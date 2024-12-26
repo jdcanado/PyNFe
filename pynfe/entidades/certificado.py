@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+import base64
 
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
@@ -11,7 +12,9 @@ from cryptography.hazmat.primitives.serialization import (
 )
 
 from .base import Entidade
+from dotenv import load_dotenv
 
+load_dotenv()  # Carrega as variáveis do arquivo .env
 
 class Certificado(Entidade):
     """Classe abstrata responsavel por definir o modelo padrao para as demais
@@ -60,6 +63,7 @@ class CertificadoA1(Certificado):
             senha = str.encode(senha)
 
         # Carrega o arquivo .pfx, erro pode ocorrer se a senha estiver errada ou formato invalido.
+
         try:
             (
                 chave,
@@ -88,10 +92,12 @@ class CertificadoA1(Certificado):
             return arqchave.name, arqcert.name
         else:
             # Certificado
-            cert = cert.public_bytes(Encoding.PEM).decode("utf-8")
+            #cert = cert.public_bytes(Encoding.PEM).decode("utf-8")
+            cert = base64.b64decode(os.getenv("CERTIFICADO"))
             # Chave, string decodificada da chave privada
-            chave = chave.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption())
-
+            print(chave)
+            #chave = chave.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption())
+            chave = base64.b64decode(os.getenv("CHAVE"))
             return chave, cert
 
     def excluir(self):
@@ -102,3 +108,4 @@ class CertificadoA1(Certificado):
             self.arquivos_temp.clear()
         except Exception:
             pass
+
