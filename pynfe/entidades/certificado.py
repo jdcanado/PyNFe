@@ -12,9 +12,9 @@ from cryptography.hazmat.primitives.serialization import (
 )
 
 from .base import Entidade
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
-load_dotenv()  # Carrega as variáveis do arquivo .env
+#load_dotenv()  # Carrega as variáveis do arquivo .env
 
 class Certificado(Entidade):
     """Classe abstrata responsavel por definir o modelo padrao para as demais
@@ -93,11 +93,16 @@ class CertificadoA1(Certificado):
         else:
             # Certificado
             #cert = cert.public_bytes(Encoding.PEM).decode("utf-8")
-            cert = base64.b64decode(os.getenv("CERTIFICADO"))
+            #LOCAL
+            #cert = base64.b64decode(os.getenv("CERTIFICADO"))
+            #VERCEL
+            cert = base64.b64decode(os.environ.get("CERTIFICADO"))
             # Chave, string decodificada da chave privada
-            print(chave)
             #chave = chave.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption())
-            chave = base64.b64decode(os.getenv("CHAVE"))
+            #LOCAL
+            #chave = base64.b64decode(os.getenv("CHAVE"))
+            #VERCEL
+            chave = base64.b64decode(os.environ.get("CHAVE"))
             return chave, cert
 
     def excluir(self):
