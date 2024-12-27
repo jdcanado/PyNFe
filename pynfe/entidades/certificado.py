@@ -92,17 +92,17 @@ class CertificadoA1(Certificado):
             return arqchave.name, arqcert.name
         else:
             # Certificado
-            #cert = cert.public_bytes(Encoding.PEM).decode("utf-8")
+            cert = cert.public_bytes(Encoding.PEM).decode("utf-8")
             #LOCAL
             #cert = base64.b64decode(os.getenv("CERTIFICADO"))
             #VERCEL
-            cert = base64.b64decode(os.environ.get("CERTIFICADO"))
+            #cert = base64.b64decode(os.environ.get("CERTIFICADO"))
             # Chave, string decodificada da chave privada
-            #chave = chave.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption())
+            chave = chave.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption())
             #LOCAL
             #chave = base64.b64decode(os.getenv("CHAVE"))
             #VERCEL
-            chave = base64.b64decode(os.environ.get("CHAVE"))
+            #chave = base64.b64decode(os.environ.get("CHAVE"))
             return chave, cert
 
     def excluir(self):
