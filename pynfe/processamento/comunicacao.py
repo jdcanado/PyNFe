@@ -276,7 +276,46 @@ class ComunicacaoSefaz(Comunicacao):
         xml = self._construir_xml_soap("CadConsultaCadastro4", raiz)
         # Chama método que efetua a requisição POST no servidor SOAP
         return self._post(url, xml)
+    
+    def consulta_gtin(self, gtin):
+        """
+        Consulta de cadastro
+        :param modelo: Modelo da nota
+        :param documento: Documento (CNPJ, CPF ou IE)
+        :tipo do documento: CNPJ, CPF, IE
+        :return:
+        """
+        # UF que utilizam a SVRS - Sefaz Virtual do RS:
+        # Para serviço de Consulta Cadastro: AC, RN, PB, SC
+        #lista_svrs = ["AC", "RN", "PB", "SC", "PA", "CE"]
 
+        # RS implementa um método diferente na consulta de cadastro
+        # usa o mesmo url para produção e homologação
+        # não tem url para NFCE
+        #if self.uf.upper() == "RS":
+        #    url = NFE["RS"]["CADASTRO"]
+        #elif self.uf.upper() in lista_svrs:
+        #    url = NFE["SVRS"]["CADASTRO"]
+        #elif self.uf.upper() == "SVC-RS":
+        #    url = NFE["SVC-RS"]["CADASTRO"]
+        #else:
+        url = self._get_url(consulta="GTIN")
+
+        raiz = etree.Element("ConsGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
+        etree.SubElement(raiz, "GTIN").text = gtin
+        #etree.SubElement(info, "xServ").text = "CONS-CAD"
+        #etree.SubElement(info, "GTIN").text = gtin
+        
+        # Monta tipo de documento CNPJ, CPF ou IE
+        #etree.SubElement(info, tipo.upper()).text = documento
+        
+        # etree.SubElement(info, 'CPF').text = cpf
+
+        # Monta XML para envio da requisição
+        xml = self._construir_xml_soap("CcgConsGTIN", raiz)
+        # Chama método que efetua a requisição POST no servidor SOAP
+        return self._post(url, xml)
+    
     def evento(self, modelo, evento, id_lote=1):
         """
         Envia um evento de nota fiscal (cancelamento e carta de correção)
