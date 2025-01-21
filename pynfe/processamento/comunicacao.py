@@ -303,7 +303,7 @@ class ComunicacaoSefaz(Comunicacao):
 
         raiz = etree.Element("ConsGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
         info = etree.SubElement(raiz, "GTIN").text = gtin
-        etree.SubElement(info, "versao") = "1.00"
+        #etree.SubElement(info, "versao") = "1.00"
         #etree.SubElement(info, "GTIN").text = gtin
         
         # Monta tipo de documento CNPJ, CPF ou IE
