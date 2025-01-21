@@ -299,7 +299,7 @@ class ComunicacaoSefaz(Comunicacao):
         #elif self.uf.upper() == "SVC-RS":
         #    url = NFE["SVC-RS"]["CADASTRO"]
         #else:
-        url = self._get_url(consulta="GTIN")
+        url = self._get_url("nfe", consulta="GTIN")
 
         raiz = etree.Element("ConsGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
         etree.SubElement(raiz, "GTIN").text = gtin
