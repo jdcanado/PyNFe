@@ -649,6 +649,7 @@ class ComunicacaoSefaz(Comunicacao):
             )
             xml = xml_declaration + xml
             # Faz o request com o servidor
+            print("##### XML #####" + xml)
             result = requests.post(
                 url,
                 xml,
