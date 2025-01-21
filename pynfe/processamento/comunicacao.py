@@ -603,6 +603,7 @@ class ComunicacaoSefaz(Comunicacao):
         )
         body = etree.SubElement(raiz, "{%s}Body" % NAMESPACE_SOAP)
         # distribuição tem um corpo de xml diferente
+        
         if metodo == "NFeDistribuicaoDFe":
             x = etree.SubElement(
                 body, "nfeDistDFeInteresse", xmlns=NAMESPACE_METODO + metodo
@@ -613,7 +614,7 @@ class ComunicacaoSefaz(Comunicacao):
                 body, "consultaCadastro", xmlns=NAMESPACE_METODO + metodo
             )
             a = etree.SubElement(x, "nfeDadosMsg")
-        elif metodo == "ccConsGTIN":
+        elif metodo == "ccgConsGTIN":
             print("##### ConsGTIN #####" + raiz)
         else:
             a = etree.SubElement(body, "nfeDadosMsg", xmlns=NAMESPACE_METODO + metodo)
