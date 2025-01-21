@@ -275,7 +275,6 @@ class ComunicacaoSefaz(Comunicacao):
         # Monta XML para envio da requisição
         xml = self._construir_xml_soap("CadConsultaCadastro4", raiz)
         # Chama método que efetua a requisição POST no servidor SOAP
-        print(xml)
         return self._post(url, xml)
     
     def consulta_gtin(self, gtin):
@@ -304,7 +303,7 @@ class ComunicacaoSefaz(Comunicacao):
 
         raiz = etree.Element("ConsGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
         info = etree.SubElement(raiz, "GTIN").text = gtin
-        etree.SubElement(info, "versao").text = "1.00"
+        etree.SubElement(info, "versao") = "1.00"
         #etree.SubElement(info, "GTIN").text = gtin
         
         # Monta tipo de documento CNPJ, CPF ou IE
@@ -315,6 +314,7 @@ class ComunicacaoSefaz(Comunicacao):
         # Monta XML para envio da requisição
         xml = self._construir_xml_soap("CcgConsGTIN", raiz)
         # Chama método que efetua a requisição POST no servidor SOAP
+        print(xml)
         return self._post(url, xml)
     
     def evento(self, modelo, evento, id_lote=1):
