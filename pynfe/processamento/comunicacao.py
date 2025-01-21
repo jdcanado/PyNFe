@@ -624,9 +624,10 @@ class ComunicacaoSefaz(Comunicacao):
         response = {
             "content-type": "application/soap+xml; charset=utf-8;",
             "Accept": "application/soap+xml; charset=utf-8;",
+            "SOAPAction": "https://dfe-servico.svrs.rs.gov.br/ws/ccgConsGTIN/ccgConsGTIN"
         }
-        if (self.uf.upper() == "PE" or self.uf.upper() == "SP"):
-            response["SOAPAction"] = "https://dfe-servico.svrs.rs.gov.br/ws/ccgConsGTIN/ccgConsGTIN"
+        if self.uf.upper() == "PE":
+            response["SOAPAction"] = ""
         return response
 
     def _post(self, url, xml, timeout=None):
