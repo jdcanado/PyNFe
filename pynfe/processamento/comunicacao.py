@@ -615,6 +615,7 @@ class ComunicacaoSefaz(Comunicacao):
             )
             a = etree.SubElement(x, "nfeDadosMsg")
         elif metodo == "ccgConsGTIN":
+            a = etree
             print("##### ConsGTIN #####")
         else:
             a = etree.SubElement(body, "nfeDadosMsg", xmlns=NAMESPACE_METODO + metodo)
