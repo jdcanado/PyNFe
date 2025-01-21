@@ -613,6 +613,8 @@ class ComunicacaoSefaz(Comunicacao):
                 body, "consultaCadastro", xmlns=NAMESPACE_METODO + metodo
             )
             a = etree.SubElement(x, "nfeDadosMsg")
+        elif metodo == "ccConsGTIN":
+            print("##### ConsGTIN #####" + raiz)
         else:
             a = etree.SubElement(body, "nfeDadosMsg", xmlns=NAMESPACE_METODO + metodo)
         a.append(dados)
