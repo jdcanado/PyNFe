@@ -312,7 +312,7 @@ class ComunicacaoSefaz(Comunicacao):
         # etree.SubElement(info, 'CPF').text = cpf
 
         # Monta XML para envio da requisição
-        xml = self._construir_xml_soap("CcgConsGTIN", raiz)
+        xml = self._construir_xml_soap("ccgConsGTIN", raiz)
         # Chama método que efetua a requisição POST no servidor SOAP
         print(xml)
         return self._post(url, xml)
