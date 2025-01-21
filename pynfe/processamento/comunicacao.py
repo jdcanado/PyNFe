@@ -625,7 +625,7 @@ class ComunicacaoSefaz(Comunicacao):
             "content-type": "application/soap+xml; charset=utf-8;",
             "Accept": "application/soap+xml; charset=utf-8;",
         }
-        if (self.uf.upper() == "PE" or self.metodo == "ccgConsGTIN"):
+        if (self.uf.upper() == "PE" or self.uf.upper() == "SP"):
             response["SOAPAction"] = ""
         return response
 
