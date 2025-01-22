@@ -667,6 +667,7 @@ class ComunicacaoSefaz(Comunicacao):
                 timeout=timeout,
             )
             result.encoding = "utf-8"
+            print("##### RESULT #####" + str(result))
             return result
         except requests.exceptions.RequestException as e:
             raise e
