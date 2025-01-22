@@ -628,7 +628,7 @@ class ComunicacaoSefaz(Comunicacao):
         # PE é a única UF que exige SOAPAction no header
         response = {
             "content-type": "application/soap+xml; charset=utf-8;",
-            "Accept": "application/soap+xml; charset=utf-8;"
+            "Accept": "application/soap+xml; charset=utf-8;",
             "SOAPAction": "http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGtin/ccgConsGTIN"
         }
         if self.uf.upper() == "PE":
