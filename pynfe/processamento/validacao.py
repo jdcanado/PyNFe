@@ -28,6 +28,7 @@ class Validacao(object):
         Retorno:
             caminho absoluto para o arquivo xsd
         """
+        print("##### GET XSD #####")
         return path.abspath(path.join(xsd_folder, xsd_file))
 
     def validar_xml(self, xml_path, xsd_file, use_assert=False):
