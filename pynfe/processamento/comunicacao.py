@@ -615,7 +615,7 @@ class ComunicacaoSefaz(Comunicacao):
             )
             a = etree.SubElement(x, "nfeDadosMsg")
         elif metodo == "ccgConsGTIN":
-            a = etree.SubElement(body, "ccgConsGTIN", xmlns=NAMESPACE_METODO + metodo)
+            a = etree.SubElement(body, "ccgConsGTIN", xmlns=NAMESPACE_METODO + "ccgConsGtin")
             a = etree.SubElement(body, "nfeDadosMsg")
             print("##### ConsGTIN #####")
         else:
@@ -629,7 +629,7 @@ class ComunicacaoSefaz(Comunicacao):
         response = {
             "content-type": "application/soap+xml; charset=utf-8;",
             "Accept": "application/soap+xml; charset=utf-8;",
-            "SOAPAction": "http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGTIN"
+            "SOAPAction": "http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGtin"
         }
         if self.uf.upper() == "PE":
             response["SOAPAction"] = ""
