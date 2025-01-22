@@ -668,7 +668,7 @@ class ComunicacaoSefaz(Comunicacao):
             )
             result.encoding = "utf-8"
             print("##### STATUS #####" + str(result.status_code))
-            print("##### RESULT #####" + str(result.text))
+            print("##### RESULT #####" + str(result.content))
             return result
         except requests.exceptions.RequestException as e:
             raise e
