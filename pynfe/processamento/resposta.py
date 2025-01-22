@@ -12,7 +12,7 @@ class RetornoSoap(object):
 
 def analisar_retorno(webservice, retorno, classe_resposta):
     # retorno.raise_for_status()
-    # print(retorno.text)
+    print(retorno.text)
 
     match = re.search("<soap:Body>(.*?)</soap:Body>", retorno.text)
 
