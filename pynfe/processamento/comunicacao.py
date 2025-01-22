@@ -299,7 +299,7 @@ class ComunicacaoSefaz(Comunicacao):
         #elif self.uf.upper() == "SVC-RS":
         #    url = NFE["SVC-RS"]["CADASTRO"]
         #else:
-        url = self._get_url("nfe", consulta="GTIN")
+        url = NFE["SP"]["GTIN"]#self._get_url("nfe", consulta="GTIN")
 
         raiz = etree.Element("ConsGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
         etree.SubElement(raiz, "GTIN").text = gtin
@@ -628,7 +628,7 @@ class ComunicacaoSefaz(Comunicacao):
         # PE é a única UF que exige SOAPAction no header
         response = {
             "content-type": "application/soap+xml; charset=utf-8;",
-            "Accept": "application/soap+xml; charset=utf-8;",
+            "Accept": "application/soap+xml; charset=utf-8;"
             #"SOAPAction": "http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGtin"
         }
         if self.uf.upper() == "PE":
@@ -663,7 +663,7 @@ class ComunicacaoSefaz(Comunicacao):
                 xml,
                 headers=self._post_header(),
                 cert=chave_cert,
-                verify=False,
+                verify=True,
                 timeout=timeout,
             )
             result.encoding = "utf-8"

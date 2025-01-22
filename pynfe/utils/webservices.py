@@ -379,7 +379,7 @@ NFE = {
         "CADASTRO": "nfe.fazenda.sp.gov.br/ws/cadconsultacadastro4.asmx",
         "HTTPS": "https://",
         "HOMOLOGACAO": "https://homologacao.",
-        "GTIN": "dfe-servico.svrs.rs.gov.br/ws/ccgConsGTIN/ccgConsGTIN.asmx"
+        "GTIN": "https://dfe-servico.svrs.rs.gov.br/ws/ccgConsGTIN/ccgConsGTIN.asmx"
     },
     "PR": {
         "STATUS": (
