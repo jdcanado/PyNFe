@@ -657,6 +657,7 @@ class ComunicacaoSefaz(Comunicacao):
             xml = xml_declaration + xml
             # Faz o request com o servidor
             print("##### XML #####" + xml)
+            print("##### URL #####" + url + "##### HEADER #####" + str(self._post_headers()))
             result = requests.post(
                 url,
                 xml,
