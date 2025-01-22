@@ -629,7 +629,7 @@ class ComunicacaoSefaz(Comunicacao):
         response = {
             "content-type": "application/soap+xml; charset=utf-8;",
             "Accept": "application/soap+xml; charset=utf-8;",
-            "SOAPAction": "https://dfe-servico.svrs.rs.gov.br/ws/ccgConsGTIN/ccgConsGTIN"
+            "SOAPAction": "ccgConsGTIN"
         }
         if self.uf.upper() == "PE":
             response["SOAPAction"] = ""
