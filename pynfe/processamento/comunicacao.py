@@ -629,7 +629,7 @@ class ComunicacaoSefaz(Comunicacao):
         response = {
             "content-type": "application/soap+xml; charset=utf-8;",
             "Accept": "application/soap+xml; charset=utf-8;",
-            "SOAPAction": "ccgConsGTIN"
+            "SOAPAction": "http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGTIN"
         }
         if self.uf.upper() == "PE":
             response["SOAPAction"] = ""
