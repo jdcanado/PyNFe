@@ -301,7 +301,7 @@ class ComunicacaoSefaz(Comunicacao):
         #else:
         url = self._get_url("nfe", consulta="GTIN")
 
-        raiz = etree.Element("consGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
+        raiz = etree.Element("ConsGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
         etree.SubElement(raiz, "GTIN").text = gtin
         #info = etree.SubElement(raiz, "versao").text = "1.00"
         #etree.SubElement(info, "versao") = "1.00"
