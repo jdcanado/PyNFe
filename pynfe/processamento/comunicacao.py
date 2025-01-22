@@ -663,7 +663,7 @@ class ComunicacaoSefaz(Comunicacao):
                 xml,
                 headers=self._post_header(),
                 cert=chave_cert,
-                verify=True,
+                verify=False,
                 timeout=timeout,
             )
             result.encoding = "utf-8"
