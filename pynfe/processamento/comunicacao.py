@@ -629,7 +629,7 @@ class ComunicacaoSefaz(Comunicacao):
         response = {
             "content-type": "application/soap+xml; charset=utf-8;",
             "Accept": "application/soap+xml; charset=utf-8;"
-            #"SOAPAction": "http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGtin"
+            "SOAPAction": "http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGtin/ccgConsGTIN"
         }
         if self.uf.upper() == "PE":
             response["SOAPAction"] = ""
@@ -668,7 +668,7 @@ class ComunicacaoSefaz(Comunicacao):
             )
             result.encoding = "utf-8"
             print("##### STATUS #####" + str(result.status_code))
-            print("##### RESULT #####" + str(result.content))
+            print("##### RESULT #####" + str(result.text))
             return result
         except requests.exceptions.RequestException as e:
             raise e
