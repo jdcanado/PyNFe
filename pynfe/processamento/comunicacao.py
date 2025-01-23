@@ -278,44 +278,14 @@ class ComunicacaoSefaz(Comunicacao):
         return self._post(url, xml)
     
     def consulta_gtin(self, gtin):
-        """
-        Consulta de cadastro
-        :param modelo: Modelo da nota
-        :param documento: Documento (CNPJ, CPF ou IE)
-        :tipo do documento: CNPJ, CPF, IE
-        :return:
-        """
-        # UF que utilizam a SVRS - Sefaz Virtual do RS:
-        # Para serviço de Consulta Cadastro: AC, RN, PB, SC
-        #lista_svrs = ["AC", "RN", "PB", "SC", "PA", "CE"]
-
-        # RS implementa um método diferente na consulta de cadastro
-        # usa o mesmo url para produção e homologação
-        # não tem url para NFCE
-        #if self.uf.upper() == "RS":
-        #    url = NFE["RS"]["CADASTRO"]
-        #elif self.uf.upper() in lista_svrs:
-        #    url = NFE["SVRS"]["CADASTRO"]
-        #elif self.uf.upper() == "SVC-RS":
-        #    url = NFE["SVC-RS"]["CADASTRO"]
-        #else:
         url = NFE["SP"]["GTIN"]#self._get_url("nfe", consulta="GTIN")
 
         raiz = etree.Element("consGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
         etree.SubElement(raiz, "GTIN").text = gtin
-        #info = etree.SubElement(raiz, "versao").text = "1.00"
-        #etree.SubElement(info, "versao") = "1.00"
-        #etree.SubElement(info, "GTIN").text = gtin
         
-        # Monta tipo de documento CNPJ, CPF ou IE
-        #etree.SubElement(info, tipo.upper()).text = documento
-        
-        # etree.SubElement(info, 'CPF').text = cpf
-
         # Monta XML para envio da requisição
         xml = self._construir_xml_soap("ccgConsGTIN", raiz)
         # Chama método que efetua a requisição POST no servidor SOAP
-        print(xml)
         return self._post(url, xml)
     
     def evento(self, modelo, evento, id_lote=1):
@@ -617,7 +587,6 @@ class ComunicacaoSefaz(Comunicacao):
         elif metodo == "ccgConsGTIN":
             x = etree.SubElement(body, "ccgConsGTIN", xmlns=NAMESPACE_METODO + "ccgConsGtin")
             a = etree.SubElement(x, "nfeDadosMsg")
-            print("##### ConsGTIN #####")
         else:
             a = etree.SubElement(body, "nfeDadosMsg", xmlns=NAMESPACE_METODO + metodo)
         a.append(dados)
@@ -628,8 +597,7 @@ class ComunicacaoSefaz(Comunicacao):
         # PE é a única UF que exige SOAPAction no header
         response = {
             "content-type": "application/soap+xml; charset=utf-8;",
-            "Accept": "application/soap+xml; charset=utf-8;",
-            "SOAPAction": "http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGtin/ccgConsGTIN"
+            "Accept": "application/soap+xml; charset=utf-8;"
         }
         if self.uf.upper() == "PE":
             response["SOAPAction"] = ""
@@ -656,8 +624,6 @@ class ComunicacaoSefaz(Comunicacao):
             )
             xml = xml_declaration + xml
             # Faz o request com o servidor
-            print("##### XML #####" + xml)
-            print("##### URL #####" + url + "##### HEADER #####" + str(self._post_header()))
             result = requests.post(
                 url,
                 xml,
@@ -667,8 +633,6 @@ class ComunicacaoSefaz(Comunicacao):
                 timeout=timeout,
             )
             result.encoding = "utf-8"
-            print("##### STATUS #####" + str(result.status_code))
-            print("##### RESULT #####" + str(result.text))
             return result
         except requests.exceptions.RequestException as e:
             raise e

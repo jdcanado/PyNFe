@@ -29,14 +29,14 @@ TIPOS_DOCUMENTO = (
 )
 
 XSD_FOLDER_NFE = "pynfe/data/XSDs/NF-e"
-XSD_NFE = "nfe_v4.00.xsd"
-XSD_NFE_PROCESSADA = "procNFe_v4.00.xsd"
-XSD_PD_CANCELAR_NFE = "procCancNFe_v1.07.xsd"
-XSD_PD_INUTILIZAR_NFE = "procInutNFe_v1.07.xsd"
+XSD_NFE = "nfe_v4.00."
+XSD_NFE_PROCESSADA = "procNFe_v4.00."
+XSD_PD_CANCELAR_NFE = "procCancNFe_v1.07."
+XSD_PD_INUTILIZAR_NFE = "procInutNFe_v1.07."
 
 XSD_FOLDER_MDFE = "pynfe/data/XSDs/MDF-e"
-XSD_MDFE = "mdfe_v3.00.xsd"
-XSD_MDFE_PROCESSADA = "procMDFe_v3.00.xsd"
+XSD_MDFE = "mdfe_v3.00."
+XSD_MDFE_PROCESSADA = "procMDFe_v3.00."
 
 
 ICMS_TIPOS_TRIBUTACAO = (
