@@ -65,8 +65,4 @@ class Validacao(object):
                 buffer.seek(0)
                 xml_doc = etree.parse(buffer)
 
-        return (
-            use_assert
-            and xsd_schema.assertValid(xml_doc)
-            or xsd_schema.validate(xml_doc)
-        )
+        return use_assert and xsd_schema.assertValid(xml_doc) or xsd_schema.validate(xml_doc)

@@ -1,5 +1,5 @@
 """
-    @author: Junior Tada, Leonardo Tada
+@author: Junior Tada, Leonardo Tada
 """
 
 # http://nfce.encat.org/desenvolvedor/qrcode/
@@ -25,16 +25,17 @@ NFCE = {
     "AM": {
         # csc_homologacao = '0123456789'
         # token_homologacao = '000001'
-        "STATUS": "nfe.sefaz.am.gov.br/services2/services/NfeStatusServico4",
-        "AUTORIZACAO": "nfe.sefaz.am.gov.br/services2/services/NfeAutorizacao4",
-        "RECIBO": "nfe.sefaz.am.gov.br/services2/services/NfeRetAutorizacao4",
-        "CHAVE": "nfe.sefaz.am.gov.br/services2/services/NfeConsulta4",
-        "INUTILIZACAO": "nfe.sefaz.am.gov.br/services2/services/NfeInutilizacao4",
-        "EVENTOS": "nfe.sefaz.am.gov.br/services2/services/RecepcaoEvento4",
+        "STATUS": "nfce.sefaz.am.gov.br/nfce-services/services/NfeStatusServico4",
+        "AUTORIZACAO": "nfce.sefaz.am.gov.br/nfce-services/services/NfeAutorizacao4",
+        "RECIBO": "nfce.sefaz.am.gov.br/nfce-services/services/NfeRetAutorizacao4",
+        "CHAVE": "nfce.sefaz.am.gov.br/nfce-services/services/NfeConsulta4",
+        "INUTILIZACAO": "nfce.sefaz.am.gov.br/nfce-services/services/NfeInutilizacao4",
+        "EVENTOS": "nfce.sefaz.am.gov.br/nfce-services/services/RecepcaoEvento4",
         "QR": "sefaz.am.gov.br/nfceweb/consultarNFCe.jsp?",
+        "QR_HOMOLOGACAO": "sefaz.am.gov.br/nfceweb-hom/consultarNFCe.jsp?",
         "URL": "sefaz.am.gov.br/nfceweb/formConsulta.do",
-        "HTTPS": "http://sistemas.",
-        "HOMOLOGACAO": "http://homnfce.",
+        "HTTPS": "https://sistemas.",
+        "HOMOLOGACAO": "https://hom",
     },
     "RR": {
         "STATUS": "",
@@ -69,7 +70,7 @@ NFCE = {
         "EVENTOS": "",
         "QR": "/nfcep.php?",
         "URL": "https://www.sefaz.ap.gov.br/sate/seg/SEGf_AcessarFuncao.jsp?cdFuncao=FIS_1261",
-        "HTTPS": "	https://www.sefaz.ap.gov.br/nfce",
+        "HTTPS": "https://www.sefaz.ap.gov.br/nfce",
         "HOMOLOGACAO": "https://www.sefaz.ap.gov.br/nfcehml",
     },
     "TO": {
@@ -141,6 +142,7 @@ NFCE = {
         "QR": "nfe.se.gov.br/portal/consultarNFCe.jsp?",
         "HTTPS": "https://www.",
         "HOMOLOGACAO": "http://www.hom.",
+        "URL": "nfe.se.gov.br/nfce/consulta",
     },
     "BA": {
         "STATUS": "",
@@ -174,7 +176,7 @@ NFCE = {
         "CHAVE": "",
         "INUTILIZACAO": "",
         "EVENTOS": "",
-        "QR": "sefaz.es.gov.br/ConsultaNFCe/qrcode.aspx?	",
+        "QR": "sefaz.es.gov.br/ConsultaNFCe/qrcode.aspx?",
         "HTTPS": "http://nfe.",
         "HOMOLOGACAO": "http://homologacao.",
         "URL": "www.sefaz.es.gov.br/nfce/consulta",
@@ -317,11 +319,7 @@ NFE = {
         "HTTPS": "https://",
         "HOMOLOGACAO": "https://hom",
     },
-    "MA": {
-        "CADASTRO": (
-            "https://sistemas.sefaz.ma.gov.br/wscadastro/CadConsultaCadastro2?wsdl"
-        )
-    },
+    "MA": {"CADASTRO": ("https://sistemas.sefaz.ma.gov.br/wscadastro/CadConsultaCadastro2?wsdl")},
     "PE": {
         "STATUS": "sefaz.pe.gov.br/nfe-service/services/NFeStatusServico4",
         "AUTORIZACAO": "sefaz.pe.gov.br/nfe-service/services/NFeAutorizacao4",
@@ -334,24 +332,14 @@ NFE = {
         "HOMOLOGACAO": "https://nfehomolog.",
     },
     "BA": {
-        "STATUS": (
-            "nfe.sefaz.ba.gov.br/webservices/NFeStatusServico4/NFeStatusServico4.asmx"
-        ),
-        "AUTORIZACAO": (
-            "nfe.sefaz.ba.gov.br/webservices/NFeAutorizacao4/NFeAutorizacao4.asmx"
-        ),
-        "RECIBO": (
-            "nfe.sefaz.ba.gov.br/webservices/NFeRetAutorizacao4/NFeRetAutorizacao4.asmx"
-        ),
+        "STATUS": ("nfe.sefaz.ba.gov.br/webservices/NFeStatusServico4/NFeStatusServico4.asmx"),
+        "AUTORIZACAO": ("nfe.sefaz.ba.gov.br/webservices/NFeAutorizacao4/NFeAutorizacao4.asmx"),
+        "RECIBO": ("nfe.sefaz.ba.gov.br/webservices/NFeRetAutorizacao4/NFeRetAutorizacao4.asmx"),
         "CHAVE": (
             "nfe.sefaz.ba.gov.br/webservices/NFeConsultaProtocolo4/NFeConsultaProtocolo4.asmx"
         ),
-        "INUTILIZACAO": (
-            "nfe.sefaz.ba.gov.br/webservices/NFeInutilizacao4/NFeInutilizacao4.asmx"
-        ),
-        "EVENTOS": (
-            "nfe.sefaz.ba.gov.br/webservices/NFeRecepcaoEvento4/NFeRecepcaoEvento4.asmx"
-        ),
+        "INUTILIZACAO": ("nfe.sefaz.ba.gov.br/webservices/NFeInutilizacao4/NFeInutilizacao4.asmx"),
+        "EVENTOS": ("nfe.sefaz.ba.gov.br/webservices/NFeRecepcaoEvento4/NFeRecepcaoEvento4.asmx"),
         "CADASTRO": (
             "nfe.sefaz.ba.gov.br/webservices/CadConsultaCadastro4/CadConsultaCadastro4.asmx"
         ),
@@ -382,14 +370,10 @@ NFE = {
         "GTIN": "https://dfe-servico.svrs.rs.gov.br/ws/ccgConsGTIN/ccgConsGTIN.asmx"
     },
     "PR": {
-        "STATUS": (
-            "nfe.sefa.pr.gov.br/nfe/NFeStatusServico4"
-        ),  # CONSULTA STATUS DO SERVICO
+        "STATUS": ("nfe.sefa.pr.gov.br/nfe/NFeStatusServico4"),  # CONSULTA STATUS DO SERVICO
         "AUTORIZACAO": "nfe.sefa.pr.gov.br/nfe/NFeAutorizacao4",  # AUTORIZACAO
         "RECIBO": "nfe.sefa.pr.gov.br/nfe/NFeRetAutorizacao4",  # CONSULTA RECIBO
-        "CHAVE": (
-            "nfe.sefa.pr.gov.br/nfe/NFeConsultaProtocolo4"
-        ),  # CONSULTA CHAVE DE ACESSO
+        "CHAVE": ("nfe.sefa.pr.gov.br/nfe/NFeConsultaProtocolo4"),  # CONSULTA CHAVE DE ACESSO
         "INUTILIZACAO": "nfe.sefa.pr.gov.br/nfe/NFeInutilizacao4",  # INUTILIZAÇAO
         "EVENTOS": "nfe.sefa.pr.gov.br/nfe/NFeRecepcaoEvento4",  # REGISTRO DE EVENTOS
         "CADASTRO": "nfe.sefa.pr.gov.br/nfe/CadConsultaCadastro4",  # CONSULTA CADASTRO
@@ -446,22 +430,12 @@ NFE = {
         "HOMOLOGACAO": "https://homolog.",
     },
     "SVAN": {
-        "STATUS": (
-            "sefazvirtual.fazenda.gov.br/NFeStatusServico4/NFeStatusServico4.asmx"
-        ),
-        "AUTORIZACAO": (
-            "sefazvirtual.fazenda.gov.br/NFeAutorizacao4/NFeAutorizacao4.asmx"
-        ),
-        "RECIBO": (
-            "sefazvirtual.fazenda.gov.br/NFeRetAutorizacao4/NFeRetAutorizacao4.asmx"
-        ),
+        "STATUS": ("sefazvirtual.fazenda.gov.br/NFeStatusServico4/NFeStatusServico4.asmx"),
+        "AUTORIZACAO": ("sefazvirtual.fazenda.gov.br/NFeAutorizacao4/NFeAutorizacao4.asmx"),
+        "RECIBO": ("sefazvirtual.fazenda.gov.br/NFeRetAutorizacao4/NFeRetAutorizacao4.asmx"),
         "CHAVE": "sefazvirtual.fazenda.gov.br/NFeConsultaProtocolo4/NFeConsultaProtocolo4.asmx",
-        "INUTILIZACAO": (
-            "sefazvirtual.fazenda.gov.br/NFeInutilizacao4/NFeInutilizacao4.asmx"
-        ),
-        "EVENTOS": (
-            "sefazvirtual.fazenda.gov.br/NFeRecepcaoEvento4/NFeRecepcaoEvento4.asmx"
-        ),
+        "INUTILIZACAO": ("sefazvirtual.fazenda.gov.br/NFeInutilizacao4/NFeInutilizacao4.asmx"),
+        "EVENTOS": ("sefazvirtual.fazenda.gov.br/NFeRecepcaoEvento4/NFeRecepcaoEvento4.asmx"),
         "DOWNLOAD": "sefazvirtual.fazenda.gov.br/NfeDownloadNF/NfeDownloadNF.asmx",
         "HTTPS": "https://www.",
         "HOMOLOGACAO": "https://hom.",
@@ -510,9 +484,7 @@ NFSE = {
         "CONSULTA_SERVICO_TOMADO": "ConsultarNfseServicoTomado",
         "SUBSTITUIR": "SubstituirNfse",
         "HTTPS": "http://e-gov.betha.com.br/e-nota-contribuinte-ws/nfseWS?wsdl",
-        "HOMOLOGACAO": (
-            "http://e-gov.betha.com.br/e-nota-contribuinte-test-ws/nfseWS?wsdl"
-        ),
+        "HOMOLOGACAO": ("http://e-gov.betha.com.br/e-nota-contribuinte-test-ws/nfseWS?wsdl"),
     },
     #
     "GINFES": {
@@ -553,41 +525,49 @@ CTE = {
     },
     "MT": {
         "STATUS": "sefaz.mt.gov.br/ctews/services/CteStatusServico",
+        "CONSULTA": "sefaz.mt.gov.br/ctews2/services/CTeConsultaV4?wsdl",
         "HTTPS": "https://cte.",
         "HOMOLOGACAO": "https://homologacao.",
     },
     "MS": {
         "STATUS": "cte.ms.gov.br/ws/CteStatusServico",
+        "CONSULTA": "cte.ms.gov.br/ws/CTeConsultaV4",
         "HTTPS": "https://producao.",
         "HOMOLOGACAO": "https://homologacao.",
     },
     "MG": {
         "STATUS": "fazenda.mg.gov.br/cte/services/CteStatusServico",
+        "CONSULTA": "fazenda.mg.gov.br/cte/services/CTeConsultaV4",
         "HTTPS": "https://cte.",
         "HOMOLOGACAO": "https://hcte.",
     },
     "PR": {
         "STATUS": "fazenda.pr.gov.br/cte/CteStatusServico?wsdl",
+        "CONSULTA": "fazenda.pr.gov.br/cte4/CTeConsultaV4?wsdl",
         "HTTPS": "https://cte.",
         "HOMOLOGACAO": "https://homologacao.",
     },
     "RS": {
         "STATUS": "svrs.rs.gov.br/ws/ctestatusservico/CteStatusServico.asmx",
+        "CONSULTA": "svrs.rs.gov.br/ws/CTeConsultaV4/CTeConsultaV4.asmx",
         "HTTPS": "https://cte.",
         "HOMOLOGACAO": "https://cte-homologacao.",
     },
     "SP": {
         "STATUS": "fazenda.sp.gov.br/cteWEB/services/cteStatusServico.asmx",
+        "CONSULTA": "fazenda.sp.gov.br/CTeWS/WS/CTeConsultaV4.asmx",
         "HTTPS": "https://nfe.",
         "HOMOLOGACAO": "https://homologacao.nfe.",
     },
     "SVRS": {
         "STATUS": "svrs.rs.gov.br/ws/ctestatusservico/CteStatusServico.asmx",
+        "CONSULTA": "svrs.rs.gov.br/ws/CTeConsultaV4/CTeConsultaV4.asmx",
         "HTTPS": "https://cte.",
         "HOMOLOGACAO": "https://cte-homologacao.",
     },
     "SVSP": {
         "STATUS": "fazenda.sp.gov.br/cteWEB/services/CteStatusServico.asmx",
+        "CONSULTA": "fazenda.sp.gov.br/CTeWS/WS/CTeConsultaV4.asmx",
         "HTTPS": "https://nfe.",
         "HOMOLOGACAO": "https://homologacao.nfe.",
     },

@@ -43,14 +43,14 @@ ICMS_TIPOS_TRIBUTACAO = (
     ("00", "ICMS 00 - Tributada integralmente"),
     ("02", "ICMS 02 - Tributação monofásica própria sobre combustíveis"),
     ("10", "ICMS 10 - Tributada com cobranca do ICMS por substituicao tributaria"),
-    ("15", "ICMS 15 - Tributação monofásica própria e com responsabilidade pela retenção sobre combustíveis"),
+    (
+        "15",
+        "ICMS 15 - Tributação monofásica própria e com responsabilidade pela retenção sobre combustíveis",
+    ),
     ("20", "ICMS 20 - Com reducao da base de calculo"),
     (
         "30",
-        (
-            "ICMS 30 - Isenta ou nao tributada e com cobranca do ICMS por substituicao"
-            " tributaria"
-        ),
+        ("ICMS 30 - Isenta ou nao tributada e com cobranca do ICMS por substituicao tributaria"),
     ),
     ("40", "ICMS 40 - Isenta"),
     ("41", "ICMS 41 - Nao tributada"),
@@ -61,10 +61,7 @@ ICMS_TIPOS_TRIBUTACAO = (
     ("61", "ICMS 61 - Tributação monofásica sobre combustíveis cobrada anteriormente"),
     (
         "70",
-        (
-            "ICMS 70 - Com reducao da base de calculo e cobranca do ICMS por"
-            " substituicao tributaria"
-        ),
+        ("ICMS 70 - Com reducao da base de calculo e cobranca do ICMS por substituicao tributaria"),
     ),
     ("90", "ICMS 90 - Outras"),
     ("101", "ICMS 101 - Tributação ICMS pelo Simples Nacional, CSOSN=101"),
@@ -106,10 +103,7 @@ ICMS_ORIGENS = (
     ),
     (
         5,
-        (
-            "Nacional, mercadoria ou bem com Conteúdo de Importação inferior ou igual a"
-            " 40%. "
-        ),
+        ("Nacional, mercadoria ou bem com Conteúdo de Importação inferior ou igual a 40%. "),
     ),
     (
         6,
@@ -229,6 +223,8 @@ NF_FINALIDADES_EMISSAO = (
     (2, "NF-e complementar"),
     (3, "NF-e de ajuste"),
     (4, "NF-e de Devolução"),
+    (5, "NF-e de Débito"),
+    (6, "NF-e de Crédito"),
 )
 
 NF_REFERENCIADA_TIPOS = (
@@ -550,6 +546,40 @@ COFINS_TIPOS_TRIBUTACAO = (
 )
 
 COFINS_TIPOS_CALCULO = IPI_TIPOS_CALCULO
+
+# =============================================
+# Reforma Tributaria - IVA Dual (EC 132/2023)
+# =============================================
+
+# CST para IBSCBS (IBS + CBS) — NT 2025.002-RTC (3-digit codes)
+IBS_CBS_TIPOS_TRIBUTACAO = (
+    ("000", "Tributação integral"),
+    ("010", "Tributação com alíquota reduzida"),
+    ("100", "Tributação com suspensão"),
+    ("110", "Imunidade — exportação"),
+    ("200", "Tributação com diferimento"),
+    ("222", "Isenção"),
+    ("300", "Não incidência"),
+    ("400", "Tributação por substituição"),
+    ("410", "Tributação com alíquota zero"),
+    ("510", "Tributação integral — regime específico"),
+    ("600", "Tributação monofásica — incidência padrão"),
+    ("620", "Tributação monofásica — demais operações"),
+    ("800", "Crédito presumido"),
+    ("810", "Crédito presumido — ZFM"),
+    ("900", "Outros"),
+)
+
+# CST para IS (Imposto Seletivo) — CSTSelec (NT 2025.002-RTC)
+IS_TIPOS_TRIBUTACAO = (
+    ("01", "Tributada integralmente"),
+    ("02", "Tributada com redução"),
+    ("03", "Isenção"),
+    ("04", "Imunidade"),
+    ("05", "Suspensão"),
+    ("06", "Diferimento"),
+    ("90", "Outros"),
+)
 
 MODALIDADES_FRETE = (
     (0, "0 - Contratação por conta do Remetente (CIF)"),

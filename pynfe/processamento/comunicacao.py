@@ -102,17 +102,11 @@ class ComunicacaoSefaz(Comunicacao):
                         # Estados como GO vem com a tag header
                         inf_prot = prot[1][0]
 
-                    lote_status = inf_prot.xpath(
-                        "ns:retEnviNFe/ns:cStat", namespaces=ns
-                    )[0].text
+                    lote_status = inf_prot.xpath("ns:retEnviNFe/ns:cStat", namespaces=ns)[0].text
                     # Lote processado
                     if lote_status == "104":
-                        prot_nfe = inf_prot.xpath(
-                            "ns:retEnviNFe/ns:protNFe", namespaces=ns
-                        )[0]
-                        status = prot_nfe.xpath("ns:infProt/ns:cStat", namespaces=ns)[
-                            0
-                        ].text
+                        prot_nfe = inf_prot.xpath("ns:retEnviNFe/ns:protNFe", namespaces=ns)[0]
+                        status = prot_nfe.xpath("ns:infProt/ns:cStat", namespaces=ns)[0].text
                         # autorizado usa da NF-e
                         # retorna xml final (protNFe+NFe)
                         if status in ["100", "150"]:
@@ -131,9 +125,7 @@ class ComunicacaoSefaz(Comunicacao):
                 status = rec.xpath("ns:retEnviNFe/ns:cStat", namespaces=ns)[0].text
                 # Lote Recebido com Sucesso!
                 if status == "103":
-                    nrec = rec.xpath("ns:retEnviNFe/ns:infRec/ns:nRec", namespaces=ns)[
-                        0
-                    ].text
+                    nrec = rec.xpath("ns:retEnviNFe/ns:infRec/ns:nRec", namespaces=ns)[0].text
                     return 0, nrec, nota_fiscal
         return 1, retorno, nota_fiscal
 
@@ -238,26 +230,48 @@ class ComunicacaoSefaz(Comunicacao):
 
         return self._post(url, xml)
 
-    def consulta_cadastro(self, modelo, documento, tipo='CNPJ'):
+    def consulta_cadastro(self, modelo, documento, tipo="CNPJ", uf=None):
         """
         Consulta de cadastro
         :param modelo: Modelo da nota
         :param documento: Documento (CNPJ, CPF ou IE)
         :tipo do documento: CNPJ, CPF, IE
+        :param uf: UF
         :return:
         """
         # UF que utilizam a SVRS - Sefaz Virtual do RS:
-        # Para serviço de Consulta Cadastro: AC, RN, PB, SC
-        lista_svrs = ["AC", "RN", "PB", "SC", "PA", "CE"]
+        lista_svrs = [
+            "AC",
+            "AL",
+            "AP",
+            "CE",
+            "DF",
+            "ES",
+            "PA",
+            "PB",
+            "PI",
+            "RJ",
+            "RN",
+            "RO",
+            "RR",
+            "SC",
+            "SE",
+            "TO",
+        ]
+
+        # Se não informada UF nos parâmetros da função,
+        # utiliza a UF do construtor
+        if not uf:
+            uf = self.uf
 
         # RS implementa um método diferente na consulta de cadastro
         # usa o mesmo url para produção e homologação
         # não tem url para NFCE
-        if self.uf.upper() == "RS":
+        if uf.upper() == "RS":
             url = NFE["RS"]["CADASTRO"]
-        elif self.uf.upper() in lista_svrs:
+        elif uf.upper() in lista_svrs:
             url = NFE["SVRS"]["CADASTRO"]
-        elif self.uf.upper() == "SVC-RS":
+        elif uf.upper() == "SVC-RS":
             url = NFE["SVC-RS"]["CADASTRO"]
         else:
             url = self._get_url(modelo=modelo, consulta="CADASTRO")
@@ -265,11 +279,11 @@ class ComunicacaoSefaz(Comunicacao):
         raiz = etree.Element("ConsCad", versao="2.00", xmlns=NAMESPACE_NFE)
         info = etree.SubElement(raiz, "infCons")
         etree.SubElement(info, "xServ").text = "CONS-CAD"
-        etree.SubElement(info, "UF").text = self.uf.upper()
-        
+        etree.SubElement(info, "UF").text = uf.upper()
+
         # Monta tipo de documento CNPJ, CPF ou IE
         etree.SubElement(info, tipo.upper()).text = documento
-        
+
         # etree.SubElement(info, 'CPF').text = cpf
 
         # Monta XML para envio da requisição
@@ -368,18 +382,15 @@ class ComunicacaoSefaz(Comunicacao):
 
         # Identificador da TAG a ser assinada formada com Código da UF + Ano (2 posições) +
         #  CNPJ + modelo + série + nro inicial e nro final precedida do literal “ID”
-        id_unico = (
-            "ID%(uf)s%(ano)s%(cnpj)s%(modelo)s%(serie)s%(num_ini)s%(num_fin)s"
-            % {
-                "uf": uf,
-                "ano": ano,
-                "cnpj": cnpjcpf_chaveacesso,
-                "modelo": "55" if modelo == "nfe" else "65",  # 55=NF-e; 65=NFC-e;
-                "serie": str(serie).zfill(3),
-                "num_ini": str(numero_inicial).zfill(9),
-                "num_fin": str(numero_final).zfill(9),
-            }
-        )
+        id_unico = "ID%(uf)s%(ano)s%(cnpj)s%(modelo)s%(serie)s%(num_ini)s%(num_fin)s" % {
+            "uf": uf,
+            "ano": ano,
+            "cnpj": cnpjcpf_chaveacesso,
+            "modelo": "55" if modelo == "nfe" else "65",  # 55=NF-e; 65=NFC-e;
+            "serie": str(serie).zfill(3),
+            "num_ini": str(numero_inicial).zfill(9),
+            "num_fin": str(numero_final).zfill(9),
+        }
 
         # Monta XML do corpo da requisição # FIXME
         raiz = etree.Element("inutNFe", versao=VERSAO_PADRAO, xmlns=NAMESPACE_NFE)
@@ -460,9 +471,7 @@ class ComunicacaoSefaz(Comunicacao):
                     # nfce Ex: https://homologacao.nfce.fazenda.pr.gov.br/nfce/NFeStatusServico3
                     self.url = NFCE["SVRS"][ambiente] + NFCE["SVRS"][consulta]
                 else:
-                    raise Exception(
-                        'Modelo não encontrado! Defina modelo="nfe" ou "nfce"'
-                    )
+                    raise Exception('Modelo não encontrado! Defina modelo="nfe" ou "nfce"')
             elif self.uf.upper() in contingencia_svan:
                 if self._ambiente == 1:
                     ambiente = "HTTPS"
@@ -475,9 +484,7 @@ class ComunicacaoSefaz(Comunicacao):
                     # nfce Ex: https://homologacao.nfce.fazenda.pr.gov.br/nfce/NFeStatusServico3
                     self.url = NFCE["SVRS"][ambiente] + NFCE["SVRS"][consulta]
                 else:
-                    raise Exception(
-                        'Modelo não encontrado! Defina modelo="nfe" ou "nfce"'
-                    )
+                    raise Exception('Modelo não encontrado! Defina modelo="nfe" ou "nfce"')
             return self.url
 
         # estado que implementam webservices proprios
@@ -493,19 +500,14 @@ class ComunicacaoSefaz(Comunicacao):
                     self.url = NFE["SVRS"][ambiente] + NFE["SVRS"][consulta]
                 else:
                     # nfe Ex: https://nfe.fazenda.pr.gov.br/nfe/NFeStatusServico3
-                    self.url = (
-                        NFE[self.uf.upper()][ambiente] + NFE[self.uf.upper()][consulta]
-                    )
+                    self.url = NFE[self.uf.upper()][ambiente] + NFE[self.uf.upper()][consulta]
             elif modelo == "nfce":
                 # PE e BA são as únicas UF'sque possuem NFE proprio e SVRS para NFCe
                 if self.uf.upper() == "PE" or self.uf.upper() == "BA":
                     self.url = NFCE["SVRS"][ambiente] + NFCE["SVRS"][consulta]
                 else:
                     # nfce Ex: https://homologacao.nfce.fazenda.pr.gov.br/nfce/NFeStatusServico3
-                    self.url = (
-                        NFCE[self.uf.upper()][ambiente]
-                        + NFCE[self.uf.upper()][consulta]
-                    )
+                    self.url = NFCE[self.uf.upper()][ambiente] + NFCE[self.uf.upper()][consulta]
             else:
                 raise Exception('Modelo não encontrado! Defina modelo="nfe" ou "nfce"')
         # Estados que utilizam outros ambientes
@@ -539,9 +541,7 @@ class ComunicacaoSefaz(Comunicacao):
                     # nfce Ex: https://homologacao.nfce.fazenda.pr.gov.br/nfce/NFeStatusServico3
                     self.url = NFCE["SVRS"][ambiente] + NFCE["SVRS"][consulta]
                 else:
-                    raise Exception(
-                        'Modelo não encontrado! Defina modelo="nfe" ou "nfce"'
-                    )
+                    raise Exception('Modelo não encontrado! Defina modelo="nfe" ou "nfce"')
             # unico UF que utiliza SVAN ainda para NF-e
             # SVRS para NFC-e
             elif self.uf.upper() == "MA":
@@ -556,13 +556,9 @@ class ComunicacaoSefaz(Comunicacao):
                     # nfce Ex: https://homologacao.nfce.fazenda.pr.gov.br/nfce/NFeStatusServico3
                     self.url = NFCE["SVRS"][ambiente] + NFCE["SVRS"][consulta]
                 else:
-                    raise Exception(
-                        'Modelo não encontrado! Defina modelo="nfe" ou "nfce"'
-                    )
+                    raise Exception('Modelo não encontrado! Defina modelo="nfe" ou "nfce"')
             else:
-                raise Exception(
-                    f"Url não encontrada para {modelo} e {consulta} {self.uf.upper()}"
-                )
+                raise Exception(f"Url não encontrada para {modelo} e {consulta} {self.uf.upper()}")
         return self.url
 
     def _construir_xml_soap(self, metodo, dados, cabecalho=False):
@@ -575,14 +571,10 @@ class ComunicacaoSefaz(Comunicacao):
         # distribuição tem um corpo de xml diferente
         
         if metodo == "NFeDistribuicaoDFe":
-            x = etree.SubElement(
-                body, "nfeDistDFeInteresse", xmlns=NAMESPACE_METODO + metodo
-            )
+            x = etree.SubElement(body, "nfeDistDFeInteresse", xmlns=NAMESPACE_METODO + metodo)
             a = etree.SubElement(x, "nfeDadosMsg")
         elif metodo == "CadConsultaCadastro4" and self.uf.upper() == "MT":
-            x = etree.SubElement(
-                body, "consultaCadastro", xmlns=NAMESPACE_METODO + metodo
-            )
+            x = etree.SubElement(body, "consultaCadastro", xmlns=NAMESPACE_METODO + metodo)
             a = etree.SubElement(x, "nfeDadosMsg")
         elif metodo == "ccgConsGTIN":
             x = etree.SubElement(body, "ccgConsGTIN", xmlns=NAMESPACE_METODO + "ccgConsGtin")
@@ -605,9 +597,7 @@ class ComunicacaoSefaz(Comunicacao):
 
     def _post(self, url, xml, timeout=None):
         certificado_a1 = CertificadoA1(self.certificado)
-        chave, cert = certificado_a1.separar_arquivo(
-            self.certificado_senha, caminho=True
-        )
+        chave, cert = certificado_a1.separar_arquivo(self.certificado_senha, caminho=True)
         chave_cert = (cert, chave)
         # Abre a conexão HTTPS
         try:
@@ -616,10 +606,7 @@ class ComunicacaoSefaz(Comunicacao):
             # limpa xml com caracteres bugados para infNFeSupl em NFC-e
             xml = re.sub(
                 "<qrCode>(.*?)</qrCode>",
-                lambda x: x.group(0)
-                .replace("&lt;", "<")
-                .replace("&gt;", ">")
-                .replace("&amp;", ""),
+                lambda x: x.group(0).replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", ""),
                 etree.tostring(xml, encoding="unicode").replace("\n", ""),
             )
             xml = xml_declaration + xml
@@ -759,12 +746,12 @@ class ComunicacaoNfse(Comunicacao):
             nsmap={"ns2": self._namespace, "xsi": NAMESPACE_XSI},
             versao=self._versao,
         )
-        etree.SubElement(raiz, "versaoDados").text = self._versao
+        etree.SubElement(raiz, "{%s}versaoDados" % self._namespace).text = self._versao
 
         if retorna_string:
-            cabecalho = etree.tostring(
-                raiz, encoding="unicode", pretty_print=False
-            ).replace("\n", "")
+            cabecalho = etree.tostring(raiz, encoding="unicode", pretty_print=False).replace(
+                "\n", ""
+            )
             cabecalho = xml_declaration + cabecalho
             return cabecalho
         else:
@@ -781,9 +768,9 @@ class ComunicacaoNfse(Comunicacao):
         etree.SubElement(raiz, "versaoDados").text = self._versao
 
         if retorna_string:
-            cabecalho = etree.tostring(
-                raiz, encoding="unicode", pretty_print=False
-            ).replace("\n", "")
+            cabecalho = etree.tostring(raiz, encoding="unicode", pretty_print=False).replace(
+                "\n", ""
+            )
             cabecalho = xml_declaration + cabecalho
             return cabecalho
         else:
@@ -842,13 +829,9 @@ class ComunicacaoNfse(Comunicacao):
             from pynfe.utils.https_nfse import HttpAuthenticated
 
             certificadoA1 = CertificadoA1(self.certificado)
-            chave, cert = certificadoA1.separar_arquivo(
-                self.certificado_senha, caminho=True
-            )
+            chave, cert = certificadoA1.separar_arquivo(self.certificado_senha, caminho=True)
 
-            cliente = Client(
-                url, transport=HttpAuthenticated(key=chave, cert=cert, endereco=url)
-            )
+            cliente = Client(url, transport=HttpAuthenticated(key=chave, cert=cert, endereco=url))
 
             # gerar nfse
             if metodo == "gerar":
@@ -955,24 +938,16 @@ class ComunicacaoMDFe(Comunicacao):
                 try:
                     # Protocolo com envio OK
                     inf_prot = prot[1][0]
-                    lote_status = inf_prot.xpath(
-                        "ns:retEnviMDFe/ns:cStat", namespaces=ns
-                    )[0].text
+                    lote_status = inf_prot.xpath("ns:retEnviMDFe/ns:cStat", namespaces=ns)[0].text
 
                     # Lote processado
                     if lote_status == self._edoc_situacao_lote_processado:
-                        prot_mdfe = inf_prot.xpath(
-                            "ns:retEnviMDFe/ns:protMDFe", namespaces=ns
-                        )[0]
-                        status = prot_mdfe.xpath("ns:infProt/ns:cStat", namespaces=ns)[
-                            0
-                        ].text
+                        prot_mdfe = inf_prot.xpath("ns:retEnviMDFe/ns:protMDFe", namespaces=ns)[0]
+                        status = prot_mdfe.xpath("ns:infProt/ns:cStat", namespaces=ns)[0].text
 
                         # autorizado uso do MDF-e
                         # retorna xml final (protMDFe + MDFe)
-                        if (
-                            status in self._edoc_situacao_ja_enviado
-                        ):  # if status == '100':
+                        if status in self._edoc_situacao_ja_enviado:  # if status == '100':
                             raiz = etree.Element(
                                 "mdfeProc", xmlns=NAMESPACE_MDFE, versao=VERSAO_MDFE
                             )
@@ -991,18 +966,14 @@ class ComunicacaoMDFe(Comunicacao):
                     self._edoc_situacao_arquivo_recebido_com_sucesso,
                     self._edoc_situacao_em_processamento,
                 ):
-                    nrec = rec.xpath("ns:retEnviMDFe/ns:infRec/ns:nRec", namespaces=ns)[
-                        0
-                    ].text
+                    nrec = rec.xpath("ns:retEnviMDFe/ns:infRec/ns:nRec", namespaces=ns)[0].text
                     return 0, nrec, manifesto
         return 1, retorno, manifesto
 
     def status_servico(self):
         url = self._get_url("STATUS")
         # Monta XML do corpo da requisição
-        raiz = etree.Element(
-            "consStatServMDFe", versao=self._versao, xmlns=NAMESPACE_MDFE
-        )
+        raiz = etree.Element("consStatServMDFe", versao=self._versao, xmlns=NAMESPACE_MDFE)
         etree.SubElement(raiz, "tpAmb").text = str(self._ambiente)
         etree.SubElement(raiz, "xServ").text = "STATUS"
         xml = self._construir_xml_soap("MDFeStatusServico", raiz)
@@ -1022,9 +993,7 @@ class ComunicacaoMDFe(Comunicacao):
     def consulta_nao_encerrados(self, cpfcnpj):
         url = self._get_url("NAO_ENCERRADOS")
         # Monta XML do corpo da requisição
-        raiz = etree.Element(
-            "consMDFeNaoEnc", xmlns=NAMESPACE_MDFE, versao=self._versao
-        )
+        raiz = etree.Element("consMDFeNaoEnc", xmlns=NAMESPACE_MDFE, versao=self._versao)
         etree.SubElement(raiz, "tpAmb").text = str(self._ambiente)
         etree.SubElement(raiz, "xServ").text = "CONSULTAR NÃO ENCERRADOS"
         if len(cpfcnpj) == 11:
@@ -1081,9 +1050,7 @@ class ComunicacaoMDFe(Comunicacao):
 
         body = etree.SubElement(raiz, "{%s}Body" % self._namespace_soap)
 
-        a = etree.SubElement(
-            body, self._envio_mensagem, xmlns=self._namespace_metodo + metodo
-        )
+        a = etree.SubElement(body, self._envio_mensagem, xmlns=self._namespace_metodo + metodo)
 
         # if metodo == 'MDFeRecepcaoSinc':
         #     body_base64 = base64.b16encode(a).decode()
@@ -1099,9 +1066,9 @@ class ComunicacaoMDFe(Comunicacao):
 
         # PE é a únca UF que exige SOAPAction no header
         if soap_webservice_method:
-            header[b"SOAPAction"] = (
-                self._namespace_metodo + soap_webservice_method
-            ).encode("utf-8")
+            header[b"SOAPAction"] = (self._namespace_metodo + soap_webservice_method).encode(
+                "utf-8"
+            )
 
         if self._accept:
             header[b"Accept"] = b"application/soap+xml; charset=utf-8;"
@@ -1110,9 +1077,7 @@ class ComunicacaoMDFe(Comunicacao):
 
     def _post(self, url, xml):
         certificado_a1 = CertificadoA1(self.certificado)
-        chave, cert = certificado_a1.separar_arquivo(
-            self.certificado_senha, caminho=True
-        )
+        chave, cert = certificado_a1.separar_arquivo(self.certificado_senha, caminho=True)
         chave_cert = (cert, chave)
         # Abre a conexão HTTPS
         try:
@@ -1121,16 +1086,11 @@ class ComunicacaoMDFe(Comunicacao):
             # limpa xml com caracteres bugados para infMDFeSupl em NFC-e
             xml = re.sub(
                 "<qrCodMDFe>(.*?)</qrCodMDFe>",
-                lambda x: x.group(0)
-                .replace("&lt;", "<")
-                .replace("&gt;", ">")
-                .replace("amp;", ""),
+                lambda x: x.group(0).replace("&lt;", "<").replace("&gt;", ">").replace("amp;", ""),
                 etree.tostring(xml, encoding="unicode").replace("\n", ""),
             )
             xml = xml_declaration + xml
-            xml = xml.encode(
-                "utf8"
-            )  # necessário para o evento "CONSULTAR NÃO ENCERRADOS"
+            xml = xml.encode("utf8")  # necessário para o evento "CONSULTAR NÃO ENCERRADOS"
 
             print(xml)
             print("-" * 20)
@@ -1195,15 +1155,15 @@ class ComunicacaoCTe(Comunicacao):
         """
         url = self._get_url("STATUS")
         # Monta XML do corpo da requisição
-        raiz = etree.Element(
-            "consStatServCte", versao=self._versao, xmlns=NAMESPACE_CTE
-        )
+        raiz = etree.Element("consStatServCte", versao=self._versao, xmlns=NAMESPACE_CTE)
         etree.SubElement(raiz, "tpAmb").text = str(self._ambiente)
         etree.SubElement(raiz, "xServ").text = "STATUS"
         xml = self._construir_xml_soap("CteStatusServico", raiz)
         return self._post(url, xml)
 
-    def consulta_distribuicao(self, cnpj=None, cpf=None, chave=None, nsu=0, consulta_nsu_especifico=False):
+    def consulta_distribuicao(
+        self, cnpj=None, cpf=None, chave=None, nsu=0, consulta_nsu_especifico=False
+    ):
         """
             O XML do pedido de distribuição suporta três tipos de consultas que são
             definidas de acordo com a tag informada no XML.
@@ -1252,6 +1212,17 @@ class ComunicacaoCTe(Comunicacao):
 
         # Monta XML para envio da requisição
         xml = self._construir_xml_soap("CTeDistribuicaoDFe", raiz)
+        return self._post(url, xml)
+
+    def consulta(self, chave):
+        url = self._get_url("CONSULTA")
+        # Monta XML do corpo da requisição
+        raiz = etree.Element("consSitCTe", versao=self._versao, xmlns=NAMESPACE_CTE)
+        etree.SubElement(raiz, "tpAmb").text = str(self._ambiente)
+        etree.SubElement(raiz, "xServ").text = "CONSULTAR"
+        etree.SubElement(raiz, "chCTe").text = chave
+        # Monta XML para envio da requisição
+        xml = self._construir_xml_soap("cteConsultaCT", raiz)
         return self._post(url, xml)
 
     def _get_url_an(self, consulta):
@@ -1340,14 +1311,10 @@ class ComunicacaoCTe(Comunicacao):
         body = etree.SubElement(raiz, "{%s}Body" % NAMESPACE_SOAP)
         # distribuição tem um corpo de xml diferente
         if metodo == "CTeDistribuicaoDFe":
-            x = etree.SubElement(
-                body, "cteDistDFeInteresse", xmlns=NAMESPACE_CTE_METODO + metodo
-            )
+            x = etree.SubElement(body, "cteDistDFeInteresse", xmlns=NAMESPACE_CTE_METODO + metodo)
             a = etree.SubElement(x, "cteDadosMsg")
         else:
-            a = etree.SubElement(
-                body, "cteDadosMsg", xmlns=NAMESPACE_CTE_METODO + metodo
-            )
+            a = etree.SubElement(body, "cteDadosMsg", xmlns=NAMESPACE_CTE_METODO + metodo)
         a.append(dados)
         return raiz
 
@@ -1362,9 +1329,7 @@ class ComunicacaoCTe(Comunicacao):
 
     def _post(self, url, xml):
         certificado_a1 = CertificadoA1(self.certificado)
-        chave, cert = certificado_a1.separar_arquivo(
-            self.certificado_senha, caminho=True
-        )
+        chave, cert = certificado_a1.separar_arquivo(self.certificado_senha, caminho=True)
         chave_cert = (cert, chave)
         # Abre a conexão HTTPS
         try:
@@ -1373,10 +1338,7 @@ class ComunicacaoCTe(Comunicacao):
             # limpa xml com caracteres bugados para infNFeSupl em NFC-e
             xml = re.sub(
                 "<qrCode>(.*?)</qrCode>",
-                lambda x: x.group(0)
-                .replace("&lt;", "<")
-                .replace("&gt;", ">")
-                .replace("&amp;", ""),
+                lambda x: x.group(0).replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", ""),
                 etree.tostring(xml, encoding="unicode").replace("\n", ""),
             )
             xml = xml_declaration + xml

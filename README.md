@@ -1,8 +1,9 @@
 ## PyNFe
 
 [![Active Development](https://img.shields.io/badge/Maintenance%20Level-Actively%20Developed-brightgreen.svg)](https://gist.github.com/cheerfulstoic/d107229326a01ff0f333a1d3476e068d)
-![status](https://img.shields.io/badge/status-stable-green.svg) ![https://github.com/TadaSoftware/PyNFe/actions](https://github.com/TadaSoftware/PyNFe/workflows/PyNFe%20CI/badge.svg?branch=main) ![pyversions](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue)
+![status](https://img.shields.io/badge/status-stable-green.svg) ![https://github.com/TadaSoftware/PyNFe/actions](https://github.com/TadaSoftware/PyNFe/actions/workflows/ci.yml/badge.svg) ![pyversions](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)
 [![PyPI version](https://badge.fury.io/py/pynfe.svg)](https://badge.fury.io/py/pynfe)
+
 
 
 
@@ -73,10 +74,12 @@ Dependências
   - Biblioteca para manuseio do certificado digital
 - requests
   - Biblioteca para a comunicação com os webservices da SEFAZ
-- suds-jurko (*apenas para NFS-e)
+- suds-community (*apenas para NFS-e)
   - Biblioteca para a comunicação com os webservices via wsdl
-- pyxb (*apenas para NFS-e)
+- PyXB-X (*apenas para NFS-e)
   - Biblioteca para geração de bindings a partir de XML Schema(xsd)
+- brazilfiscalreport (*apenas para Impressão)
+  - Biblioteca para impressão de DANFE e DAMDFE
 
 Referências
 -----------
@@ -104,24 +107,30 @@ Referências
 - Validador de assinaturas
   - https://servicos.receita.fazenda.gov.br/servicos/assinadoc/ValidadorAssinaturas.app/valida.aspx
 
+- Impressão de Documentos Fiscais
+  - https://github.com/Engenere/BrazilFiscalReport
+  - https://engenere.github.io/BrazilFiscalReport
+
+
 Instalação
 -----------
 
-```sh
-pip install pynfe
-```
+* Instalar a versão estável: `pip install pynfe`
 
-Instalar versão de desenvolvimento:
+* Instalar as dependências da NFSe: `pip install 'pynfe[nfse]'`
 
+* Instalar as dependências para Impressão: `pip install 'pynfe[impressao]'`
+
+* Instalar versão de desenvolvimento:
 ```sh
 pip install https://github.com/TadaSoftware/PyNFe/archive/refs/heads/main.zip
 ```
 
-Opcional para NFS-e:
-
+* Opcional para NFS-e:
 ```sh
 pip install --user -r https://github.com/TadaSoftware/PyNFe/blob/main/requirements-nfse.txt
 ```
+
 
 Exemplos de uso
 -----------
@@ -153,15 +162,20 @@ python -m unittest
 Lint
 -----------
 
-Instalação: `pip install ruff`
-Checar lint: `ruff check .`
-Formatar: `ruff format .`
+* Instalação: `pip install ruff`
+* Checar lint: `ruff check .`
+* Formatar: `ruff format .`
+
+
+Bindings XSD
+-----------
+
+Para atualizar os bindings XSD da NFSe, execute o script `gerarnfsebindings.sh`.
 
 
 Documentação
 -----------
 - https://github.com/TadaSoftware/PyNFe/wiki
-- http://pynfe.readthedocs.org/pt/latest/
 
 
 Suporte

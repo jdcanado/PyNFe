@@ -84,7 +84,14 @@ class SerializacaoBetha(InterfaceAutorizador):
         gnfse = nfse_schema.GerarNfseEnvio()
         gnfse.Rps = declaracao_servico
 
-        return gnfse.toxml(element_name="GerarNfseEnvio")
+        gnfse = (
+            gnfse.toxml(element_name="GerarNfseEnvio")
+            .replace("ns1:", "")
+            .replace(":ns1", "")
+            .replace('<?xml version="1.0" ?>', "")
+        )
+
+        return gnfse
 
     def consultar_rps(self, nfse):
         """Retorna string de um XML gerado a partir do
@@ -337,9 +344,7 @@ class SerializacaoGinfes(InterfaceAutorizador):
         id_prestador.Cnpj = emitente.cnpj
         id_prestador.InscricaoMunicipal = emitente.inscricao_municipal
 
-        consulta = (
-            servico_consultar_situacao_lote_rps_envio_v03.ConsultarSituacaoLoteRpsEnvio()
-        )
+        consulta = servico_consultar_situacao_lote_rps_envio_v03.ConsultarSituacaoLoteRpsEnvio()
         consulta.Prestador = id_prestador
         consulta.Protocolo = str(numero)
 
@@ -380,9 +385,7 @@ class SerializacaoGinfes(InterfaceAutorizador):
         if nfse.servico.aliquota:
             valores_servico.Aliquota = nfse.servico.aliquota
         if nfse.servico.desconto_incondicionado:
-            valores_servico.DescontoIncondicionado = (
-                nfse.servico.desconto_incondicionado
-            )
+            valores_servico.DescontoIncondicionado = nfse.servico.desconto_incondicionado
         if nfse.servico.desconto_condicionado:
             valores_servico.DescontoCondicionado = nfse.servico.desconto_condicionado
 
@@ -518,9 +521,7 @@ class SerializacaoGinfes(InterfaceAutorizador):
 
         ns1 = "http://www.ginfes.com.br/servico_cancelar_nfse_envio"
         ns2 = "http://www.ginfes.com.br/tipos"
-        raiz = etree.Element(
-            "{%s}CancelarNfseEnvio" % ns1, nsmap={"ns1": ns1, "ns2": ns2}
-        )
+        raiz = etree.Element("{%s}CancelarNfseEnvio" % ns1, nsmap={"ns1": ns1, "ns2": ns2})
         prestador = etree.SubElement(raiz, "{%s}Prestador" % ns1)
         etree.SubElement(prestador, "{%s}Cnpj" % ns2).text = nfse.emitente.cnpj
         etree.SubElement(
