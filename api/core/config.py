@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     version: str = "1.0.0"
     debug: bool = False
 
+    # Rate limiting
+    ratelimit_enabled: bool = True
+
     # Database
     database_url: str
     database_pool_size: int = 5
