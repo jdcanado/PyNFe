@@ -1,8 +1,6 @@
-# -*- coding: utf-8 -*-
 
 import os
 import tempfile
-import base64
 
 from cryptography.hazmat.primitives.serialization import (
     Encoding,
@@ -12,6 +10,7 @@ from cryptography.hazmat.primitives.serialization import (
 )
 
 from .base import Entidade
+
 #from dotenv import load_dotenv
 
 #load_dotenv()  # Carrega as variáveis do arquivo .env
@@ -27,7 +26,7 @@ class Certificado(Entidade):
         if cls == Certificado:
             raise Exception("Esta classe nao pode ser instanciada diretamente!")
         else:
-            return super(Certificado, cls).__new__(cls)
+            return super().__new__(cls)
 
 
 class CertificadoA1(Certificado):
@@ -36,8 +35,9 @@ class CertificadoA1(Certificado):
 
     caminho_arquivo = None
 
-    def __init__(self, caminho_arquivo=None):
+    def __init__(self, caminho_arquivo=None, pfx_bytes=None):
         self.caminho_arquivo = caminho_arquivo
+        self._pfx_bytes = pfx_bytes
         self.arquivos_temp = []
 
     def separar_arquivo(self, senha, caminho=False):
@@ -46,21 +46,29 @@ class CertificadoA1(Certificado):
         senao retorna o objeto. Apos o uso devem ser excluidos com o metodo excluir.
         """
 
-        try:
-            with open(self.caminho_arquivo, "rb") as cert_arquivo:
-                cert_conteudo = cert_arquivo.read()
-        except FileNotFoundError as exc:
-            raise FileNotFoundError(
-                "Falha ao abrir arquivo do certificado digital A1. Verifique o local do arquivo."
-            ) from exc
-        except PermissionError as exc:
-            raise PermissionError(
-                "Falha ao abrir arquivo do certificado digital A1. Verifique as permissoes do arquivo."
-            ) from exc
-        except Exception as exc:
-            raise Exception(
-                "Falha ao abrir arquivo do certificado digital A1. Causa desconhecida."
-            ) from exc
+        # Obtém o conteúdo do certificado: pfx_bytes (memória) ou caminho_arquivo (disco)
+        if self._pfx_bytes is not None:
+            cert_conteudo = self._pfx_bytes
+        elif self.caminho_arquivo:
+            try:
+                with open(self.caminho_arquivo, "rb") as cert_arquivo:
+                    cert_conteudo = cert_arquivo.read()
+            except FileNotFoundError as exc:
+                raise FileNotFoundError(
+                    "Falha ao abrir arquivo do certificado digital A1. Verifique o local do arquivo."
+                ) from exc
+            except PermissionError as exc:
+                raise PermissionError(
+                    "Falha ao abrir arquivo do certificado digital A1. Verifique as permissoes do arquivo."
+                ) from exc
+            except Exception as exc:
+                raise Exception(
+                    "Falha ao abrir arquivo do certificado digital A1. Causa desconhecida."
+                ) from exc
+        else:
+            raise ValueError(
+                "Nenhum certificado fornecido. Informe caminho_arquivo ou pfx_bytes."
+            )
 
         if not isinstance(senha, bytes):
             senha = str.encode(senha)
