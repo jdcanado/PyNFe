@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Pre-commit hook — PyNFe
+# Bloqueia o commit se format/lint falharem (mesmos checks do CI).
+# Ativação: git config core.hooksPath .githooks
+
+set -u
+
+# Resolve o executável do ruff (venv preferido, senão global)
+if [ -x ".venv/bin/ruff" ]; then
+    RUFF=".venv/bin/ruff"
+else
+    RUFF="ruff"
+fi
+
+if ! command -v "$RUFF" >/dev/null 2>&1; then
+    echo "pre-commit: ruff não encontrado (procurei '$RUFF'). Instale com: pip install ruff" >&2
+    exit 1
+fi
+
+FAIL=0
+
+echo "pre-commit: verificando formatação..."
+if ! "$RUFF" format --check .; then
+    echo "pre-commit: FALHOU em 'ruff format --check .'. Rode '${RUFF} format .' e revise o diff." >&2
+    FAIL=1
+fi
+
+echo "pre-commit: verificando lint..."
+if ! "$RUFF" check .; then
+    echo "pre-commit: FALHOU em 'ruff check .'. Corrija os erros antes de commitar." >&2
+    FAIL=1
+fi
+
+if [ "$FAIL" -ne 0 ]; then
+    echo "pre-commit: commit bloqueado — formatação e/ou lint com erros." >&2
+    exit 1
+fi
+
+echo "pre-commit: format e lint OK ✓"
+exit 0
