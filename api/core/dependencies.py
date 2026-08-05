@@ -1,0 +1,71 @@
+"""Dependências FastAPI: DB, Redis e autenticação."""
+
+from __future__ import annotations
+
+from collections.abc import AsyncGenerator
+
+import redis.asyncio as redis_async
+from fastapi import Depends, Header, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from api.core.config import get_settings
+from api.core.database import get_db
+from api.core.security import decode_jwt_token
+from api.models import APIClient
+
+settings = get_settings()
+
+_redis_client: redis_async.Redis | None = None
+
+
+def get_redis() -> redis_async.Redis:
+    """Retorna o cliente Redis (Upstash) singleton."""
+    global _redis_client
+    if _redis_client is None:
+        _redis_client = redis_async.from_url(
+            settings.kv_url,
+            password=settings.kv_token,
+            decode_responses=True,
+        )
+    return _redis_client
+
+
+async def get_current_client(
+    authorization: str = Header(...),
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+) -> APIClient:
+    """Extrai o JWT do header Authorization e busca o APIClient no banco."""
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authorization header",
+        )
+
+    token = authorization.removeprefix("Bearer ").strip()
+    try:
+        payload = decode_jwt_token(token)
+    except Exception as exc:  # JWTError
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        ) from exc
+
+    client_id = payload.get("sub")
+    if not client_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token missing subject",
+        )
+
+    client = await db.get(APIClient, client_id)
+    if client is None or not client.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Client not found or inactive",
+        )
+    return client
+
+
+async def get_redis_dep() -> AsyncGenerator[redis_async.Redis, None]:
+    """Dependency que fornece o cliente Redis (para uso como Depends)."""
+    yield get_redis()
