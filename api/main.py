@@ -1,0 +1,58 @@
+"""App factory FastAPI com lifespan."""
+
+from __future__ import annotations
+
+from contextlib import asynccontextmanager
+
+from fastapi import APIRouter, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from api.core.config import get_settings
+from api.routers.auth import router as auth_router
+
+settings = get_settings()
+
+API_V1_PREFIX = "/api/v1"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Inicializa recursos (DB engine, Redis) ao subir."""
+    from api.core.database import engine
+
+    yield
+
+    await engine.dispose()
+
+
+def create_app() -> FastAPI:
+    """Cria a aplicação FastAPI."""
+    app = FastAPI(
+        title=settings.app_name,
+        version=settings.version,
+        lifespan=lifespan,
+    )
+
+    # CORS
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    api_router = APIRouter(prefix=API_V1_PREFIX)
+
+    @api_router.get("/health")
+    async def health() -> dict:
+        """Health check."""
+        return {"status": "ok", "version": settings.version}
+
+    api_router.include_router(auth_router)
+    app.include_router(api_router)
+
+    return app
+
+
+app = create_app()
