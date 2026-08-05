@@ -596,7 +596,10 @@ class ComunicacaoSefaz(Comunicacao):
         return response
 
     def _post(self, url, xml, timeout=None):
-        certificado_a1 = CertificadoA1(self.certificado)
+        if isinstance(self.certificado, bytes):
+            certificado_a1 = CertificadoA1(pfx_bytes=self.certificado)
+        else:
+            certificado_a1 = CertificadoA1(self.certificado)
         chave, cert = certificado_a1.separar_arquivo(self.certificado_senha, caminho=True)
         chave_cert = (cert, chave)
         # Abre a conexão HTTPS
@@ -828,7 +831,10 @@ class ComunicacaoNfse(Comunicacao):
 
             from pynfe.utils.https_nfse import HttpAuthenticated
 
-            certificadoA1 = CertificadoA1(self.certificado)
+            if isinstance(self.certificado, bytes):
+                certificadoA1 = CertificadoA1(pfx_bytes=self.certificado)
+            else:
+                certificadoA1 = CertificadoA1(self.certificado)
             chave, cert = certificadoA1.separar_arquivo(self.certificado_senha, caminho=True)
 
             cliente = Client(url, transport=HttpAuthenticated(key=chave, cert=cert, endereco=url))
@@ -1076,7 +1082,10 @@ class ComunicacaoMDFe(Comunicacao):
         return header
 
     def _post(self, url, xml):
-        certificado_a1 = CertificadoA1(self.certificado)
+        if isinstance(self.certificado, bytes):
+            certificado_a1 = CertificadoA1(pfx_bytes=self.certificado)
+        else:
+            certificado_a1 = CertificadoA1(self.certificado)
         chave, cert = certificado_a1.separar_arquivo(self.certificado_senha, caminho=True)
         chave_cert = (cert, chave)
         # Abre a conexão HTTPS
@@ -1328,7 +1337,10 @@ class ComunicacaoCTe(Comunicacao):
         return response
 
     def _post(self, url, xml):
-        certificado_a1 = CertificadoA1(self.certificado)
+        if isinstance(self.certificado, bytes):
+            certificado_a1 = CertificadoA1(pfx_bytes=self.certificado)
+        else:
+            certificado_a1 = CertificadoA1(self.certificado)
         chave, cert = certificado_a1.separar_arquivo(self.certificado_senha, caminho=True)
         chave_cert = (cert, chave)
         # Abre a conexão HTTPS

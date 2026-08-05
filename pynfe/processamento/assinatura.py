@@ -25,7 +25,10 @@ class Assinatura(object):
 
 class AssinaturaA1(Assinatura):
     def __init__(self, certificado, senha):
-        self.key, self.cert = CertificadoA1(certificado).separar_arquivo(senha)
+        if isinstance(certificado, bytes):
+            self.key, self.cert = CertificadoA1(pfx_bytes=certificado).separar_arquivo(senha)
+        else:
+            self.key, self.cert = CertificadoA1(certificado).separar_arquivo(senha)
 
     def assinar(self, xml: etree._Element, retorna_string=False) -> Union[str, etree._Element]:
         # busca tag que tem id(reference_uri), logo nao importa se tem namespace

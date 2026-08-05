@@ -67,6 +67,51 @@ class CertificadoTestCase(unittest.TestCase):
 
         self.assertTrue(len(self.a1.arquivos_temp) == 0)
 
+    def test_pfx_bytes_com_caminho(self):
+        with open(self.certificado_correto, "rb") as f:
+            pfx_data = f.read()
+        self.a1 = CertificadoA1(pfx_bytes=pfx_data)
+        cert = self.a1.separar_arquivo(senha=self.senha_correto, caminho=True)
+
+        temp_dir = tempfile.gettempdir()
+        self.assertTrue(cert[0].startswith(temp_dir))
+        self.assertTrue(cert[1].startswith(temp_dir))
+
+        self.a1.excluir()
+
+    def test_pfx_bytes_sem_caminho(self):
+        with open(self.certificado_correto, "rb") as f:
+            pfx_data = f.read()
+        self.a1 = CertificadoA1(pfx_bytes=pfx_data)
+        cert = self.a1.separar_arquivo(senha=self.senha_correto, caminho=None)
+
+        texto_inicial_esperado = "-----BEGIN PRIVATE KEY-----"
+        texto_inicial_gerado = cert[0].decode("utf-8")
+
+        self.assertTrue(texto_inicial_gerado.startswith(texto_inicial_esperado))
+
+        self.a1.excluir()
+
+    def test_pfx_bytes_senha_errada(self):
+        with open(self.certificado_correto, "rb") as f:
+            pfx_data = f.read()
+        with self.assertRaises(Exception) as context:
+            self.a1 = CertificadoA1(pfx_bytes=pfx_data)
+            self.a1.separar_arquivo(senha=self.senha_incorreto, caminho=True)
+        self.assertEqual(
+            str(context.exception),
+            ("Falha ao carregar certificado digital A1. Verifique a senha do certificado."),
+        )
+
+    def test_sem_certificado_erro(self):
+        with self.assertRaises(ValueError) as context:
+            self.a1 = CertificadoA1()
+            self.a1.separar_arquivo(senha=self.senha_correto, caminho=True)
+        self.assertEqual(
+            str(context.exception),
+            ("Nenhum certificado fornecido. Informe caminho_arquivo ou pfx_bytes."),
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
