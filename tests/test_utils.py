@@ -1,20 +1,20 @@
 #!/usr/bin/env python
-# *-* encoding: utf8 *-*
 
 import unittest
 
+from lxml import etree
+
 from pynfe.utils import (
-    so_numeros,
-    obter_pais_por_codigo,
+    carregar_arquivo_municipios,
+    formatar_decimal,
     normalizar_municipio,
     obter_codigo_por_municipio,
     obter_municipio_por_codigo,
+    obter_pais_por_codigo,
     obter_uf_por_codigo,
-    formatar_decimal,
     remover_acentos,
-    carregar_arquivo_municipios,
+    so_numeros,
 )
-from lxml import etree
 from pynfe.utils.descompactar import DescompactaGzip
 
 
@@ -118,7 +118,7 @@ class UtilsTestCase(unittest.TestCase):
         self.assertEqual(obter_municipio_por_codigo("4106902", "PR", True), "CURITIBA")
 
     def test_fail_obter_municipio_por_codigo_saopaulo_3550308(self):
-        with self.assertRaises(Exception):
+        with self.assertRaises(ValueError):
             obter_municipio_por_codigo("0000000", "SP")
         self.assertRaises(ValueError)
 

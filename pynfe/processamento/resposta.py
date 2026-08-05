@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
 import re
+
 from pynfe.utils import etree
 
 
-class RetornoSoap(object):
+class RetornoSoap:
     def __init__(self, webservice, retorno, resposta):
         self.webservice = webservice
         self.resposta = resposta

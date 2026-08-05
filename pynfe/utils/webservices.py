@@ -474,7 +474,6 @@ NFE = {
 
 # Nfs-e
 NFSE = {
-    #
     "BETHA": {
         "AUTORIZACAO": "GerarNfse",
         "CANCELAR": "CancelarNfse",
@@ -486,7 +485,6 @@ NFSE = {
         "HTTPS": "http://e-gov.betha.com.br/e-nota-contribuinte-ws/nfseWS?wsdl",
         "HOMOLOGACAO": ("http://e-gov.betha.com.br/e-nota-contribuinte-test-ws/nfseWS?wsdl"),
     },
-    #
     "GINFES": {
         "AUTORIZACAO": "GerarNfse",
         "CANCELAR": "CancelarNfse",

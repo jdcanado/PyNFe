@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 import base64
 import hashlib
 import re
 import warnings
-
 from datetime import datetime
 from decimal import Decimal
 
@@ -28,7 +26,7 @@ from pynfe.utils.flags import (
 from pynfe.utils.webservices import MDFE, NFCE
 
 
-class Serializacao(object):
+class Serializacao:
     """Classe abstrata responsavel por fornecer as funcionalidades basicas para
     exportacao e importacao de Notas Fiscais eletronicas para formatos serializados
     de arquivos. Como XML, JSON, binario, etc.
@@ -45,7 +43,7 @@ class Serializacao(object):
         if cls == Serializacao:
             raise Exception("Esta classe nao pode ser instanciada diretamente!")
         else:
-            return super(Serializacao, cls).__new__(cls)
+            return super().__new__(cls)
 
     def __init__(self, fonte_dados, homologacao=False, contingencia=None, so_cpf=False):
         self._fonte_dados = fonte_dados
@@ -91,8 +89,6 @@ class SerializacaoXML(Serializacao):
                 return etree.tostring(raiz, encoding="unicode", pretty_print=False)
             else:
                 return raiz
-        except Exception as e:
-            raise e
         finally:
             if limpar:
                 self._fonte_dados.limpar_dados()
@@ -301,9 +297,9 @@ class SerializacaoXML(Serializacao):
         etree.SubElement(prod, "qCom").text = self._formatarQuantidade(
             produto_servico.quantidade_comercial or 0
         )
-        etree.SubElement(prod, "vUnCom").text = str("{:.10f}").format(
-            produto_servico.valor_unitario_comercial or 0
-        )
+        etree.SubElement(
+            prod, "vUnCom"
+        ).text = f"{produto_servico.valor_unitario_comercial or 0:.10f}"
         """
         Código Especificador da Substituição Tributária – CEST,
         que estabelece a sistemática de uniformização
@@ -313,32 +309,30 @@ class SerializacaoXML(Serializacao):
         """
         # if produto_servico.cest:
         #    etree.SubElement(prod, 'CEST').text = produto_servico.cest
-        etree.SubElement(prod, "vProd").text = str("{:.2f}").format(
-            produto_servico.valor_total_bruto or 0
-        )
+        etree.SubElement(prod, "vProd").text = f"{produto_servico.valor_total_bruto or 0:.2f}"
         etree.SubElement(prod, "cEANTrib").text = produto_servico.ean_tributavel
         etree.SubElement(prod, "uTrib").text = produto_servico.unidade_tributavel
         etree.SubElement(prod, "qTrib").text = self._formatarQuantidade(
             produto_servico.quantidade_tributavel
         )
-        etree.SubElement(prod, "vUnTrib").text = "{:.10f}".format(
-            produto_servico.valor_unitario_tributavel or 0
-        )
+        etree.SubElement(
+            prod, "vUnTrib"
+        ).text = f"{produto_servico.valor_unitario_tributavel or 0:.10f}"
 
         # frete
         if produto_servico.total_frete:
-            etree.SubElement(prod, "vFrete").text = "{:.2f}".format(produto_servico.total_frete)
+            etree.SubElement(prod, "vFrete").text = f"{produto_servico.total_frete:.2f}"
         # seguro
         if produto_servico.total_seguro:
-            etree.SubElement(prod, "vSeg").text = "{:.2f}".format(produto_servico.total_seguro)
+            etree.SubElement(prod, "vSeg").text = f"{produto_servico.total_seguro:.2f}"
         # desconto
         if produto_servico.desconto:
-            etree.SubElement(prod, "vDesc").text = "{:.2f}".format(produto_servico.desconto)
+            etree.SubElement(prod, "vDesc").text = f"{produto_servico.desconto:.2f}"
         # outras despesas acessórias
         if produto_servico.outras_despesas_acessorias:
-            etree.SubElement(prod, "vOutro").text = "{:.2f}".format(
-                produto_servico.outras_despesas_acessorias
-            )
+            etree.SubElement(
+                prod, "vOutro"
+            ).text = f"{produto_servico.outras_despesas_acessorias:.2f}"
 
         """ Indica se valor do Item (vProd) entra no valor total da NF-e (vProd)
             0=Valor do item (vProd) não compõe o valor total da NF-e
@@ -368,21 +362,13 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(combustivel, "cProdANP").text = str(produto_servico.cProdANP)
             etree.SubElement(combustivel, "descANP").text = str(produto_servico.descANP)
             if produto_servico.pGLP:
-                etree.SubElement(combustivel, "pGLP").text = "{:.4f}".format(
-                    produto_servico.pGLP or 0
-                )
+                etree.SubElement(combustivel, "pGLP").text = f"{produto_servico.pGLP or 0:.4f}"
             if produto_servico.pGNn:
-                etree.SubElement(combustivel, "pGNn").text = "{:.4f}".format(
-                    produto_servico.pGNn or 0
-                )
+                etree.SubElement(combustivel, "pGNn").text = f"{produto_servico.pGNn or 0:.4f}"
             if produto_servico.pGNi:
-                etree.SubElement(combustivel, "pGNi").text = "{:.4f}".format(
-                    produto_servico.pGNi or 0
-                )
+                etree.SubElement(combustivel, "pGNi").text = f"{produto_servico.pGNi or 0:.4f}"
             if produto_servico.vPart:
-                etree.SubElement(combustivel, "vPart").text = "{:.2f}".format(
-                    produto_servico.vPart or 0
-                )
+                etree.SubElement(combustivel, "vPart").text = f"{produto_servico.vPart or 0:.2f}"
             if produto_servico.comb_codif:
                 etree.SubElement(combustivel, "CODIF").text = produto_servico.comb_codif
             if produto_servico.comb_q_temp:
@@ -396,17 +382,17 @@ class SerializacaoXML(Serializacao):
                 if produto_servico.comb_n_bomba:
                     etree.SubElement(encerrante, "nBomba").text = str(produto_servico.comb_n_bomba)
                 etree.SubElement(encerrante, "nTanque").text = str(produto_servico.comb_n_tanque)
-                etree.SubElement(encerrante, "vEncIni").text = "{:.3f}".format(
-                    produto_servico.comb_v_enc_ini
-                )
-                etree.SubElement(encerrante, "vEncFin").text = "{:.3f}".format(
-                    produto_servico.comb_v_enc_fin
-                )
+                etree.SubElement(
+                    encerrante, "vEncIni"
+                ).text = f"{produto_servico.comb_v_enc_ini:.3f}"
+                etree.SubElement(
+                    encerrante, "vEncFin"
+                ).text = f"{produto_servico.comb_v_enc_fin:.3f}"
 
             if produto_servico.comb_p_bio:
-                etree.SubElement(combustivel, "pBio").text = "{:.4f}".format(
-                    produto_servico.comb_p_bio or 0
-                )
+                etree.SubElement(
+                    combustivel, "pBio"
+                ).text = f"{produto_servico.comb_p_bio or 0:.4f}"
 
         # Imposto
         imposto = etree.SubElement(raiz, "imposto")
@@ -461,13 +447,11 @@ class SerializacaoXML(Serializacao):
         # tag impostoDevol
         if produto_servico.ipi_valor_ipi_dev:
             impostodevol = etree.SubElement(raiz, "impostoDevol")
-            etree.SubElement(impostodevol, "pDevol").text = "{:.2f}".format(
-                produto_servico.pdevol or 100
-            )
+            etree.SubElement(impostodevol, "pDevol").text = f"{produto_servico.pdevol or 100:.2f}"
             ipidev = etree.SubElement(impostodevol, "IPI")
-            etree.SubElement(ipidev, "vIPIDevol").text = "{:.2f}".format(
-                produto_servico.ipi_valor_ipi_dev or 0
-            )
+            etree.SubElement(
+                ipidev, "vIPIDevol"
+            ).text = f"{produto_servico.ipi_valor_ipi_dev or 0:.2f}"
 
         # Informações adicionais do produto
         if produto_servico.informacoes_adicionais:
@@ -492,20 +476,20 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(icms_item, "vBC").text = str(
                 produto_servico.icms_valor_base_calculo
             )  # Valor da BC do ICMS
-            etree.SubElement(icms_item, "pICMS").text = "{:.2f}".format(
-                produto_servico.icms_aliquota or 0
-            )  # Alíquota do imposto
-            etree.SubElement(icms_item, "vICMS").text = "{:.2f}".format(
-                produto_servico.icms_valor or 0
-            )  # Valor do ICMS
+            etree.SubElement(
+                icms_item, "pICMS"
+            ).text = f"{produto_servico.icms_aliquota or 0:.2f}"  # Alíquota do imposto
+            etree.SubElement(
+                icms_item, "vICMS"
+            ).text = f"{produto_servico.icms_valor or 0:.2f}"  # Valor do ICMS
 
             if produto_servico.fcp_valor:
-                etree.SubElement(icms_item, "pFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_aliquota or 0
-                )  # Percentual FCP
-                etree.SubElement(icms_item, "vFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_valor or 0
-                )  # Valor Fundo Combate a Pobreza
+                etree.SubElement(
+                    icms_item, "pFCP"
+                ).text = f"{produto_servico.fcp_aliquota or 0:.2f}"  # Percentual FCP
+                etree.SubElement(
+                    icms_item, "vFCP"
+                ).text = f"{produto_servico.fcp_valor or 0:.2f}"  # Valor Fundo Combate a Pobreza
 
         # 02=Tributação monofásica própria sobre combustíveis
         elif produto_servico.icms_modalidade == "02":
@@ -513,15 +497,15 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(icms_item, "orig").text = str(produto_servico.icms_origem)
             etree.SubElement(icms_item, "CST").text = produto_servico.icms_modalidade
 
-            etree.SubElement(icms_item, "qBCMono").text = "{:.4f}".format(
-                produto_servico.icms_q_bc_mono or 0
-            )
-            etree.SubElement(icms_item, "adRemICMS").text = "{:.4f}".format(
-                produto_servico.icms_ad_rem_icms or 0
-            )
-            etree.SubElement(icms_item, "vICMSMono").text = "{:.2f}".format(
-                produto_servico.icms_v_icms_mono or 0
-            )
+            etree.SubElement(
+                icms_item, "qBCMono"
+            ).text = f"{produto_servico.icms_q_bc_mono or 0:.4f}"
+            etree.SubElement(
+                icms_item, "adRemICMS"
+            ).text = f"{produto_servico.icms_ad_rem_icms or 0:.4f}"
+            etree.SubElement(
+                icms_item, "vICMSMono"
+            ).text = f"{produto_servico.icms_v_icms_mono or 0:.2f}"
 
         # 10=Tributada e com cobrança do ICMS por substituição tributária
         elif produto_servico.icms_modalidade == "10":
@@ -534,23 +518,23 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(icms_item, "vBC").text = str(
                 produto_servico.icms_valor_base_calculo
             )  # Valor da BC do ICMS
-            etree.SubElement(icms_item, "pICMS").text = "{:.2f}".format(
-                produto_servico.icms_aliquota or 0
-            )  # Alíquota do imposto
-            etree.SubElement(icms_item, "vICMS").text = "{:.2f}".format(
-                produto_servico.icms_valor or 0
-            )  # Valor do ICMS
+            etree.SubElement(
+                icms_item, "pICMS"
+            ).text = f"{produto_servico.icms_aliquota or 0:.2f}"  # Alíquota do imposto
+            etree.SubElement(
+                icms_item, "vICMS"
+            ).text = f"{produto_servico.icms_valor or 0:.2f}"  # Valor do ICMS
 
             if produto_servico.fcp_valor:
-                etree.SubElement(icms_item, "vBCFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_base_calculo or 0
-                )  # Base de calculo FCP
-                etree.SubElement(icms_item, "pFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_aliquota or 0
-                )  # Percentual FCP
-                etree.SubElement(icms_item, "vFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_valor or 0
-                )  # Valor Fundo Combate a Pobreza
+                etree.SubElement(
+                    icms_item, "vBCFCP"
+                ).text = f"{produto_servico.fcp_base_calculo or 0:.2f}"  # Base de calculo FCP
+                etree.SubElement(
+                    icms_item, "pFCP"
+                ).text = f"{produto_servico.fcp_aliquota or 0:.2f}"  # Percentual FCP
+                etree.SubElement(
+                    icms_item, "vFCP"
+                ).text = f"{produto_servico.fcp_valor or 0:.2f}"  # Valor Fundo Combate a Pobreza
 
             # Modalidade de determinação da BC do ICMS ST
             # 0=Preço tabelado ou máximo sugerido;
@@ -560,32 +544,32 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(icms_item, "modBCST").text = str(
                 produto_servico.icms_st_modalidade_determinacao_bc
             )
-            etree.SubElement(icms_item, "pMVAST").text = "{:.2f}".format(
-                produto_servico.icms_st_percentual_adicional or 0
-            )  # Percentual da margem de valor Adicionado do ICMS ST
-            etree.SubElement(icms_item, "pRedBCST").text = "{:.2f}".format(
-                produto_servico.icms_st_percentual_reducao_bc or 0
-            )  # APercentual da Redução de BC do ICMS ST
-            etree.SubElement(icms_item, "vBCST").text = "{:.2f}".format(
-                produto_servico.icms_st_valor_base_calculo or 0
-            )
-            etree.SubElement(icms_item, "pICMSST").text = "{:.2f}".format(
-                produto_servico.icms_st_aliquota or 0
-            )
-            etree.SubElement(icms_item, "vICMSST").text = "{:.2f}".format(
-                produto_servico.icms_st_valor or 0
-            )
+            etree.SubElement(
+                icms_item, "pMVAST"
+            ).text = f"{produto_servico.icms_st_percentual_adicional or 0:.2f}"  # Percentual da margem de valor Adicionado do ICMS ST
+            etree.SubElement(
+                icms_item, "pRedBCST"
+            ).text = f"{produto_servico.icms_st_percentual_reducao_bc or 0:.2f}"  # APercentual da Redução de BC do ICMS ST
+            etree.SubElement(
+                icms_item, "vBCST"
+            ).text = f"{produto_servico.icms_st_valor_base_calculo or 0:.2f}"
+            etree.SubElement(
+                icms_item, "pICMSST"
+            ).text = f"{produto_servico.icms_st_aliquota or 0:.2f}"
+            etree.SubElement(
+                icms_item, "vICMSST"
+            ).text = f"{produto_servico.icms_st_valor or 0:.2f}"
 
             if produto_servico.fcp_st_valor:
-                etree.SubElement(icms_item, "vBCFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_base_calculo or 0
-                )
-                etree.SubElement(icms_item, "pFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_aliquota or 0
-                )
-                etree.SubElement(icms_item, "vFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_valor or 0
-                )
+                etree.SubElement(
+                    icms_item, "vBCFCPST"
+                ).text = f"{produto_servico.fcp_st_base_calculo or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "pFCPST"
+                ).text = f"{produto_servico.fcp_st_aliquota or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "vFCPST"
+                ).text = f"{produto_servico.fcp_st_valor or 0:.2f}"
 
         # 15=Tributação monofásica própria e com responsabilidade pela retenção sobre combustíveis
         elif produto_servico.icms_modalidade == "15":
@@ -593,28 +577,28 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(icms_item, "orig").text = str(produto_servico.icms_origem)
             etree.SubElement(icms_item, "CST").text = produto_servico.icms_modalidade
 
-            etree.SubElement(icms_item, "qBCMono").text = "{:.4f}".format(
-                produto_servico.icms_q_bc_mono or 0
-            )
-            etree.SubElement(icms_item, "adRemICMS").text = "{:.4f}".format(
-                produto_servico.icms_ad_rem_icms or 0
-            )
-            etree.SubElement(icms_item, "vICMSMono").text = "{:.2f}".format(
-                produto_servico.icms_v_icms_mono or 0
-            )
-            etree.SubElement(icms_item, "qBCMonoReten").text = "{:.4f}".format(
-                produto_servico.icms_q_bc_mono_reten or 0
-            )
-            etree.SubElement(icms_item, "adRemICMSReten").text = "{:.4f}".format(
-                produto_servico.icms_ad_rem_icms_reten or 0
-            )
-            etree.SubElement(icms_item, "vICMSMonoReten").text = "{:.2f}".format(
-                produto_servico.icms_v_icms_mono_reten or 0
-            )
+            etree.SubElement(
+                icms_item, "qBCMono"
+            ).text = f"{produto_servico.icms_q_bc_mono or 0:.4f}"
+            etree.SubElement(
+                icms_item, "adRemICMS"
+            ).text = f"{produto_servico.icms_ad_rem_icms or 0:.4f}"
+            etree.SubElement(
+                icms_item, "vICMSMono"
+            ).text = f"{produto_servico.icms_v_icms_mono or 0:.2f}"
+            etree.SubElement(
+                icms_item, "qBCMonoReten"
+            ).text = f"{produto_servico.icms_q_bc_mono_reten or 0:.4f}"
+            etree.SubElement(
+                icms_item, "adRemICMSReten"
+            ).text = f"{produto_servico.icms_ad_rem_icms_reten or 0:.4f}"
+            etree.SubElement(
+                icms_item, "vICMSMonoReten"
+            ).text = f"{produto_servico.icms_v_icms_mono_reten or 0:.2f}"
             if produto_servico.icms_p_red_ad_rem:
-                etree.SubElement(icms_item, "pRedAdRem").text = "{:.2f}".format(
-                    produto_servico.icms_p_red_ad_rem or 0
-                )
+                etree.SubElement(
+                    icms_item, "pRedAdRem"
+                ).text = f"{produto_servico.icms_p_red_ad_rem or 0:.2f}"
                 etree.SubElement(icms_item, "motRedAdRem").text = str(
                     produto_servico.icms_mot_red_ad_rem
                 )
@@ -627,36 +611,36 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(icms_item, "modBC").text = str(
                 produto_servico.icms_modalidade_determinacao_bc
             )
-            etree.SubElement(icms_item, "pRedBC").text = "{:.2f}".format(
-                produto_servico.icms_percentual_reducao_bc or 0
-            )  # Percentual da Redução de BC
-            etree.SubElement(icms_item, "vBC").text = "{:.2f}".format(
-                produto_servico.icms_valor_base_calculo or 0
-            )  # Valor da BC do ICMS
-            etree.SubElement(icms_item, "pICMS").text = "{:.2f}".format(
-                produto_servico.icms_aliquota or 0
-            )  # Alíquota do imposto
-            etree.SubElement(icms_item, "vICMS").text = "{:.2f}".format(
-                produto_servico.icms_valor or 0
-            )  # Valor do ICMS
+            etree.SubElement(
+                icms_item, "pRedBC"
+            ).text = f"{produto_servico.icms_percentual_reducao_bc or 0:.2f}"  # Percentual da Redução de BC
+            etree.SubElement(
+                icms_item, "vBC"
+            ).text = f"{produto_servico.icms_valor_base_calculo or 0:.2f}"  # Valor da BC do ICMS
+            etree.SubElement(
+                icms_item, "pICMS"
+            ).text = f"{produto_servico.icms_aliquota or 0:.2f}"  # Alíquota do imposto
+            etree.SubElement(
+                icms_item, "vICMS"
+            ).text = f"{produto_servico.icms_valor or 0:.2f}"  # Valor do ICMS
 
             # Os campos relativos ao Fundo de Combate à Pobreza só devem ser informados
             # se o produto estiver sujeito a incidência do mesmo.
             if produto_servico.fcp_valor:
-                etree.SubElement(icms_item, "vBCFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_base_calculo or 0
-                )  # Base de calculo FCP
-                etree.SubElement(icms_item, "pFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_aliquota or 0
-                )  # Percentual FCP
-                etree.SubElement(icms_item, "vFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_valor or 0
-                )  # Valor Fundo Combate a Pobreza
+                etree.SubElement(
+                    icms_item, "vBCFCP"
+                ).text = f"{produto_servico.fcp_base_calculo or 0:.2f}"  # Base de calculo FCP
+                etree.SubElement(
+                    icms_item, "pFCP"
+                ).text = f"{produto_servico.fcp_aliquota or 0:.2f}"  # Percentual FCP
+                etree.SubElement(
+                    icms_item, "vFCP"
+                ).text = f"{produto_servico.fcp_valor or 0:.2f}"  # Valor Fundo Combate a Pobreza
 
             if produto_servico.icms_desonerado > 0:
-                etree.SubElement(icms_item, "vICMSDeson").text = "{:.2f}".format(
-                    produto_servico.icms_desonerado or 0
-                )  # Valor do ICMS Desonerado
+                etree.SubElement(
+                    icms_item, "vICMSDeson"
+                ).text = f"{produto_servico.icms_desonerado or 0:.2f}"  # Valor do ICMS Desonerado
                 etree.SubElement(icms_item, "motDesICMS").text = str(
                     produto_servico.icms_motivo_desoneracao
                 )
@@ -669,37 +653,37 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(icms_item, "modBCST").text = str(
                 produto_servico.icms_st_modalidade_determinacao_bc
             )
-            etree.SubElement(icms_item, "pMVAST").text = "{:.2f}".format(
-                produto_servico.icms_st_percentual_adicional or 0
-            )  # Percentual da margem de valor Adicionado do ICMS ST
-            etree.SubElement(icms_item, "pRedBCST").text = "{:.2f}".format(
-                produto_servico.icms_st_percentual_reducao_bc or 0
-            )  # APercentual da Redução de BC do ICMS ST
-            etree.SubElement(icms_item, "vBCST").text = "{:.2f}".format(
-                produto_servico.icms_st_valor_base_calculo or 0
-            )
-            etree.SubElement(icms_item, "pICMSST").text = "{:.2f}".format(
-                produto_servico.icms_st_aliquota or 0
-            )
-            etree.SubElement(icms_item, "vICMSST").text = "{:.2f}".format(
-                produto_servico.icms_st_valor or 0
-            )
+            etree.SubElement(
+                icms_item, "pMVAST"
+            ).text = f"{produto_servico.icms_st_percentual_adicional or 0:.2f}"  # Percentual da margem de valor Adicionado do ICMS ST
+            etree.SubElement(
+                icms_item, "pRedBCST"
+            ).text = f"{produto_servico.icms_st_percentual_reducao_bc or 0:.2f}"  # APercentual da Redução de BC do ICMS ST
+            etree.SubElement(
+                icms_item, "vBCST"
+            ).text = f"{produto_servico.icms_st_valor_base_calculo or 0:.2f}"
+            etree.SubElement(
+                icms_item, "pICMSST"
+            ).text = f"{produto_servico.icms_st_aliquota or 0:.2f}"
+            etree.SubElement(
+                icms_item, "vICMSST"
+            ).text = f"{produto_servico.icms_st_valor or 0:.2f}"
 
             if produto_servico.fcp_st_valor:
-                etree.SubElement(icms_item, "vBCFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_base_calculo or 0
-                )
-                etree.SubElement(icms_item, "pFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_aliquota or 0
-                )
-                etree.SubElement(icms_item, "vFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_valor or 0
-                )
+                etree.SubElement(
+                    icms_item, "vBCFCPST"
+                ).text = f"{produto_servico.fcp_st_base_calculo or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "pFCPST"
+                ).text = f"{produto_servico.fcp_st_aliquota or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "vFCPST"
+                ).text = f"{produto_servico.fcp_st_valor or 0:.2f}"
 
             if produto_servico.icms_desonerado > 0:
-                etree.SubElement(icms_item, "vICMSDeson").text = "{:.2f}".format(
-                    produto_servico.icms_desonerado or 0
-                )  # Valor do ICMS Desonerado
+                etree.SubElement(
+                    icms_item, "vICMSDeson"
+                ).text = f"{produto_servico.icms_desonerado or 0:.2f}"  # Valor do ICMS Desonerado
                 etree.SubElement(icms_item, "motDesICMS").text = str(
                     produto_servico.icms_motivo_desoneracao
                 )
@@ -711,9 +695,9 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(icms_item, "CST").text = str(produto_servico.icms_modalidade)
 
             if produto_servico.icms_desonerado > 0:
-                etree.SubElement(icms_item, "vICMSDeson").text = "{:.2f}".format(
-                    produto_servico.icms_desonerado or 0
-                )  # Valor do ICMS Desonerado
+                etree.SubElement(
+                    icms_item, "vICMSDeson"
+                ).text = f"{produto_servico.icms_desonerado or 0:.2f}"  # Valor do ICMS Desonerado
                 etree.SubElement(icms_item, "motDesICMS").text = str(
                     produto_servico.icms_motivo_desoneracao
                 )
@@ -728,15 +712,15 @@ class SerializacaoXML(Serializacao):
             )
 
             if produto_servico.fcp_valor:
-                etree.SubElement(icms_item, "vBCFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_base_calculo or 0
-                )  # Base de calculo FCP
-                etree.SubElement(icms_item, "pFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_aliquota or 0
-                )  # Percentual FCP
-                etree.SubElement(icms_item, "vFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_valor or 0
-                )  # Valor Fundo Combate a Pobreza
+                etree.SubElement(
+                    icms_item, "vBCFCP"
+                ).text = f"{produto_servico.fcp_base_calculo or 0:.2f}"  # Base de calculo FCP
+                etree.SubElement(
+                    icms_item, "pFCP"
+                ).text = f"{produto_servico.fcp_aliquota or 0:.2f}"  # Percentual FCP
+                etree.SubElement(
+                    icms_item, "vFCP"
+                ).text = f"{produto_servico.fcp_valor or 0:.2f}"  # Valor Fundo Combate a Pobreza
 
         # 53=Tributação monofásica sobre combustíveis com recolhimento diferido
         elif produto_servico.icms_modalidade == "53":
@@ -744,65 +728,63 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(icms_item, "orig").text = str(produto_servico.icms_origem)
             etree.SubElement(icms_item, "CST").text = produto_servico.icms_modalidade
 
-            etree.SubElement(icms_item, "qBCMono").text = "{:.4f}".format(
-                produto_servico.icms_q_bc_mono or 0
-            )
-            etree.SubElement(icms_item, "adRemICMS").text = "{:.4f}".format(
-                produto_servico.icms_ad_rem_icms or 0
-            )
-            etree.SubElement(icms_item, "vICMSMonoOp").text = "{:.2f}".format(
-                produto_servico.icms_v_icms_mono_op or 0
-            )
-            etree.SubElement(icms_item, "pDif").text = "{:.4f}".format(
-                produto_servico.icms_p_dif or 0
-            )
-            etree.SubElement(icms_item, "vICMSMonoDif").text = "{:.4f}".format(
-                produto_servico.icms_v_icms_mono_dif or 0
-            )
-            etree.SubElement(icms_item, "vICMSMono").text = "{:.2f}".format(
-                produto_servico.icms_v_icms_mono or 0
-            )
+            etree.SubElement(
+                icms_item, "qBCMono"
+            ).text = f"{produto_servico.icms_q_bc_mono or 0:.4f}"
+            etree.SubElement(
+                icms_item, "adRemICMS"
+            ).text = f"{produto_servico.icms_ad_rem_icms or 0:.4f}"
+            etree.SubElement(
+                icms_item, "vICMSMonoOp"
+            ).text = f"{produto_servico.icms_v_icms_mono_op or 0:.2f}"
+            etree.SubElement(icms_item, "pDif").text = f"{produto_servico.icms_p_dif or 0:.4f}"
+            etree.SubElement(
+                icms_item, "vICMSMonoDif"
+            ).text = f"{produto_servico.icms_v_icms_mono_dif or 0:.4f}"
+            etree.SubElement(
+                icms_item, "vICMSMono"
+            ).text = f"{produto_servico.icms_v_icms_mono or 0:.2f}"
 
         # 60=ICMS cobrado anteriormente por substituição tributária
         elif produto_servico.icms_modalidade in ["ST", "60"]:
             icms_item = etree.SubElement(icms, "ICMS" + produto_servico.icms_modalidade)
             etree.SubElement(icms_item, "orig").text = str(produto_servico.icms_origem)
             etree.SubElement(icms_item, "CST").text = "60"
-            etree.SubElement(icms_item, "vBCSTRet").text = "{:.2f}".format(
-                produto_servico.icms_st_ret_base_calculo or 0
-            )
-            etree.SubElement(icms_item, "pST").text = "{:.2f}".format(
-                produto_servico.icms_st_ret_aliquota or 0
-            )
-            etree.SubElement(icms_item, "vICMSSTRet").text = "{:.2f}".format(
-                produto_servico.icms_st_ret_valor or 0
-            )
+            etree.SubElement(
+                icms_item, "vBCSTRet"
+            ).text = f"{produto_servico.icms_st_ret_base_calculo or 0:.2f}"
+            etree.SubElement(
+                icms_item, "pST"
+            ).text = f"{produto_servico.icms_st_ret_aliquota or 0:.2f}"
+            etree.SubElement(
+                icms_item, "vICMSSTRet"
+            ).text = f"{produto_servico.icms_st_ret_valor or 0:.2f}"
 
             if produto_servico.fcp_st_ret_valor:
-                etree.SubElement(icms_item, "vBCFCPSTRet").text = "{:.2f}".format(
-                    produto_servico.fcp_st_ret_base_calculo or 0
-                )
-                etree.SubElement(icms_item, "pFCPSTRet").text = "{:.2f}".format(
-                    produto_servico.fcp_st_ret_aliquota or 0
-                )
-                etree.SubElement(icms_item, "vFCPSTRet").text = "{:.2f}".format(
-                    produto_servico.fcp_st_ret_valor or 0
-                )
+                etree.SubElement(
+                    icms_item, "vBCFCPSTRet"
+                ).text = f"{produto_servico.fcp_st_ret_base_calculo or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "pFCPSTRet"
+                ).text = f"{produto_servico.fcp_st_ret_aliquota or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "vFCPSTRet"
+                ).text = f"{produto_servico.fcp_st_ret_valor or 0:.2f}"
 
         # 61=Tributação monofásica sobre combustíveis cobrada anteriormente
         elif produto_servico.icms_modalidade == "61":
             icms_item = etree.SubElement(icms, "ICMS" + produto_servico.icms_modalidade)
             etree.SubElement(icms_item, "orig").text = str(produto_servico.icms_origem)
             etree.SubElement(icms_item, "CST").text = "61"
-            etree.SubElement(icms_item, "qBCMonoRet").text = "{:.4f}".format(
-                produto_servico.icms_q_bc_mono_ret or 0
-            )
-            etree.SubElement(icms_item, "adRemICMSRet").text = "{:.4f}".format(
-                produto_servico.icms_ad_rem_icms_ret or 0
-            )
-            etree.SubElement(icms_item, "vICMSMonoRet").text = "{:.2f}".format(
-                produto_servico.icms_v_icms_mono_ret or 0
-            )
+            etree.SubElement(
+                icms_item, "qBCMonoRet"
+            ).text = f"{produto_servico.icms_q_bc_mono_ret or 0:.4f}"
+            etree.SubElement(
+                icms_item, "adRemICMSRet"
+            ).text = f"{produto_servico.icms_ad_rem_icms_ret or 0:.4f}"
+            etree.SubElement(
+                icms_item, "vICMSMonoRet"
+            ).text = f"{produto_servico.icms_v_icms_mono_ret or 0:.2f}"
 
         # 70=Com redução da BC e cobrança do ICMS por substituição tributária
         elif produto_servico.icms_modalidade == "70":
@@ -812,64 +794,64 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(icms_item, "modBC").text = str(
                 produto_servico.icms_modalidade_determinacao_bc
             )
-            etree.SubElement(icms_item, "pRedBC").text = "{:.2f}".format(
-                produto_servico.icms_percentual_reducao_bc or 0
-            )  # Percentual da Redução de BC
-            etree.SubElement(icms_item, "vBC").text = "{:.2f}".format(
-                produto_servico.icms_valor_base_calculo or 0
-            )  # Valor da BC do ICMS
-            etree.SubElement(icms_item, "pICMS").text = "{:.2f}".format(
-                produto_servico.icms_aliquota or 0
-            )  # Alíquota do imposto
-            etree.SubElement(icms_item, "vICMS").text = "{:.2f}".format(
-                produto_servico.icms_valor or 0
-            )  # Valor do ICMS
+            etree.SubElement(
+                icms_item, "pRedBC"
+            ).text = f"{produto_servico.icms_percentual_reducao_bc or 0:.2f}"  # Percentual da Redução de BC
+            etree.SubElement(
+                icms_item, "vBC"
+            ).text = f"{produto_servico.icms_valor_base_calculo or 0:.2f}"  # Valor da BC do ICMS
+            etree.SubElement(
+                icms_item, "pICMS"
+            ).text = f"{produto_servico.icms_aliquota or 0:.2f}"  # Alíquota do imposto
+            etree.SubElement(
+                icms_item, "vICMS"
+            ).text = f"{produto_servico.icms_valor or 0:.2f}"  # Valor do ICMS
 
             if produto_servico.fcp_valor:
-                etree.SubElement(icms_item, "vBCFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_base_calculo or 0
-                )  # Base de calculo FCP
-                etree.SubElement(icms_item, "pFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_aliquota or 0
-                )  # Percentual FCP
-                etree.SubElement(icms_item, "vFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_valor or 0
-                )  # Valor Fundo Combate a Pobreza
+                etree.SubElement(
+                    icms_item, "vBCFCP"
+                ).text = f"{produto_servico.fcp_base_calculo or 0:.2f}"  # Base de calculo FCP
+                etree.SubElement(
+                    icms_item, "pFCP"
+                ).text = f"{produto_servico.fcp_aliquota or 0:.2f}"  # Percentual FCP
+                etree.SubElement(
+                    icms_item, "vFCP"
+                ).text = f"{produto_servico.fcp_valor or 0:.2f}"  # Valor Fundo Combate a Pobreza
 
             etree.SubElement(icms_item, "modBCST").text = str(
                 produto_servico.icms_st_modalidade_determinacao_bc
             )
-            etree.SubElement(icms_item, "pMVAST").text = "{:.2f}".format(
-                produto_servico.icms_st_percentual_adicional or 0
-            )  # Percentual da margem de valor Adicionado do ICMS ST
-            etree.SubElement(icms_item, "pRedBCST").text = "{:.2f}".format(
-                produto_servico.icms_st_percentual_reducao_bc or 0
-            )  # APercentual da Redução de BC do ICMS ST
-            etree.SubElement(icms_item, "vBCST").text = "{:.2f}".format(
-                produto_servico.icms_st_valor_base_calculo or 0
-            )
-            etree.SubElement(icms_item, "pICMSST").text = "{:.2f}".format(
-                produto_servico.icms_st_aliquota or 0
-            )
-            etree.SubElement(icms_item, "vICMSST").text = "{:.2f}".format(
-                produto_servico.icms_st_valor or 0
-            )
+            etree.SubElement(
+                icms_item, "pMVAST"
+            ).text = f"{produto_servico.icms_st_percentual_adicional or 0:.2f}"  # Percentual da margem de valor Adicionado do ICMS ST
+            etree.SubElement(
+                icms_item, "pRedBCST"
+            ).text = f"{produto_servico.icms_st_percentual_reducao_bc or 0:.2f}"  # APercentual da Redução de BC do ICMS ST
+            etree.SubElement(
+                icms_item, "vBCST"
+            ).text = f"{produto_servico.icms_st_valor_base_calculo or 0:.2f}"
+            etree.SubElement(
+                icms_item, "pICMSST"
+            ).text = f"{produto_servico.icms_st_aliquota or 0:.2f}"
+            etree.SubElement(
+                icms_item, "vICMSST"
+            ).text = f"{produto_servico.icms_st_valor or 0:.2f}"
 
             if produto_servico.fcp_st_valor:
-                etree.SubElement(icms_item, "vBCFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_base_calculo or 0
-                )
-                etree.SubElement(icms_item, "pFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_aliquota or 0
-                )
-                etree.SubElement(icms_item, "vFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_valor or 0
-                )
+                etree.SubElement(
+                    icms_item, "vBCFCPST"
+                ).text = f"{produto_servico.fcp_st_base_calculo or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "pFCPST"
+                ).text = f"{produto_servico.fcp_st_aliquota or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "vFCPST"
+                ).text = f"{produto_servico.fcp_st_valor or 0:.2f}"
 
             if produto_servico.icms_desonerado > 0:
-                etree.SubElement(icms_item, "vICMSDeson").text = "{:.2f}".format(
-                    produto_servico.icms_desonerado or 0
-                )  # Valor do ICMS Desonerado
+                etree.SubElement(
+                    icms_item, "vICMSDeson"
+                ).text = f"{produto_servico.icms_desonerado or 0:.2f}"  # Valor do ICMS Desonerado
                 etree.SubElement(icms_item, "motDesICMS").text = str(
                     produto_servico.icms_motivo_desoneracao
                 )
@@ -884,29 +866,31 @@ class SerializacaoXML(Serializacao):
                 etree.SubElement(icms_item, "modBC").text = str(
                     produto_servico.icms_modalidade_determinacao_bc
                 )
-                etree.SubElement(icms_item, "vBC").text = "{:.2f}".format(
-                    produto_servico.icms_valor_base_calculo or 0
-                )  # Valor da BC do ICMS
-                etree.SubElement(icms_item, "pRedBC").text = "{:.2f}".format(
-                    produto_servico.icms_percentual_reducao_bc or 0
-                )  # Percentual da Redução de BC
-                etree.SubElement(icms_item, "pICMS").text = "{:.2f}".format(
-                    produto_servico.icms_aliquota or 0
-                )  # Alíquota do imposto
-                etree.SubElement(icms_item, "vICMS").text = "{:.2f}".format(
-                    produto_servico.icms_valor or 0
-                )  # Valor do ICMS
+                etree.SubElement(
+                    icms_item, "vBC"
+                ).text = (
+                    f"{produto_servico.icms_valor_base_calculo or 0:.2f}"  # Valor da BC do ICMS
+                )
+                etree.SubElement(
+                    icms_item, "pRedBC"
+                ).text = f"{produto_servico.icms_percentual_reducao_bc or 0:.2f}"  # Percentual da Redução de BC
+                etree.SubElement(
+                    icms_item, "pICMS"
+                ).text = f"{produto_servico.icms_aliquota or 0:.2f}"  # Alíquota do imposto
+                etree.SubElement(
+                    icms_item, "vICMS"
+                ).text = f"{produto_servico.icms_valor or 0:.2f}"  # Valor do ICMS
 
             if produto_servico.fcp_valor:
-                etree.SubElement(icms_item, "vBCFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_base_calculo or 0
-                )  # Base de calculo FCP
-                etree.SubElement(icms_item, "pFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_aliquota or 0
-                )  # Percentual FCP
-                etree.SubElement(icms_item, "vFCP").text = "{:.2f}".format(
-                    produto_servico.fcp_valor or 0
-                )  # Valor Fundo Combate a Pobreza
+                etree.SubElement(
+                    icms_item, "vBCFCP"
+                ).text = f"{produto_servico.fcp_base_calculo or 0:.2f}"  # Base de calculo FCP
+                etree.SubElement(
+                    icms_item, "pFCP"
+                ).text = f"{produto_servico.fcp_aliquota or 0:.2f}"  # Percentual FCP
+                etree.SubElement(
+                    icms_item, "vFCP"
+                ).text = f"{produto_servico.fcp_valor or 0:.2f}"  # Valor Fundo Combate a Pobreza
 
             if (produto_servico.icms_st_valor_base_calculo > 0) and (
                 produto_servico.icms_st_valor > 0
@@ -914,37 +898,37 @@ class SerializacaoXML(Serializacao):
                 etree.SubElement(icms_item, "modBCST").text = str(
                     produto_servico.icms_st_modalidade_determinacao_bc
                 )
-                etree.SubElement(icms_item, "pMVAST").text = "{:.2f}".format(
-                    produto_servico.icms_st_percentual_adicional or 0
-                )  # Percentual da margem de valor Adicionado do ICMS ST
-                etree.SubElement(icms_item, "pRedBCST").text = "{:.2f}".format(
-                    produto_servico.icms_st_percentual_reducao_bc or 0
-                )  # APercentual da Redução de BC do ICMS ST
-                etree.SubElement(icms_item, "vBCST").text = "{:.2f}".format(
-                    produto_servico.icms_st_valor_base_calculo or 0
-                )
-                etree.SubElement(icms_item, "pICMSST").text = "{:.2f}".format(
-                    produto_servico.icms_st_aliquota or 0
-                )
-                etree.SubElement(icms_item, "vICMSST").text = "{:.2f}".format(
-                    produto_servico.icms_st_valor or 0
-                )
+                etree.SubElement(
+                    icms_item, "pMVAST"
+                ).text = f"{produto_servico.icms_st_percentual_adicional or 0:.2f}"  # Percentual da margem de valor Adicionado do ICMS ST
+                etree.SubElement(
+                    icms_item, "pRedBCST"
+                ).text = f"{produto_servico.icms_st_percentual_reducao_bc or 0:.2f}"  # APercentual da Redução de BC do ICMS ST
+                etree.SubElement(
+                    icms_item, "vBCST"
+                ).text = f"{produto_servico.icms_st_valor_base_calculo or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "pICMSST"
+                ).text = f"{produto_servico.icms_st_aliquota or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "vICMSST"
+                ).text = f"{produto_servico.icms_st_valor or 0:.2f}"
 
             if produto_servico.fcp_st_valor:
-                etree.SubElement(icms_item, "vBCFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_base_calculo or 0
-                )
-                etree.SubElement(icms_item, "pFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_aliquota or 0
-                )
-                etree.SubElement(icms_item, "vFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_valor or 0
-                )
+                etree.SubElement(
+                    icms_item, "vBCFCPST"
+                ).text = f"{produto_servico.fcp_st_base_calculo or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "pFCPST"
+                ).text = f"{produto_servico.fcp_st_aliquota or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "vFCPST"
+                ).text = f"{produto_servico.fcp_st_valor or 0:.2f}"
 
             if produto_servico.icms_desonerado > 0:
-                etree.SubElement(icms_item, "vICMSDeson").text = "{:.2f}".format(
-                    produto_servico.icms_desonerado or 0
-                )  # Valor do ICMS Desonerado
+                etree.SubElement(
+                    icms_item, "vICMSDeson"
+                ).text = f"{produto_servico.icms_desonerado or 0:.2f}"  # Valor do ICMS Desonerado
                 etree.SubElement(icms_item, "motDesICMS").text = str(
                     produto_servico.icms_motivo_desoneracao
                 )
@@ -956,12 +940,12 @@ class SerializacaoXML(Serializacao):
             icms_item = etree.SubElement(icms, "ICMSSN" + produto_servico.icms_modalidade)
             etree.SubElement(icms_item, "orig").text = str(produto_servico.icms_origem)
             etree.SubElement(icms_item, "CSOSN").text = produto_servico.icms_csosn
-            etree.SubElement(icms_item, "pCredSN").text = "{:.2f}".format(
-                produto_servico.icms_aliquota
-            )  # Alíquota aplicável de cálculo do crédito (Simples Nacional).
-            etree.SubElement(icms_item, "vCredICMSSN").text = "{:.2f}".format(
-                produto_servico.icms_credito
-            )  # Valor crédito do ICMS que pode ser aproveitado nos termos
+            etree.SubElement(
+                icms_item, "pCredSN"
+            ).text = f"{produto_servico.icms_aliquota:.2f}"  # Alíquota aplicável de cálculo do crédito (Simples Nacional).
+            etree.SubElement(
+                icms_item, "vCredICMSSN"
+            ).text = f"{produto_servico.icms_credito:.2f}"  # Valor crédito do ICMS que pode ser aproveitado nos termos
             # do art. 23 da LC 123 (Simples Nacional)
 
         # 102=Tributada pelo Simples Nacional sem permissão de crédito
@@ -987,40 +971,40 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(icms_item, "modBCST").text = str(
                 produto_servico.icms_st_modalidade_determinacao_bc
             )
-            etree.SubElement(icms_item, "pMVAST").text = "{:.2f}".format(
-                produto_servico.icms_st_percentual_adicional or 0
-            )  # Percentual da margem de valor Adicionado do ICMS ST
-            etree.SubElement(icms_item, "pRedBCST").text = "{:.2f}".format(
-                produto_servico.icms_st_percentual_reducao_bc or 0
-            )  # APercentual da Redução de BC do ICMS ST
-            etree.SubElement(icms_item, "vBCST").text = "{:.2f}".format(
-                produto_servico.icms_st_valor_base_calculo or 0
-            )
-            etree.SubElement(icms_item, "pICMSST").text = "{:.2f}".format(
-                produto_servico.icms_st_aliquota or 0
-            )
-            etree.SubElement(icms_item, "vICMSST").text = "{:.2f}".format(
-                produto_servico.icms_st_valor or 0
-            )
+            etree.SubElement(
+                icms_item, "pMVAST"
+            ).text = f"{produto_servico.icms_st_percentual_adicional or 0:.2f}"  # Percentual da margem de valor Adicionado do ICMS ST
+            etree.SubElement(
+                icms_item, "pRedBCST"
+            ).text = f"{produto_servico.icms_st_percentual_reducao_bc or 0:.2f}"  # APercentual da Redução de BC do ICMS ST
+            etree.SubElement(
+                icms_item, "vBCST"
+            ).text = f"{produto_servico.icms_st_valor_base_calculo or 0:.2f}"
+            etree.SubElement(
+                icms_item, "pICMSST"
+            ).text = f"{produto_servico.icms_st_aliquota or 0:.2f}"
+            etree.SubElement(
+                icms_item, "vICMSST"
+            ).text = f"{produto_servico.icms_st_valor or 0:.2f}"
 
             if produto_servico.fcp_st_valor:
-                etree.SubElement(icms_item, "vBCFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_base_calculo or 0
-                )
-                etree.SubElement(icms_item, "pFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_aliquota or 0
-                )
-                etree.SubElement(icms_item, "vFCPST").text = "{:.2f}".format(
-                    produto_servico.fcp_st_valor or 0
-                )
+                etree.SubElement(
+                    icms_item, "vBCFCPST"
+                ).text = f"{produto_servico.fcp_st_base_calculo or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "pFCPST"
+                ).text = f"{produto_servico.fcp_st_aliquota or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "vFCPST"
+                ).text = f"{produto_servico.fcp_st_valor or 0:.2f}"
 
             if produto_servico.icms_modalidade == "201":
-                etree.SubElement(icms_item, "pCredSN").text = "{:.2f}".format(
-                    produto_servico.icms_aliquota
-                )  # Alíquota aplicável de cálculo do crédito (Simples Nacional).
-                etree.SubElement(icms_item, "vCredICMSSN").text = "{:.2f}".format(
-                    produto_servico.icms_credito
-                )  # Valor crédito do ICMS que pode ser aproveitado nos termos
+                etree.SubElement(
+                    icms_item, "pCredSN"
+                ).text = f"{produto_servico.icms_aliquota:.2f}"  # Alíquota aplicável de cálculo do crédito (Simples Nacional).
+                etree.SubElement(
+                    icms_item, "vCredICMSSN"
+                ).text = f"{produto_servico.icms_credito:.2f}"  # Valor crédito do ICMS que pode ser aproveitado nos termos
                 # do art. 23 da LC 123 (Simples Nacional)
 
         # 500=ICMS cobrado anteriormente por ST (substituído) ou por antecipação
@@ -1039,18 +1023,20 @@ class SerializacaoXML(Serializacao):
                 etree.SubElement(icms_item, "modBC").text = str(
                     produto_servico.icms_modalidade_determinacao_bc
                 )
-                etree.SubElement(icms_item, "vBC").text = "{:.2f}".format(
-                    produto_servico.icms_valor_base_calculo or 0
-                )  # Valor da BC do ICMS
-                etree.SubElement(icms_item, "pRedBC").text = "{:.2f}".format(
-                    produto_servico.icms_percentual_reducao_bc or 0
-                )  # Percentual da Redução de BC
-                etree.SubElement(icms_item, "pICMS").text = "{:.2f}".format(
-                    produto_servico.icms_aliquota or 0
-                )  # Alíquota do imposto
-                etree.SubElement(icms_item, "vICMS").text = "{:.2f}".format(
-                    produto_servico.icms_valor or 0
-                )  # Valor do ICMS
+                etree.SubElement(
+                    icms_item, "vBC"
+                ).text = (
+                    f"{produto_servico.icms_valor_base_calculo or 0:.2f}"  # Valor da BC do ICMS
+                )
+                etree.SubElement(
+                    icms_item, "pRedBC"
+                ).text = f"{produto_servico.icms_percentual_reducao_bc or 0:.2f}"  # Percentual da Redução de BC
+                etree.SubElement(
+                    icms_item, "pICMS"
+                ).text = f"{produto_servico.icms_aliquota or 0:.2f}"  # Alíquota do imposto
+                etree.SubElement(
+                    icms_item, "vICMS"
+                ).text = f"{produto_servico.icms_valor or 0:.2f}"  # Valor do ICMS
 
             if (produto_servico.icms_st_valor_base_calculo > 0) and (
                 produto_servico.icms_st_valor > 0
@@ -1058,40 +1044,40 @@ class SerializacaoXML(Serializacao):
                 etree.SubElement(icms_item, "modBCST").text = str(
                     produto_servico.icms_st_modalidade_determinacao_bc
                 )
-                etree.SubElement(icms_item, "pMVAST").text = "{:.2f}".format(
-                    produto_servico.icms_st_percentual_adicional or 0
-                )  # Percentual da margem de valor Adicionado do ICMS ST
-                etree.SubElement(icms_item, "pRedBCST").text = "{:.2f}".format(
-                    produto_servico.icms_st_percentual_reducao_bc or 0
-                )  # APercentual da Redução de BC do ICMS ST
-                etree.SubElement(icms_item, "vBCST").text = "{:.2f}".format(
-                    produto_servico.icms_st_valor_base_calculo or 0
-                )
-                etree.SubElement(icms_item, "pICMSST").text = "{:.2f}".format(
-                    produto_servico.icms_st_aliquota or 0
-                )
-                etree.SubElement(icms_item, "vICMSST").text = "{:.2f}".format(
-                    produto_servico.icms_st_valor or 0
-                )
+                etree.SubElement(
+                    icms_item, "pMVAST"
+                ).text = f"{produto_servico.icms_st_percentual_adicional or 0:.2f}"  # Percentual da margem de valor Adicionado do ICMS ST
+                etree.SubElement(
+                    icms_item, "pRedBCST"
+                ).text = f"{produto_servico.icms_st_percentual_reducao_bc or 0:.2f}"  # APercentual da Redução de BC do ICMS ST
+                etree.SubElement(
+                    icms_item, "vBCST"
+                ).text = f"{produto_servico.icms_st_valor_base_calculo or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "pICMSST"
+                ).text = f"{produto_servico.icms_st_aliquota or 0:.2f}"
+                etree.SubElement(
+                    icms_item, "vICMSST"
+                ).text = f"{produto_servico.icms_st_valor or 0:.2f}"
 
                 if produto_servico.fcp_st_valor:
-                    etree.SubElement(icms_item, "vBCFCPST").text = "{:.2f}".format(
-                        produto_servico.fcp_st_base_calculo or 0
-                    )
-                    etree.SubElement(icms_item, "pFCPST").text = "{:.2f}".format(
-                        produto_servico.fcp_st_aliquota or 0
-                    )
-                    etree.SubElement(icms_item, "vFCPST").text = "{:.2f}".format(
-                        produto_servico.fcp_st_valor or 0
-                    )
+                    etree.SubElement(
+                        icms_item, "vBCFCPST"
+                    ).text = f"{produto_servico.fcp_st_base_calculo or 0:.2f}"
+                    etree.SubElement(
+                        icms_item, "pFCPST"
+                    ).text = f"{produto_servico.fcp_st_aliquota or 0:.2f}"
+                    etree.SubElement(
+                        icms_item, "vFCPST"
+                    ).text = f"{produto_servico.fcp_st_valor or 0:.2f}"
 
             if produto_servico.icms_aliquota > 0:
-                etree.SubElement(icms_item, "pCredSN").text = "{:.2f}".format(
-                    produto_servico.icms_aliquota
-                )  # Alíquota aplicável de cálculo do crédito (Simples Nacional).
-                etree.SubElement(icms_item, "vCredICMSSN").text = "{:.2f}".format(
-                    produto_servico.icms_credito
-                )  # Valor crédito do ICMS que pode ser aproveitado nos termos
+                etree.SubElement(
+                    icms_item, "pCredSN"
+                ).text = f"{produto_servico.icms_aliquota:.2f}"  # Alíquota aplicável de cálculo do crédito (Simples Nacional).
+                etree.SubElement(
+                    icms_item, "vCredICMSSN"
+                ).text = f"{produto_servico.icms_credito:.2f}"  # Valor crédito do ICMS que pode ser aproveitado nos termos
                 # do art. 23 da LC 123 (Simples Nacional)
 
         else:
@@ -1127,15 +1113,13 @@ class SerializacaoXML(Serializacao):
 
                 ipi_item = etree.SubElement(ipi, "IPITrib")
                 etree.SubElement(ipi_item, "CST").text = produto_servico.ipi_codigo_enquadramento
-                etree.SubElement(ipi_item, "vBC").text = "{:.2f}".format(
-                    produto_servico.ipi_valor_base_calculo or 0
-                )
-                etree.SubElement(ipi_item, "pIPI").text = "{:.2f}".format(
-                    produto_servico.ipi_aliquota or 0
-                )
-                etree.SubElement(ipi_item, "vIPI").text = "{:.2f}".format(
-                    produto_servico.ipi_valor_ipi or 0
-                )
+                etree.SubElement(
+                    ipi_item, "vBC"
+                ).text = f"{produto_servico.ipi_valor_base_calculo or 0:.2f}"
+                etree.SubElement(ipi_item, "pIPI").text = f"{produto_servico.ipi_aliquota or 0:.2f}"
+                etree.SubElement(
+                    ipi_item, "vIPI"
+                ).text = f"{produto_servico.ipi_valor_ipi or 0:.2f}"
 
     def _serializar_imposto_pis(
         self, produto_servico, modelo, tag_raiz="imposto", retorna_string=True
@@ -1160,47 +1144,41 @@ class SerializacaoXML(Serializacao):
         elif produto_servico.pis_modalidade == "01" or produto_servico.pis_modalidade == "02":
             pis_item = etree.SubElement(pis, "PISAliq")
             etree.SubElement(pis_item, "CST").text = produto_servico.pis_modalidade
-            etree.SubElement(pis_item, "vBC").text = "{:.2f}".format(
-                produto_servico.pis_valor_base_calculo or 0
-            )
-            etree.SubElement(pis_item, "pPIS").text = "{:.2f}".format(
-                produto_servico.pis_aliquota_percentual or 0
-            )
-            etree.SubElement(pis_item, "vPIS").text = "{:.2f}".format(
-                produto_servico.pis_valor or 0
-            )
+            etree.SubElement(
+                pis_item, "vBC"
+            ).text = f"{produto_servico.pis_valor_base_calculo or 0:.2f}"
+            etree.SubElement(
+                pis_item, "pPIS"
+            ).text = f"{produto_servico.pis_aliquota_percentual or 0:.2f}"
+            etree.SubElement(pis_item, "vPIS").text = f"{produto_servico.pis_valor or 0:.2f}"
         elif produto_servico.pis_modalidade == "03":
             pis_item = etree.SubElement(pis, "PISQtde")
             etree.SubElement(pis_item, "CST").text = produto_servico.pis_modalidade
-            etree.SubElement(pis_item, "qBCProd").text = "{:.4f}".format(
-                produto_servico.quantidade_comercial
-            )
-            etree.SubElement(pis_item, "vAliqProd").text = "{:.4f}".format(
-                produto_servico.pis_aliquota_reais or 0
-            )
-            etree.SubElement(pis_item, "vPIS").text = "{:.2f}".format(
-                produto_servico.pis_valor or 0
-            )
+            etree.SubElement(
+                pis_item, "qBCProd"
+            ).text = f"{produto_servico.quantidade_comercial:.4f}"
+            etree.SubElement(
+                pis_item, "vAliqProd"
+            ).text = f"{produto_servico.pis_aliquota_reais or 0:.4f}"
+            etree.SubElement(pis_item, "vPIS").text = f"{produto_servico.pis_valor or 0:.2f}"
         else:
             pis_item = etree.SubElement(pis, "PISOutr")
             etree.SubElement(pis_item, "CST").text = produto_servico.pis_modalidade
             if produto_servico.pis_aliquota_reais > 0:
-                etree.SubElement(pis_item, "qBCProd").text = "{:.4f}".format(
-                    produto_servico.quantidade_comercial
-                )
-                etree.SubElement(pis_item, "vAliqProd").text = "{:.4f}".format(
-                    produto_servico.pis_aliquota_reais or 0
-                )
+                etree.SubElement(
+                    pis_item, "qBCProd"
+                ).text = f"{produto_servico.quantidade_comercial:.4f}"
+                etree.SubElement(
+                    pis_item, "vAliqProd"
+                ).text = f"{produto_servico.pis_aliquota_reais or 0:.4f}"
             else:
-                etree.SubElement(pis_item, "vBC").text = "{:.2f}".format(
-                    produto_servico.pis_valor_base_calculo or 0
-                )
-                etree.SubElement(pis_item, "pPIS").text = "{:.2f}".format(
-                    produto_servico.pis_aliquota_percentual or 0
-                )
-            etree.SubElement(pis_item, "vPIS").text = "{:.2f}".format(
-                produto_servico.pis_valor or 0
-            )
+                etree.SubElement(
+                    pis_item, "vBC"
+                ).text = f"{produto_servico.pis_valor_base_calculo or 0:.2f}"
+                etree.SubElement(
+                    pis_item, "pPIS"
+                ).text = f"{produto_servico.pis_aliquota_percentual or 0:.2f}"
+            etree.SubElement(pis_item, "vPIS").text = f"{produto_servico.pis_valor or 0:.2f}"
 
             # PISST
             # pis_item = etree.SubElement(pis, 'PISST')
@@ -1234,47 +1212,43 @@ class SerializacaoXML(Serializacao):
         elif produto_servico.cofins_modalidade == "01" or produto_servico.cofins_modalidade == "02":
             cofins_item = etree.SubElement(cofins, "COFINSAliq")
             etree.SubElement(cofins_item, "CST").text = produto_servico.cofins_modalidade
-            etree.SubElement(cofins_item, "vBC").text = "{:.2f}".format(
-                produto_servico.cofins_valor_base_calculo or 0
-            )
-            etree.SubElement(cofins_item, "pCOFINS").text = "{:.2f}".format(
-                produto_servico.cofins_aliquota_percentual or 0
-            )
-            etree.SubElement(cofins_item, "vCOFINS").text = "{:.2f}".format(
-                produto_servico.cofins_valor
-            )
+            etree.SubElement(
+                cofins_item, "vBC"
+            ).text = f"{produto_servico.cofins_valor_base_calculo or 0:.2f}"
+            etree.SubElement(
+                cofins_item, "pCOFINS"
+            ).text = f"{produto_servico.cofins_aliquota_percentual or 0:.2f}"
+            etree.SubElement(cofins_item, "vCOFINS").text = f"{produto_servico.cofins_valor:.2f}"
         elif produto_servico.cofins_modalidade == "03":
             cofins_item = etree.SubElement(cofins, "COFINSQtde")
             etree.SubElement(cofins_item, "CST").text = produto_servico.cofins_modalidade
-            etree.SubElement(cofins_item, "qBCProd").text = "{:.4f}".format(
-                produto_servico.quantidade_comercial
-            )
-            etree.SubElement(cofins_item, "vAliqProd").text = "{:.4f}".format(
-                produto_servico.cofins_aliquota_reais
-            )
-            etree.SubElement(cofins_item, "vCOFINS").text = "{:.2f}".format(
-                produto_servico.cofins_valor
-            )
+            etree.SubElement(
+                cofins_item, "qBCProd"
+            ).text = f"{produto_servico.quantidade_comercial:.4f}"
+            etree.SubElement(
+                cofins_item, "vAliqProd"
+            ).text = f"{produto_servico.cofins_aliquota_reais:.4f}"
+            etree.SubElement(cofins_item, "vCOFINS").text = f"{produto_servico.cofins_valor:.2f}"
         else:
             cofins_item = etree.SubElement(cofins, "COFINSOutr")
             etree.SubElement(cofins_item, "CST").text = produto_servico.cofins_modalidade
             if produto_servico.cofins_aliquota_reais > 0:
-                etree.SubElement(cofins_item, "qBCProd").text = "{:.4f}".format(
-                    produto_servico.quantidade_comercial
-                )
-                etree.SubElement(cofins_item, "vAliqProd").text = "{:.4f}".format(
-                    produto_servico.cofins_aliquota_reais or 0
-                )
+                etree.SubElement(
+                    cofins_item, "qBCProd"
+                ).text = f"{produto_servico.quantidade_comercial:.4f}"
+                etree.SubElement(
+                    cofins_item, "vAliqProd"
+                ).text = f"{produto_servico.cofins_aliquota_reais or 0:.4f}"
             else:
-                etree.SubElement(cofins_item, "vBC").text = "{:.2f}".format(
-                    produto_servico.cofins_valor_base_calculo or 0
-                )
-                etree.SubElement(cofins_item, "pCOFINS").text = "{:.2f}".format(
-                    produto_servico.cofins_aliquota_percentual or 0
-                )
-            etree.SubElement(cofins_item, "vCOFINS").text = "{:.2f}".format(
-                produto_servico.cofins_valor or 0
-            )
+                etree.SubElement(
+                    cofins_item, "vBC"
+                ).text = f"{produto_servico.cofins_valor_base_calculo or 0:.2f}"
+                etree.SubElement(
+                    cofins_item, "pCOFINS"
+                ).text = f"{produto_servico.cofins_aliquota_percentual or 0:.2f}"
+            etree.SubElement(
+                cofins_item, "vCOFINS"
+            ).text = f"{produto_servico.cofins_valor or 0:.2f}"
 
             # COFINSST
             # cofins_item = etree.SubElement(cofins, 'COFINSOutr')
@@ -1299,18 +1273,16 @@ class SerializacaoXML(Serializacao):
             or (produto_servico.cfop[1] == "3")
         ):
             ii = etree.SubElement(tag_raiz, "II")
-            etree.SubElement(ii, "vBC").text = "{:.2f}".format(
-                produto_servico.imposto_importacao_valor_base_calculo or 0
-            )
-            etree.SubElement(ii, "vDespAdu").text = "{:.2f}".format(
-                produto_servico.imposto_importacao_valor_despesas_aduaneiras or 0
-            )
-            etree.SubElement(ii, "vII").text = "{:.2f}".format(
-                produto_servico.imposto_importacao_valor
-            )
-            etree.SubElement(ii, "vIOF").text = "{:.2f}".format(
-                produto_servico.imposto_importacao_valor_iof
-            )
+            etree.SubElement(
+                ii, "vBC"
+            ).text = f"{produto_servico.imposto_importacao_valor_base_calculo or 0:.2f}"
+            etree.SubElement(
+                ii, "vDespAdu"
+            ).text = f"{produto_servico.imposto_importacao_valor_despesas_aduaneiras or 0:.2f}"
+            etree.SubElement(ii, "vII").text = f"{produto_servico.imposto_importacao_valor:.2f}"
+            etree.SubElement(
+                ii, "vIOF"
+            ).text = f"{produto_servico.imposto_importacao_valor_iof:.2f}"
 
     # =============================================
     # Reforma Tributaria - IVA Dual (NT 2025.002-RTC)
@@ -1350,35 +1322,29 @@ class SerializacaoXML(Serializacao):
         if produto_servico.ibscbs_cst in self._IBSCBS_CST_TRIBUTADOS:
             gibscbs = etree.SubElement(ibscbs, "gIBSCBS")
 
-            etree.SubElement(gibscbs, "vBC").text = "{:.2f}".format(produto_servico.ibscbs_vbc or 0)
+            etree.SubElement(gibscbs, "vBC").text = f"{produto_servico.ibscbs_vbc or 0:.2f}"
 
             # gIBSUF
             gibsuf = etree.SubElement(gibscbs, "gIBSUF")
-            etree.SubElement(gibsuf, "pIBSUF").text = "{:.4f}".format(
-                produto_servico.ibscbs_p_ibs_uf or 0
-            )
-            etree.SubElement(gibsuf, "vIBSUF").text = "{:.2f}".format(
-                produto_servico.ibscbs_v_ibs_uf or 0
-            )
+            etree.SubElement(gibsuf, "pIBSUF").text = f"{produto_servico.ibscbs_p_ibs_uf or 0:.4f}"
+            etree.SubElement(gibsuf, "vIBSUF").text = f"{produto_servico.ibscbs_v_ibs_uf or 0:.2f}"
 
             # gIBSMun
             gibsmun = etree.SubElement(gibscbs, "gIBSMun")
-            etree.SubElement(gibsmun, "pIBSMun").text = "{:.4f}".format(
-                produto_servico.ibscbs_p_ibs_mun or 0
-            )
-            etree.SubElement(gibsmun, "vIBSMun").text = "{:.2f}".format(
-                produto_servico.ibscbs_v_ibs_mun or 0
-            )
+            etree.SubElement(
+                gibsmun, "pIBSMun"
+            ).text = f"{produto_servico.ibscbs_p_ibs_mun or 0:.4f}"
+            etree.SubElement(
+                gibsmun, "vIBSMun"
+            ).text = f"{produto_servico.ibscbs_v_ibs_mun or 0:.2f}"
 
             # vIBS total
-            etree.SubElement(gibscbs, "vIBS").text = "{:.2f}".format(
-                produto_servico.ibscbs_v_ibs or 0
-            )
+            etree.SubElement(gibscbs, "vIBS").text = f"{produto_servico.ibscbs_v_ibs or 0:.2f}"
 
             # gCBS
             gcbs = etree.SubElement(gibscbs, "gCBS")
-            etree.SubElement(gcbs, "pCBS").text = "{:.4f}".format(produto_servico.ibscbs_p_cbs or 0)
-            etree.SubElement(gcbs, "vCBS").text = "{:.2f}".format(produto_servico.ibscbs_v_cbs or 0)
+            etree.SubElement(gcbs, "pCBS").text = f"{produto_servico.ibscbs_p_cbs or 0:.4f}"
+            etree.SubElement(gcbs, "vCBS").text = f"{produto_servico.ibscbs_v_cbs or 0:.2f}"
 
     def _serializar_is(self, produto_servico, tag_raiz):
         """Serializa <IS> (Imposto Seletivo) como filho direto de <imposto>.
@@ -1393,9 +1359,9 @@ class SerializacaoXML(Serializacao):
             etree.SubElement(is_tag, "cClassTribIS").text = produto_servico.is_c_class_trib
 
         if produto_servico.is_cst_selec in ("01", "02"):
-            etree.SubElement(is_tag, "vBCIS").text = "{:.2f}".format(produto_servico.is_vbc or 0)
-            etree.SubElement(is_tag, "pIS").text = "{:.4f}".format(produto_servico.is_aliquota or 0)
-            etree.SubElement(is_tag, "vIS").text = "{:.2f}".format(produto_servico.is_valor or 0)
+            etree.SubElement(is_tag, "vBCIS").text = f"{produto_servico.is_vbc or 0:.2f}"
+            etree.SubElement(is_tag, "pIS").text = f"{produto_servico.is_aliquota or 0:.4f}"
+            etree.SubElement(is_tag, "vIS").text = f"{produto_servico.is_valor or 0:.2f}"
 
     def _serializar_declaracao_importacao(
         self, produto_servico, tag_raiz="prod", retorna_string=True
@@ -1423,7 +1389,7 @@ class SerializacaoXML(Serializacao):
                 etree.SubElement(di, "tpViaTransp").text = str(item_di.tipo_via_transporte)
                 # Valor da AFRMM - Adicional ao Frete para Renovação da Marinha Mercante
                 if item_di.valor_afrmm:
-                    etree.SubElement(di, "vAFRMM").text = "{:.2f}".format(item_di.valor_afrmm or 0)
+                    etree.SubElement(di, "vAFRMM").text = f"{item_di.valor_afrmm or 0:.2f}"
                 # tpIntermedio
                 etree.SubElement(di, "tpIntermedio").text = str(item_di.tipo_intermediacao)
                 # CNPJ
@@ -1442,9 +1408,7 @@ class SerializacaoXML(Serializacao):
                     etree.SubElement(adi, "nSeqAdic").text = str(adicao.sequencia)
                     etree.SubElement(adi, "cFabricante").text = str(adicao.codigo_fabricante)
                     if adicao.desconto:
-                        etree.SubElement(adi, "vDescDI").text = "{:.2f}".format(
-                            adicao.desconto or 0
-                        )
+                        etree.SubElement(adi, "vDescDI").text = f"{adicao.desconto or 0:.2f}"
                     # Número do ato concessório de Drawback
                     if adicao.numero_drawback:
                         etree.SubElement(adi, "nDraw").text = str(adicao.numero_drawback)
@@ -1470,10 +1434,10 @@ class SerializacaoXML(Serializacao):
         detpag = etree.SubElement(pag, "detPag")
         if str(finalidade_emissao) == "3" or str(finalidade_emissao) == "4":
             etree.SubElement(detpag, "tPag").text = "90"
-            etree.SubElement(detpag, "vPag").text = "{:.2f}".format(0)
+            etree.SubElement(detpag, "vPag").text = f"{0:.2f}"
         else:
             etree.SubElement(detpag, "tPag").text = str(tipo_pagamento).zfill(2)
-            etree.SubElement(detpag, "vPag").text = "{:.2f}".format(totais_icms_total_nota)
+            etree.SubElement(detpag, "vPag").text = f"{totais_icms_total_nota:.2f}"
             if tipo_pagamento == 3 or tipo_pagamento == 4:
                 cartao = etree.SubElement(detpag, "card")
                 """ Tipo de Integração do processo de pagamento com
@@ -1495,13 +1459,13 @@ class SerializacaoXML(Serializacao):
         return pag
 
     def _serializar_pagamentos(
-        self, pagamentos: list(), finalidade_emissao="", valor_troco=0.00, retorna_string=True
+        self, pagamentos: [], finalidade_emissao="", valor_troco=0.00, retorna_string=True
     ):
         pag = etree.Element("pag")
         if finalidade_emissao in [3, 4]:
             detpag = etree.SubElement(pag, "detPag")
             etree.SubElement(detpag, "tPag").text = "90"
-            etree.SubElement(detpag, "vPag").text = "{:.2f}".format(0)
+            etree.SubElement(detpag, "vPag").text = f"{0:.2f}"
         else:
             for item in pagamentos:
                 det = etree.Element("detPag")
@@ -1535,7 +1499,7 @@ class SerializacaoXML(Serializacao):
         tz = nota_fiscal.data_emissao.strftime("%z")
         if not tz:
             tz = datetime.now().astimezone().strftime("%z")
-        tz = "{}:{}".format(tz[:-2], tz[-2:])
+        tz = f"{tz[:-2]}:{tz[-2:]}"
 
         # Dados da Nota Fiscal
         ide = etree.SubElement(raiz, "ide")
@@ -1582,9 +1546,8 @@ class SerializacaoXML(Serializacao):
             (as demais opções de contingência são válidas também para a NFC-e).
             Para a NFC-e somente estão disponíveis e são válidas as opções de contingência 5 e 9.
         """
-        if self._contingencia is not None:
-            if nota_fiscal.forma_emissao == "1":
-                nota_fiscal.forma_emissao = "9"
+        if self._contingencia is not None and nota_fiscal.forma_emissao == "1":
+            nota_fiscal.forma_emissao = "9"
         etree.SubElement(ide, "tpEmis").text = str(nota_fiscal.forma_emissao)
         etree.SubElement(ide, "cDV").text = nota_fiscal.dv_codigo_numerico_aleatorio
         etree.SubElement(ide, "tpAmb").text = str(self._ambiente)
@@ -1600,47 +1563,45 @@ class SerializacaoXML(Serializacao):
         if (nota_fiscal.modelo in [55, 65]) and (nota_fiscal.indicador_presencial not in [0, 1, 5]):
             etree.SubElement(ide, "indIntermed").text = str(nota_fiscal.indicador_intermediador)
         etree.SubElement(ide, "procEmi").text = str(nota_fiscal.processo_emissao)
-        etree.SubElement(ide, "verProc").text = "%s %s" % (
-            self._nome_aplicacao,
-            nota_fiscal.versao_processo_emissao,
-        )
+        etree.SubElement(
+            ide, "verProc"
+        ).text = f"{self._nome_aplicacao} {nota_fiscal.versao_processo_emissao}"
 
         # NF-e referenciada (utilizado em casos de devolução/garantia)
         # Apenas NF-e
-        if nota_fiscal.modelo == 55:
-            if nota_fiscal.notas_fiscais_referenciadas:
-                for refNFe in nota_fiscal.notas_fiscais_referenciadas:
-                    nfref = etree.SubElement(ide, "NFref")
-                    if refNFe.tipo == "Conhecimento de frete":
-                        if refNFe.chave_acesso and len(refNFe.chave_acesso) == 44:
-                            etree.SubElement(nfref, "refCTe").text = refNFe.chave_acesso
+        if nota_fiscal.modelo == 55 and nota_fiscal.notas_fiscais_referenciadas:
+            for refNFe in nota_fiscal.notas_fiscais_referenciadas:
+                nfref = etree.SubElement(ide, "NFref")
+                if refNFe.tipo == "Conhecimento de frete":
+                    if refNFe.chave_acesso and len(refNFe.chave_acesso) == 44:
+                        etree.SubElement(nfref, "refCTe").text = refNFe.chave_acesso
 
-                    elif refNFe.tipo == "Nota Fiscal":
-                        refNF = etree.SubElement(nfref, "refNF")
-                        etree.SubElement(refNF, "cUF").text = str(refNFe.uf)
-                        etree.SubElement(refNF, "AAMM").text = str(refNFe.mes_ano_emissao)
-                        etree.SubElement(refNF, "CNPJ").text = so_numeros(refNFe.cnpj)
-                        etree.SubElement(refNF, "mod").text = str(refNFe.modelo)  # 1 ou 2
-                        etree.SubElement(refNF, "serie").text = str(refNFe.serie)
-                        etree.SubElement(refNF, "nNF").text = str(refNFe.numero)
+                elif refNFe.tipo == "Nota Fiscal":
+                    refNF = etree.SubElement(nfref, "refNF")
+                    etree.SubElement(refNF, "cUF").text = str(refNFe.uf)
+                    etree.SubElement(refNF, "AAMM").text = str(refNFe.mes_ano_emissao)
+                    etree.SubElement(refNF, "CNPJ").text = so_numeros(refNFe.cnpj)
+                    etree.SubElement(refNF, "mod").text = str(refNFe.modelo)  # 1 ou 2
+                    etree.SubElement(refNF, "serie").text = str(refNFe.serie)
+                    etree.SubElement(refNF, "nNF").text = str(refNFe.numero)
 
-                    elif refNFe.tipo == "Nota Fiscal produtor":
-                        refNFP = etree.SubElement(nfref, "refNFP")
-                        etree.SubElement(refNFP, "cUF").text = str(refNFe.uf)
-                        etree.SubElement(refNFP, "AAMM").text = str(refNFe.mes_ano_emissao)
-                        if len(so_numeros(refNFe.cnpj)) == 11:
-                            etree.SubElement(refNFP, "CPF").text = so_numeros(refNFe.cnpj)
-                        else:
-                            etree.SubElement(refNFP, "CNPJ").text = so_numeros(refNFe.cnpj)
-                        etree.SubElement(refNFP, "IE").text = so_numeros(refNFe.ie)
-                        etree.SubElement(refNFP, "mod").text = "04"
-                        etree.SubElement(refNFP, "serie").text = str(refNFe.serie)
-                        etree.SubElement(refNFP, "nNF").text = str(refNFe.numero)
-
+                elif refNFe.tipo == "Nota Fiscal produtor":
+                    refNFP = etree.SubElement(nfref, "refNFP")
+                    etree.SubElement(refNFP, "cUF").text = str(refNFe.uf)
+                    etree.SubElement(refNFP, "AAMM").text = str(refNFe.mes_ano_emissao)
+                    if len(so_numeros(refNFe.cnpj)) == 11:
+                        etree.SubElement(refNFP, "CPF").text = so_numeros(refNFe.cnpj)
                     else:
-                        # tipo == 'Nota Fiscal eletronica'
-                        if refNFe.chave_acesso and len(refNFe.chave_acesso) == 44:
-                            etree.SubElement(nfref, "refNFe").text = refNFe.chave_acesso
+                        etree.SubElement(refNFP, "CNPJ").text = so_numeros(refNFe.cnpj)
+                    etree.SubElement(refNFP, "IE").text = so_numeros(refNFe.ie)
+                    etree.SubElement(refNFP, "mod").text = "04"
+                    etree.SubElement(refNFP, "serie").text = str(refNFe.serie)
+                    etree.SubElement(refNFP, "nNF").text = str(refNFe.numero)
+
+                else:
+                    # tipo == 'Nota Fiscal eletronica'
+                    if refNFe.chave_acesso and len(refNFe.chave_acesso) == 44:
+                        etree.SubElement(nfref, "refNFe").text = refNFe.chave_acesso
 
         # CONTINGENCIA
         if self._contingencia is not None:
@@ -1663,12 +1624,12 @@ class SerializacaoXML(Serializacao):
                     nota_fiscal.cliente, modelo=nota_fiscal.modelo, retorna_string=False
                 )
             )
-        except AttributeError as e:
+        except AttributeError:
             # NFC-e pode ser gerada sem destinatário
             if nota_fiscal.modelo == 65:
                 pass
             else:
-                raise e
+                raise
         # Retirada
         if nota_fiscal.retirada:
             raiz.append(
@@ -1705,97 +1666,81 @@ class SerializacaoXML(Serializacao):
         # Totais
         total = etree.SubElement(raiz, "total")
         icms_total = etree.SubElement(total, "ICMSTot")
-        etree.SubElement(icms_total, "vBC").text = "{:.2f}".format(
-            nota_fiscal.totais_icms_base_calculo
-        )
-        etree.SubElement(icms_total, "vICMS").text = "{:.2f}".format(nota_fiscal.totais_icms_total)
-        etree.SubElement(icms_total, "vICMSDeson").text = "{:.2f}".format(
-            nota_fiscal.totais_icms_desonerado
-        )  # Valor Total do ICMS desonerado
+        etree.SubElement(icms_total, "vBC").text = f"{nota_fiscal.totais_icms_base_calculo:.2f}"
+        etree.SubElement(icms_total, "vICMS").text = f"{nota_fiscal.totais_icms_total:.2f}"
+        etree.SubElement(
+            icms_total, "vICMSDeson"
+        ).text = f"{nota_fiscal.totais_icms_desonerado:.2f}"  # Valor Total do ICMS desonerado
         if nota_fiscal.totais_fcp_destino:
-            etree.SubElement(icms_total, "vFCPUFDest").text = "{:.2f}".format(
-                nota_fiscal.totais_fcp_destino
-            )
+            etree.SubElement(
+                icms_total, "vFCPUFDest"
+            ).text = f"{nota_fiscal.totais_fcp_destino:.2f}"
         if nota_fiscal.totais_icms_inter_destino:
-            etree.SubElement(icms_total, "vICMSUFDest").text = "{:.2f}".format(
-                nota_fiscal.totais_icms_inter_destino
-            )
+            etree.SubElement(
+                icms_total, "vICMSUFDest"
+            ).text = f"{nota_fiscal.totais_icms_inter_destino:.2f}"
         if nota_fiscal.totais_icms_inter_remetente:
-            etree.SubElement(icms_total, "vICMSUFRemet").text = "{:.2f}".format(
-                nota_fiscal.totais_icms_remetente
-            )
-        etree.SubElement(icms_total, "vFCP").text = "{:.2f}".format(nota_fiscal.totais_fcp)
-        etree.SubElement(icms_total, "vBCST").text = "{:.2f}".format(
-            nota_fiscal.totais_icms_st_base_calculo
-        )
-        etree.SubElement(icms_total, "vST").text = "{:.2f}".format(nota_fiscal.totais_icms_st_total)
-        etree.SubElement(icms_total, "vFCPST").text = "{:.2f}".format(nota_fiscal.totais_fcp_st)
-        etree.SubElement(icms_total, "vFCPSTRet").text = "{:.2f}".format(
-            nota_fiscal.totais_fcp_st_ret
-        )
+            etree.SubElement(
+                icms_total, "vICMSUFRemet"
+            ).text = f"{nota_fiscal.totais_icms_remetente:.2f}"
+        etree.SubElement(icms_total, "vFCP").text = f"{nota_fiscal.totais_fcp:.2f}"
+        etree.SubElement(
+            icms_total, "vBCST"
+        ).text = f"{nota_fiscal.totais_icms_st_base_calculo:.2f}"
+        etree.SubElement(icms_total, "vST").text = f"{nota_fiscal.totais_icms_st_total:.2f}"
+        etree.SubElement(icms_total, "vFCPST").text = f"{nota_fiscal.totais_fcp_st:.2f}"
+        etree.SubElement(icms_total, "vFCPSTRet").text = f"{nota_fiscal.totais_fcp_st_ret:.2f}"
 
         # ICMS monofasico
         if nota_fiscal.totais_icms_q_bc_mono:
-            etree.SubElement(icms_total, "qBCMono").text = "{:.2f}".format(
-                nota_fiscal.totais_icms_q_bc_mono
-            )
+            etree.SubElement(
+                icms_total, "qBCMono"
+            ).text = f"{nota_fiscal.totais_icms_q_bc_mono:.2f}"
         if nota_fiscal.totais_icms_v_icms_mono:
-            etree.SubElement(icms_total, "vICMSMono").text = "{:.2f}".format(
-                nota_fiscal.totais_icms_v_icms_mono
-            )
+            etree.SubElement(
+                icms_total, "vICMSMono"
+            ).text = f"{nota_fiscal.totais_icms_v_icms_mono:.2f}"
         if nota_fiscal.totais_icms_q_bc_mono_reten:
-            etree.SubElement(icms_total, "qBCMonoReten").text = "{:.2f}".format(
-                nota_fiscal.totais_icms_q_bc_mono_reten
-            )
+            etree.SubElement(
+                icms_total, "qBCMonoReten"
+            ).text = f"{nota_fiscal.totais_icms_q_bc_mono_reten:.2f}"
         if nota_fiscal.totais_icms_v_icms_mono_reten:
-            etree.SubElement(icms_total, "vICMSMonoReten").text = "{:.2f}".format(
-                nota_fiscal.totais_icms_v_icms_mono_reten
-            )
+            etree.SubElement(
+                icms_total, "vICMSMonoReten"
+            ).text = f"{nota_fiscal.totais_icms_v_icms_mono_reten:.2f}"
         if nota_fiscal.totais_icms_q_bc_mono_ret:
-            etree.SubElement(icms_total, "qBCMonoRet").text = "{:.2f}".format(
-                nota_fiscal.totais_icms_q_bc_mono_ret
-            )
+            etree.SubElement(
+                icms_total, "qBCMonoRet"
+            ).text = f"{nota_fiscal.totais_icms_q_bc_mono_ret:.2f}"
         if nota_fiscal.totais_icms_v_icms_mono_ret:
-            etree.SubElement(icms_total, "vICMSMonoRet").text = "{:.2f}".format(
-                nota_fiscal.totais_icms_v_icms_mono_ret
-            )
+            etree.SubElement(
+                icms_total, "vICMSMonoRet"
+            ).text = f"{nota_fiscal.totais_icms_v_icms_mono_ret:.2f}"
 
-        etree.SubElement(icms_total, "vProd").text = "{:.2f}".format(
-            nota_fiscal.totais_icms_total_produtos_e_servicos
-        )
-        etree.SubElement(icms_total, "vFrete").text = "{:.2f}".format(
-            nota_fiscal.totais_icms_total_frete
-        )
-        etree.SubElement(icms_total, "vSeg").text = "{:.2f}".format(
-            nota_fiscal.totais_icms_total_seguro
-        )
-        etree.SubElement(icms_total, "vDesc").text = "{:.2f}".format(
-            nota_fiscal.totais_icms_total_desconto
-        )
+        etree.SubElement(
+            icms_total, "vProd"
+        ).text = f"{nota_fiscal.totais_icms_total_produtos_e_servicos:.2f}"
+        etree.SubElement(icms_total, "vFrete").text = f"{nota_fiscal.totais_icms_total_frete:.2f}"
+        etree.SubElement(icms_total, "vSeg").text = f"{nota_fiscal.totais_icms_total_seguro:.2f}"
+        etree.SubElement(icms_total, "vDesc").text = f"{nota_fiscal.totais_icms_total_desconto:.2f}"
 
         # Tributos
-        etree.SubElement(icms_total, "vII").text = "{:.2f}".format(nota_fiscal.totais_icms_total_ii)
-        etree.SubElement(icms_total, "vIPI").text = "{:.2f}".format(
-            nota_fiscal.totais_icms_total_ipi
-        )
-        etree.SubElement(icms_total, "vIPIDevol").text = "{:.2f}".format(
-            nota_fiscal.totais_icms_total_ipi_dev
-        )
-        etree.SubElement(icms_total, "vPIS").text = "{:.2f}".format(nota_fiscal.totais_icms_pis)
-        etree.SubElement(icms_total, "vCOFINS").text = "{:.2f}".format(
-            nota_fiscal.totais_icms_cofins
-        )
+        etree.SubElement(icms_total, "vII").text = f"{nota_fiscal.totais_icms_total_ii:.2f}"
+        etree.SubElement(icms_total, "vIPI").text = f"{nota_fiscal.totais_icms_total_ipi:.2f}"
+        etree.SubElement(
+            icms_total, "vIPIDevol"
+        ).text = f"{nota_fiscal.totais_icms_total_ipi_dev:.2f}"
+        etree.SubElement(icms_total, "vPIS").text = f"{nota_fiscal.totais_icms_pis:.2f}"
+        etree.SubElement(icms_total, "vCOFINS").text = f"{nota_fiscal.totais_icms_cofins:.2f}"
 
-        etree.SubElement(icms_total, "vOutro").text = "{:.2f}".format(
-            nota_fiscal.totais_icms_outras_despesas_acessorias
-        )
-        etree.SubElement(icms_total, "vNF").text = "{:.2f}".format(
-            nota_fiscal.totais_icms_total_nota
-        )
+        etree.SubElement(
+            icms_total, "vOutro"
+        ).text = f"{nota_fiscal.totais_icms_outras_despesas_acessorias:.2f}"
+        etree.SubElement(icms_total, "vNF").text = f"{nota_fiscal.totais_icms_total_nota:.2f}"
         if nota_fiscal.totais_tributos_aproximado:
-            etree.SubElement(icms_total, "vTotTrib").text = "{:.2f}".format(
-                nota_fiscal.totais_tributos_aproximado
-            )
+            etree.SubElement(
+                icms_total, "vTotTrib"
+            ).text = f"{nota_fiscal.totais_tributos_aproximado:.2f}"
 
         # Reforma Tributaria - Totais IVA Dual (Group W03 - IBSCBSTot)
         # Type: TIBSCBSMonoTot (PL 010b DFeTiposBasicos_v1.00.xsd)
@@ -1804,9 +1749,7 @@ class SerializacaoXML(Serializacao):
         )
         if has_reforma:
             ibscbs_tot = etree.SubElement(total, "IBSCBSTot")
-            etree.SubElement(ibscbs_tot, "vBCIBSCBS").text = "{:.2f}".format(
-                nota_fiscal.totais_vbc_ibscbs
-            )
+            etree.SubElement(ibscbs_tot, "vBCIBSCBS").text = f"{nota_fiscal.totais_vbc_ibscbs:.2f}"
 
             # gIBS (optional — emit if any IBS value exists)
             if nota_fiscal.totais_ibs_uf or nota_fiscal.totais_ibs_mun or nota_fiscal.totais_ibs:
@@ -1815,18 +1758,14 @@ class SerializacaoXML(Serializacao):
                 g_ibs_uf = etree.SubElement(g_ibs, "gIBSUF")
                 etree.SubElement(g_ibs_uf, "vDif").text = "0.00"
                 etree.SubElement(g_ibs_uf, "vDevTrib").text = "0.00"
-                etree.SubElement(g_ibs_uf, "vIBSUF").text = "{:.2f}".format(
-                    nota_fiscal.totais_ibs_uf
-                )
+                etree.SubElement(g_ibs_uf, "vIBSUF").text = f"{nota_fiscal.totais_ibs_uf:.2f}"
 
                 g_ibs_mun = etree.SubElement(g_ibs, "gIBSMun")
                 etree.SubElement(g_ibs_mun, "vDif").text = "0.00"
                 etree.SubElement(g_ibs_mun, "vDevTrib").text = "0.00"
-                etree.SubElement(g_ibs_mun, "vIBSMun").text = "{:.2f}".format(
-                    nota_fiscal.totais_ibs_mun
-                )
+                etree.SubElement(g_ibs_mun, "vIBSMun").text = f"{nota_fiscal.totais_ibs_mun:.2f}"
 
-                etree.SubElement(g_ibs, "vIBS").text = "{:.2f}".format(nota_fiscal.totais_ibs)
+                etree.SubElement(g_ibs, "vIBS").text = f"{nota_fiscal.totais_ibs:.2f}"
                 etree.SubElement(g_ibs, "vCredPres").text = "0.00"
                 etree.SubElement(g_ibs, "vCredPresCondSus").text = "0.00"
 
@@ -1835,7 +1774,7 @@ class SerializacaoXML(Serializacao):
                 g_cbs = etree.SubElement(ibscbs_tot, "gCBS")
                 etree.SubElement(g_cbs, "vDif").text = "0.00"
                 etree.SubElement(g_cbs, "vDevTrib").text = "0.00"
-                etree.SubElement(g_cbs, "vCBS").text = "{:.2f}".format(nota_fiscal.totais_cbs)
+                etree.SubElement(g_cbs, "vCBS").text = f"{nota_fiscal.totais_cbs:.2f}"
                 etree.SubElement(g_cbs, "vCredPres").text = "0.00"
                 etree.SubElement(g_cbs, "vCredPresCondSus").text = "0.00"
 
@@ -1907,15 +1846,9 @@ class SerializacaoXML(Serializacao):
             if nota_fiscal.fatura_numero:
                 fat = etree.SubElement(cobr, "fat")
                 etree.SubElement(fat, "nFat").text = nota_fiscal.fatura_numero
-                etree.SubElement(fat, "vOrig").text = "{:.2f}".format(
-                    nota_fiscal.fatura_valor_original
-                )
-                etree.SubElement(fat, "vDesc").text = "{:.2f}".format(
-                    nota_fiscal.fatura_valor_desconto
-                )
-                etree.SubElement(fat, "vLiq").text = "{:.2f}".format(
-                    nota_fiscal.fatura_valor_liquido
-                )
+                etree.SubElement(fat, "vOrig").text = f"{nota_fiscal.fatura_valor_original:.2f}"
+                etree.SubElement(fat, "vDesc").text = f"{nota_fiscal.fatura_valor_desconto:.2f}"
+                etree.SubElement(fat, "vLiq").text = f"{nota_fiscal.fatura_valor_liquido:.2f}"
 
             # Duplicata 0-N
             if nota_fiscal.duplicatas and len(nota_fiscal.duplicatas) > 0:
@@ -1923,7 +1856,7 @@ class SerializacaoXML(Serializacao):
                     dup = etree.SubElement(cobr, "dup")
                     etree.SubElement(dup, "nDup").text = item.numero
                     etree.SubElement(dup, "dVenc").text = item.data_vencimento.strftime("%Y-%m-%d")
-                    etree.SubElement(dup, "vDup").text = "{:.2f}".format(item.valor)
+                    etree.SubElement(dup, "vDup").text = f"{item.valor:.2f}"
 
         # Pagamento
         """ Obrigatório o preenchimento do Grupo Informações de Pagamento para NF-e e NFC-e.
@@ -1982,7 +1915,7 @@ class SerializacaoXML(Serializacao):
 
     def serializar_evento(self, evento, tag_raiz="evento", retorna_string=False):
         tz = datetime.now().astimezone().strftime("%z")
-        tz = "{}:{}".format(tz[:-2], tz[-2:])
+        tz = f"{tz[:-2]}:{tz[-2:]}"
         raiz = etree.Element(tag_raiz, versao="1.00", xmlns=NAMESPACE_NFE)
         e = etree.SubElement(raiz, "infEvento", Id=evento.identificador)
         etree.SubElement(e, "cOrgao").text = CODIGOS_ESTADOS[evento.uf.upper()]
@@ -2016,7 +1949,7 @@ class SerializacaoXML(Serializacao):
 
     def serializar_evento_mdfe(self, evento, tag_raiz="eventoMDFe", retorna_string=False):
         tz = datetime.now().astimezone().strftime("%z")
-        tz = "{}:{}".format(tz[:-2], tz[-2:])
+        tz = f"{tz[:-2]}:{tz[-2:]}"
         raiz = etree.Element(tag_raiz, versao=VERSAO_MDFE, xmlns=NAMESPACE_MDFE)
         e = etree.SubElement(raiz, "infEvento", Id=evento.identificador)
         etree.SubElement(e, "cOrgao").text = CODIGOS_ESTADOS[evento.uf.upper()]
@@ -2081,19 +2014,18 @@ class SerializacaoXML(Serializacao):
             # Componentes de Pagamento do Frete
             Comp = etree.SubElement(infPag, "Comp")
             etree.SubElement(Comp, "tpComp").text = evento.tpComp.zfill(2)
-            etree.SubElement(Comp, "vComp").text = "{:.2f}".format(evento.vComp)
+            etree.SubElement(Comp, "vComp").text = f"{evento.vComp:.2f}"
 
             # Continuação das Informações do pagamento
-            etree.SubElement(infPag, "vContrato").text = "{:.2f}".format(evento.vContrato)
+            etree.SubElement(infPag, "vContrato").text = f"{evento.vContrato:.2f}"
             etree.SubElement(infPag, "indPag").text = evento.indPag
 
             # Se indPag == 1 (0=A vista e 1=A prazo)
-            if evento.indPag != "":
-                if int(evento.indPag) == 1:
-                    infPrazo = etree.SubElement(infPag, "infPrazo")
-                    etree.SubElement(infPrazo, "nParcela").text = evento.nParcela.zfill(3)
-                    etree.SubElement(infPrazo, "dVenc").text = evento.dVenc.strftime("%Y-%m-%d")
-                    etree.SubElement(infPrazo, "vParcela").text = "{:.2f}".format(evento.vParcela)
+            if evento.indPag != "" and int(evento.indPag) == 1:
+                infPrazo = etree.SubElement(infPag, "infPrazo")
+                etree.SubElement(infPrazo, "nParcela").text = evento.nParcela.zfill(3)
+                etree.SubElement(infPrazo, "dVenc").text = evento.dVenc.strftime("%Y-%m-%d")
+                etree.SubElement(infPrazo, "vParcela").text = f"{evento.vParcela:.2f}"
 
             # Informações bancárias
             infBanc = etree.SubElement(infPag, "infBanc")
@@ -2109,7 +2041,7 @@ class SerializacaoXML(Serializacao):
             return raiz
 
 
-class SerializacaoQrcode(object):
+class SerializacaoQrcode:
     """Classe que gera e serializa o qrcode de NFC-e no xml"""
 
     def gerar_qrcode(self, token, csc, xml, return_qr=False, online=True):
@@ -2123,7 +2055,7 @@ class SerializacaoQrcode(object):
         data = nfe.xpath("ns:infNFe/ns:ide/ns:dhEmi/text()", namespaces=ns)[0].encode()
         tpamb = nfe.xpath("ns:infNFe/ns:ide/ns:tpAmb/text()", namespaces=ns)[0]
         cuf = nfe.xpath("ns:infNFe/ns:ide/ns:cUF/text()", namespaces=ns)[0]
-        uf = [key for key, value in CODIGOS_ESTADOS.items() if value == cuf][0].upper()
+        uf = next(key for key, value in CODIGOS_ESTADOS.items() if value == cuf).upper()
 
         # tenta encontrar a tag cpf
         try:
@@ -2150,20 +2082,18 @@ class SerializacaoQrcode(object):
         # VERSAO_QRCODE =2
         if online:
             # versão online
-            url = "{}|{}|{}|{}".format(chave, VERSAO_QRCODE, tpamb, token)
+            url = f"{chave}|{VERSAO_QRCODE}|{tpamb}|{token}"
         else:
             # versão offline
             digest = digest.hex()
 
-            url = "{}|{}|{}|{}|{}|{}|{}".format(
-                chave, VERSAO_QRCODE, tpamb, dia, total, digest, token
-            )
+            url = f"{chave}|{VERSAO_QRCODE}|{tpamb}|{dia}|{total}|{digest}|{token}"
 
         url_complementar = url + csc
         url_hash = hashlib.sha1(url_complementar.encode()).digest()
         url_hash = base64.b16encode(url_hash).decode()
 
-        url = "p={}|{}".format(url, url_hash)
+        url = f"p={url}|{url_hash}"
 
         # url_chave -Texto com a URL de consulta por chave de acesso a ser impressa no DANFE NFC-e.
         # Informar a URL da “Consulta por chave de acesso da NFC-e”.
@@ -2185,7 +2115,7 @@ class SerializacaoQrcode(object):
                 qrcode = NFCE[uf]["HTTPS"] + NFCE[uf]["QR"] + url
             else:
                 qrcode = NFCE[uf]["HOMOLOGACAO"] + NFCE[uf]["QR"] + url
-            url_chave = url_chave = NFCE[uf]["URL"]
+            url_chave = NFCE[uf]["URL"]
         # MG tem comportamento distintos para qrcode e url
         elif uf == "MG":
             qrcode = NFCE[uf]["QR"] + url
@@ -2224,7 +2154,7 @@ class SerializacaoQrcode(object):
             return nfe
 
 
-class SerializacaoNfse(object):
+class SerializacaoNfse:
     def __init__(self, autorizador):
         "Recebe uma string com o nome do autorizador."
         self.autorizador = autorizador
@@ -2293,7 +2223,7 @@ class SerializacaoNfse(object):
             raise Exception("Autorizador não suportado para cancelamento!")
 
 
-class SerializacaoQrcodeMDFe(object):
+class SerializacaoQrcodeMDFe:
     """Classe que gera e serializa o qrcode do MDF-e no xml"""
 
     def gerar_qrcode(self, xml, return_qr=False):
@@ -2346,8 +2276,6 @@ class SerializacaoMDFe(Serializacao):
                 return etree.tostring(raiz, encoding="unicode", pretty_print=False)
             else:
                 return raiz
-        except Exception as e:
-            raise e
         finally:
             if limpar:
                 self._fonte_dados.limpar_dados()
@@ -2458,9 +2386,9 @@ class SerializacaoMDFe(Serializacao):
                 elif len(item.cpfcnpj_pagador) == 14:
                     etree.SubElement(disp, "CNPJPg").text = item.cpfcnpj_pagador
                 etree.SubElement(disp, "nCompra").text = item.numero_compra
-                etree.SubElement(disp, "vValePed").text = "{:.2f}".format(
-                    item.valor_pedagio or 0
-                )  # Valor do ICMS
+                etree.SubElement(
+                    disp, "vValePed"
+                ).text = f"{item.valor_pedagio or 0:.2f}"  # Valor do ICMS
 
         # Contratantes
         if modal_rodoviario.contratante is not None:
@@ -2476,13 +2404,13 @@ class SerializacaoMDFe(Serializacao):
                 if item.NroContrato:
                     infContrato = etree.SubElement(infContratante, "infContrato")
                     etree.SubElement(infContrato, "NroContrato").text = item.NroContrato
-                    etree.SubElement(infContrato, "vContratoGlobal").text = "{:.2f}".format(
-                        item.vContratoGlobal or 0
-                    )
+                    etree.SubElement(
+                        infContrato, "vContratoGlobal"
+                    ).text = f"{item.vContratoGlobal or 0:.2f}"
 
         # Veículo Tração
         if len(modal_rodoviario.veiculo_tracao) != 1:
-            raise "Permitido somente um único veículo Tração"
+            raise Exception("Permitido somente um único veículo Tração")
 
         for num, item in enumerate(modal_rodoviario.veiculo_tracao):
             veicTracao = etree.SubElement(rodo, "veicTracao")
@@ -2491,9 +2419,9 @@ class SerializacaoMDFe(Serializacao):
             etree.SubElement(veicTracao, "placa").text = item.placa
             if item.RENAVAM:
                 etree.SubElement(veicTracao, "RENAVAM").text = item.RENAVAM
-            etree.SubElement(veicTracao, "tara").text = "{:.0f}".format(item.tara or 0)
-            etree.SubElement(veicTracao, "capKG").text = "{:.0f}".format(item.capKG or 0)
-            etree.SubElement(veicTracao, "capM3").text = "{:.0f}".format(item.capM3 or 0)
+            etree.SubElement(veicTracao, "tara").text = f"{item.tara or 0:.0f}"
+            etree.SubElement(veicTracao, "capKG").text = f"{item.capKG or 0:.0f}"
+            etree.SubElement(veicTracao, "capM3").text = f"{item.capM3 or 0:.0f}"
 
             # Propritario do veículo Tração
             if item.proprietario:
@@ -2535,13 +2463,9 @@ class SerializacaoMDFe(Serializacao):
                 etree.SubElement(veicReboque, "placa").text = item_reboque.placa
                 if item_reboque.RENAVAM:
                     etree.SubElement(veicReboque, "RENAVAM").text = item_reboque.RENAVAM
-                etree.SubElement(veicReboque, "tara").text = "{:.0f}".format(item_reboque.tara or 0)
-                etree.SubElement(veicReboque, "capKG").text = "{:.0f}".format(
-                    item_reboque.capKG or 0
-                )
-                etree.SubElement(veicReboque, "capM3").text = "{:.0f}".format(
-                    item_reboque.capM3 or 0
-                )
+                etree.SubElement(veicReboque, "tara").text = f"{item_reboque.tara or 0:.0f}"
+                etree.SubElement(veicReboque, "capKG").text = f"{item_reboque.capKG or 0:.0f}"
+                etree.SubElement(veicReboque, "capM3").text = f"{item_reboque.capM3 or 0:.0f}"
 
                 # Propritario do veículo Reboque
                 if item_reboque.proprietario:
@@ -2578,7 +2502,7 @@ class SerializacaoMDFe(Serializacao):
         raiz = etree.Element(tag_raiz)
 
         if len(documentos) <= 0:
-            raise "MDFe deve ter uma NFe ou uma CTe vinculadas"
+            raise Exception("MDFe deve ter uma NFe ou uma CTe vinculadas")
 
         for num, item in enumerate(documentos):
             infMunDescarga = etree.SubElement(raiz, "infMunDescarga")
@@ -2642,14 +2566,14 @@ class SerializacaoMDFe(Serializacao):
         elif totais.qNFe > 0:
             etree.SubElement(raiz, "qNFe").text = str(totais.qNFe)
 
-        etree.SubElement(raiz, "vCarga").text = str("{:.2f}").format(totais.vCarga or 0)
+        etree.SubElement(raiz, "vCarga").text = f"{totais.vCarga or 0:.2f}"
         if totais.cUnid == "KG":
             etree.SubElement(raiz, "cUnid").text = "01"
         elif totais.cUnid == "TON":
             etree.SubElement(raiz, "cUnid").text = "02"
         else:
-            raise "cUnid deve ser KG ou TON"
-        etree.SubElement(raiz, "qCarga").text = str("{:.4f}").format(totais.qCarga or 0)
+            raise Exception("cUnid deve ser KG ou TON")
+        etree.SubElement(raiz, "qCarga").text = f"{totais.qCarga or 0:.4f}"
 
         if retorna_string:
             return etree.tostring(raiz, encoding="unicode", pretty_print=True)
@@ -2689,7 +2613,7 @@ class SerializacaoMDFe(Serializacao):
         tz = manifesto.data_emissao.strftime("%z")
         if not tz:
             tz = datetime.now().astimezone().strftime("%z")
-        tz = "{}:{}".format(tz[:-2], tz[-2:])
+        tz = f"{tz[:-2]}:{tz[-2:]}"
 
         # Dados do Manifesto
         ide = etree.SubElement(raiz, "ide")

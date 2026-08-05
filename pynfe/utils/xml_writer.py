@@ -1,7 +1,9 @@
-from lxml import etree
 from decimal import Decimal
+from typing import Any, Literal
+
+from lxml import etree
+
 from . import ajustar_valor, is_empty
-from typing import Literal, Any
 
 __MIN_LEN_ERROR = 'Tamanho do campo {} é menor que o mímino permitido "{}"'
 __MAX_LEN_ERROR = 'Tamanho do campo {} é maior que o mímino permitido "{}"'

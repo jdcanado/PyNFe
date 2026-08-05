@@ -1,4 +1,10 @@
+import datetime
+import re
+from decimal import Decimal
+
 import pyxb.namespace
+from lxml import etree
+
 from pynfe.entidades.cliente import Cliente
 from pynfe.entidades.emitente import Emitente
 from pynfe.entidades.notafiscal import NotaFiscalServico
@@ -9,10 +15,6 @@ from pynfe.utils import obter_codigo_por_municipio
 from pynfe.utils.flags import (
     CODIGO_BRASIL,
 )
-from decimal import Decimal
-import datetime
-import re
-from lxml import etree
 
 
 class SerializacaoNFSeConfigTest:
@@ -55,7 +57,7 @@ class SerializacaoNFSeTest:
 
         return NotaFiscalServico(
             identificador="50",
-            data_emissao=datetime.datetime.strptime(
+            data_emissao=datetime.datetime.strptime(  # noqa: DTZ007
                 SerializacaoNFSeTest.data_hora, "%Y-%m-%dT%H:%M:%S"
             ),
             servico=servico,

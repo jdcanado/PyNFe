@@ -15,6 +15,8 @@ Create bar code sample :
    bar.getImage("9782212110708",50,"gif")
 """
 
+from typing import ClassVar
+
 # courbB08.pil PIL Font file uuencoded
 courB08_pil = """eJztl91rFkcUxp+Zt7vGFYzVtiJKICgYlLRWkaBBVGgDraFGCH5gsQp+QMBqabAVRYJYAlakCkoh
 CpYgxaLkIu1NvLBeSAStglpqL6xQAsVe2AuL5u2buH3mzGaYPf9AKWTl8d3nl7MzZ2bnazvea9+9
@@ -66,7 +68,7 @@ eVQFrS7Sh/uFLftIidKWbgj6Oq652d4c3v88Dw2JDK7bSWX/ByuaLZI="""
 
 
 class Code128:
-    CharSetA = {
+    CharSetA: ClassVar[dict] = {
         " ": 0,
         "!": 1,
         '"': 2,
@@ -176,7 +178,7 @@ class Code128:
         "STOP": 106,
     }
 
-    CharSetB = {
+    CharSetB: ClassVar[dict] = {
         " ": 0,
         "!": 1,
         '"': 2,
@@ -286,7 +288,7 @@ class Code128:
         "STOP": 106,
     }
 
-    CharSetC = {
+    CharSetC: ClassVar[dict] = {
         "00": 0,
         "01": 1,
         "02": 2,
@@ -396,7 +398,7 @@ class Code128:
         "STOP": 106,
     }
 
-    ValueEncodings = {
+    ValueEncodings: ClassVar[dict] = {
         0: "11011001100",
         1: "11001101100",
         2: "11001100110",
@@ -522,10 +524,10 @@ class Code128:
             # Only switch to char set C if next four chars are digits
             if (
                 len(code[c:]) >= 4
-                and code[c : c + 4].isdigit()  # noqa: E203
+                and code[c : c + 4].isdigit()
                 and current_charset != self.CharSetC
                 or len(code[c:]) >= 2
-                and code[c : c + 2].isdigit()  # noqa: E203
+                and code[c : c + 2].isdigit()
                 and current_charset == self.CharSetC
             ):
                 # If char set C = current and next two chars ar digits, keep C
@@ -571,7 +573,7 @@ class Code128:
                 pos += 1
 
             if current_charset == self.CharSetC:
-                val = self.CharSetC[code[c : c + 2]]  # noqa: E203
+                val = self.CharSetC[code[c : c + 2]]
                 skip = True
             else:
                 val = current_charset[code[c]]
@@ -598,10 +600,11 @@ class Code128:
         value code barre value
         height height in pixel of the bar code
         extension image file extension"""
-        import Image
-        import ImageFont
-        import ImageDraw
         from string import lower, upper
+
+        import Image
+        import ImageDraw
+        import ImageFont
 
         # Create a missing font file
         decodeFontFile(courB08_pil, "courB08.pil")
@@ -637,14 +640,15 @@ class Code128:
 
 def decodeFontFile(data, file):
     """Decode font file embedded in this script and create file"""
-    from zlib import decompress
     from base64 import decodestring
     from os.path import exists
+    from zlib import decompress
 
     # If the font file is missing
     if not exists(file):
         # Write font file
-        open(file, "wb").write(decompress(decodestring(data)))
+        with open(file, "wb") as f:
+            f.write(decompress(decodestring(data)))
 
 
 def testWithChecksum():
@@ -652,7 +656,7 @@ def testWithChecksum():
     bar = Code128()
     assert (
         bar.makeCode("HI345678")
-        == "11010010000110001010001100010001010111011110100010110001110001011011000010100100001001101100011101011"  # noqa: E501
+        == "11010010000110001010001100010001010111011110100010110001110001011011000010100100001001101100011101011"
     )
 
 

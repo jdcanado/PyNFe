@@ -2,19 +2,20 @@
 @author: Junior Tada, Leonardo Tada
 """
 
-from .base import Entidade
 from decimal import Decimal
+
+from .base import Entidade
 
 
 class Servico(Entidade):
     valor_servico = Decimal()
-    iss_retido = int()
+    iss_retido = 0
     """ http://www1.receita.fazenda.gov.br/sistemas/nfse/tabelas-de-codigos.htm
         Lista com códigos dos serviços
     """
-    item_lista = str()
+    item_lista = ""
     # descrição da atividade
-    discriminacao = str()
+    discriminacao = ""
     """
         1 – Exigível;
         2 – Não incidência;
@@ -24,12 +25,12 @@ class Servico(Entidade):
         6 – Exigibilidade Suspensa por Decisão Judicial;
         7 – Exigibilidade Suspensa por ProcessoAdministrativo
     """
-    exigibilidade = int()
+    exigibilidade = 0
     # Lista com todos os codigos divididos por estados na pasta data/MunIBGE
-    codigo_municipio = str()
-    municipio_incidencia = str()
-    codigo_cnae = int()
-    codigo_tributacao_municipio = str()
+    codigo_municipio = ""
+    municipio_incidencia = ""
+    codigo_cnae = 0
+    codigo_tributacao_municipio = ""
     # Dados opcionais
     valor_deducoes = Decimal()
     valor_pis = Decimal()

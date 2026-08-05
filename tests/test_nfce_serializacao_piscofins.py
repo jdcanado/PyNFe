@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# *-* encoding: utf8 *-*
 
 import datetime
 import unittest
@@ -19,6 +18,7 @@ from pynfe.utils.flags import (
     XSD_NFE,
     XSD_NFE_PROCESSADA,
 )
+
 # from pynfe.utils import etree
 
 
@@ -102,11 +102,11 @@ class SerializacaoNFeTestCase(unittest.TestCase):
             ean="1234567890121",
             cfop="5102",
             unidade_comercial="UN",
-            quantidade_comercial=Decimal("12"),
+            quantidade_comercial=Decimal(12),
             valor_unitario_comercial=Decimal("9.67"),
             valor_total_bruto=Decimal("116.03999999999999"),
             unidade_tributavel="UN",
-            quantidade_tributavel=Decimal("12"),
+            quantidade_tributavel=Decimal(12),
             valor_unitario_tributavel=Decimal("9.67"),
             ean_tributavel="SEM GTIN",
             ind_total=1,
@@ -163,11 +163,11 @@ class SerializacaoNFeTestCase(unittest.TestCase):
             ean="1234567890121",
             cfop="5102",
             unidade_comercial="UN",
-            quantidade_comercial=Decimal("12"),
+            quantidade_comercial=Decimal(12),
             valor_unitario_comercial=Decimal("9.67"),
             valor_total_bruto=Decimal("116.03999999999999"),
             unidade_tributavel="UN",
-            quantidade_tributavel=Decimal("12"),
+            quantidade_tributavel=Decimal(12),
             valor_unitario_tributavel=Decimal("9.67"),
             ean_tributavel="SEM GTIN",
             ind_total=1,
@@ -199,7 +199,7 @@ class SerializacaoNFeTestCase(unittest.TestCase):
             CST_PIS = self.xml_assinado.xpath(
                 "//ns:det/ns:imposto/ns:PIS/ns:PISOutr/ns:CST", namespaces=self.ns
             )[0].text
-        except BaseException:
+        except BaseException:  # noqa: BLE001
             CST_PIS = None
         self.assertEqual(CST_PIS, None)
 
@@ -207,7 +207,7 @@ class SerializacaoNFeTestCase(unittest.TestCase):
             vPIS = self.xml_assinado.xpath(
                 "//ns:det/ns:imposto/ns:PIS/ns:PISOutr/ns:vPIS", namespaces=self.ns
             )[0].text
-        except BaseException:
+        except BaseException:  # noqa: BLE001
             vPIS = None
         self.assertEqual(vPIS, None)
 
@@ -216,7 +216,7 @@ class SerializacaoNFeTestCase(unittest.TestCase):
             CST_COFINS = self.xml_assinado.xpath(
                 "//ns:det/ns:imposto/ns:COFINS/ns:COFINSOutr/ns:CST", namespaces=self.ns
             )[0].text
-        except BaseException:
+        except BaseException:  # noqa: BLE001
             CST_COFINS = None
         self.assertEqual(CST_COFINS, None)
 
@@ -224,7 +224,7 @@ class SerializacaoNFeTestCase(unittest.TestCase):
             vCOFINS = self.xml_assinado.xpath(
                 "//ns:det/ns:imposto/ns:COFINS/ns:COFINSOutr/ns:vCOFINS", namespaces=self.ns
             )[0].text
-        except BaseException:
+        except BaseException:  # noqa: BLE001
             vCOFINS = None
         self.assertEqual(vCOFINS, None)
 

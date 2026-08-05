@@ -1,8 +1,7 @@
-# -*- coding: utf-8 -*-
-from pynfe.excecoes import NenhumObjetoEncontrado, MuitosObjetosEncontrados
+from pynfe.excecoes import MuitosObjetosEncontrados, NenhumObjetoEncontrado
 
 
-class FonteDados(object):
+class FonteDados:
     """Classe responsável por ser o repositório dos objetos em memória e que
     pode ser extendida para persistir esses objetos. Também tem a função de
     memorizar os objetos redundantes como um só e assim otimizar o desempenho."""
@@ -62,7 +61,7 @@ class FonteDados(object):
             self._objetos += _objeto
 
         else:
-            raise Exception("Objeto informado e invalido!")
+            raise TypeError("Objeto informado e invalido!")
 
     def remover_objeto(self, _objeto=None, **kwargs):
         """Método responsavel por remover os objetos que casem com os atributos

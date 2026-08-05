@@ -1,30 +1,29 @@
-# -*- coding: utf-8 -*-
 from .base import Entidade
 
 
 class Transportadora(Entidade):
     # Dados da Transportadora
     # - Nome/Razão Social (obrigatorio)
-    razao_social = str()
+    razao_social = ""
 
     # - Tipo de Documento (obrigatorio) - default CNPJ
     tipo_documento = "CNPJ"
 
     # - Numero do Documento (obrigatorio)
-    numero_documento = str()
+    numero_documento = ""
 
     # - Inscricao Estadual
-    inscricao_estadual = str()
+    inscricao_estadual = ""
 
     # Endereco
     # - Logradouro (obrigatorio)
-    endereco_logradouro = str()
+    endereco_logradouro = ""
 
     # - UF (obrigatorio)
-    endereco_uf = str()
+    endereco_uf = ""
 
     # - Municipio (obrigatorio)
-    endereco_municipio = str()
+    endereco_municipio = ""
 
     def __str__(self):
-        return " ".join([self.tipo_documento, self.numero_documento])
+        return f"{self.tipo_documento} {self.numero_documento}"

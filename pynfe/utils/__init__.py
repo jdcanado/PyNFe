@@ -1,11 +1,10 @@
-# *-* encoding: utf-8 *-*
-
 import codecs
 import os
-from unicodedata import normalize
-from signxml import XMLSigner
-from typing import Literal
 from decimal import Decimal
+from typing import Literal
+from unicodedata import normalize
+
+from signxml import XMLSigner
 
 try:
     from lxml import etree  # noqa: F401
@@ -76,12 +75,11 @@ def carregar_arquivo_municipios(uf, reverso=False):
         except ValueError:
             uf = flags.CODIGOS_ESTADOS[uf.upper()]
 
-    caminho_arquivo = os.path.join(CAMINHO_MUNICIPIOS, "MunIBGE-UF%s.txt" % uf)
+    caminho_arquivo = os.path.join(CAMINHO_MUNICIPIOS, f"MunIBGE-UF{uf}.txt")
 
     # Carrega o conteudo do arquivo
-    fp = codecs.open(caminho_arquivo, "r", "utf-8-sig")
-    linhas = list(fp.readlines())
-    fp.close()
+    with codecs.open(caminho_arquivo, "r", "utf-8-sig") as fp:
+        linhas = list(fp.readlines())
 
     municipios_dict = {}
 
@@ -104,7 +102,7 @@ def obter_codigo_por_municipio(municipio, uf):
     municipios = carregar_arquivo_municipios(uf, True)
     municipio_normalizado = normalizar_municipio(municipio)
     if municipio_normalizado not in municipios:
-        raise ValueError("Município inválido %s" % municipio)
+        raise ValueError(f"Município inválido {municipio}")
     return municipios[municipio_normalizado]
 
 
@@ -149,7 +147,7 @@ def formatar_decimal(dec):
     if dec * 100 - int(dec * 100):
         return str(dec)
     else:
-        return "%.2f" % dec
+        return f"{dec:.2f}"
 
 
 def obter_uf_por_codigo(codigo_uf):
@@ -202,7 +200,7 @@ def is_empty(value):
     elif isinstance(value, str) and not value.strip():
         # Verifica se a string está vazia ou contém apenas espaços em branco.
         return True
-    elif isinstance(value, (list, tuple, dict)) and not value:
+    elif isinstance(value, (list, tuple, dict)) and not value:  # noqa: SIM103
         # Verifica se a lista, tupla ou dicionário está vazio.
         return True
     else:

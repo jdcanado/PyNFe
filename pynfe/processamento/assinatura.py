@@ -1,12 +1,12 @@
-# -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import signxml
-from typing import Union
 
 from pynfe.entidades import CertificadoA1
 from pynfe.utils import CustomXMLSigner, etree, remover_acentos
 
 
-class Assinatura(object):
+class Assinatura:
     """Classe abstrata responsavel por definir os metodos e logica das classes
     de assinatura digital."""
 
@@ -20,7 +20,6 @@ class Assinatura(object):
 
     def assinar(self, xml):
         """Efetua a assinatura da nota"""
-        pass
 
 
 class AssinaturaA1(Assinatura):
@@ -30,7 +29,7 @@ class AssinaturaA1(Assinatura):
         else:
             self.key, self.cert = CertificadoA1(certificado).separar_arquivo(senha)
 
-    def assinar(self, xml: etree._Element, retorna_string=False) -> Union[str, etree._Element]:
+    def assinar(self, xml: etree._Element, retorna_string=False) -> str | etree._Element:
         # busca tag que tem id(reference_uri), logo nao importa se tem namespace
         reference = xml.find(".//*[@Id]").attrib["Id"]
 
@@ -49,7 +48,7 @@ class AssinaturaA1(Assinatura):
         ns = {None: signer.namespaces["ds"]}
         signer.namespaces = ns
 
-        ref_uri = ("#%s" % reference) if reference else None
+        ref_uri = (f"#{reference}") if reference else None
         signed_root = signer.sign(xml, key=self.key, cert=self.cert, reference_uri=ref_uri)
 
         # Reparse to ensure namespaces are correctly associated with elements

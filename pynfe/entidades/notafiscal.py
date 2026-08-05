@@ -1,10 +1,10 @@
-# -*- coding: utf-8 -*-
 import random
 from decimal import Decimal
 
-from pynfe import get_version
-
 # from pynfe.utils import so_numeros, memoize
+from typing import ClassVar
+
+from pynfe import get_version
 from pynfe.utils import so_numeros
 from pynfe.utils.flags import CODIGOS_ESTADOS, NF_STATUS
 
@@ -13,7 +13,7 @@ from .base import CampoDeprecated, Entidade
 
 class NotaFiscal(Entidade):
     # campos deprecados
-    campos_deprecados = [
+    campos_deprecados: ClassVar[list[CampoDeprecated]] = [
         CampoDeprecated(
             "tipo_pagamento",
             novo=None,
@@ -25,29 +25,29 @@ class NotaFiscal(Entidade):
     status = NF_STATUS[0]
 
     # Código numérico aleatório que compõe a chave de acesso
-    codigo_numerico_aleatorio = str()
+    codigo_numerico_aleatorio = ""
 
     # Digito verificador do codigo numerico aleatorio
-    dv_codigo_numerico_aleatorio = str()
+    dv_codigo_numerico_aleatorio = ""
 
     # Nota Fisca eletronica
     # - Modelo (formato: NN)
-    modelo = int()
+    modelo = 0
 
     # - Serie (obrigatorio - formato: NNN)
-    serie = str()
+    serie = ""
 
     # - Numero NF (obrigatorio)
-    numero_nf = str()
+    numero_nf = ""
 
     # - Data da Emissao (obrigatorio)
     data_emissao = None
 
     # - Natureza da Operacao (obrigatorio)
-    natureza_operacao = str()
+    natureza_operacao = ""
 
     # - Tipo do Documento (obrigatorio - seleciona de lista) - NF_TIPOS_DOCUMENTO
-    tipo_documento = int()
+    tipo_documento = 0
 
     # - Processo de emissão da NF-e (obrigatorio - seleciona de lista) - NF_PROCESSOS_EMISSAO
     processo_emissao = 0
@@ -56,7 +56,7 @@ class NotaFiscal(Entidade):
     versao_processo_emissao = get_version()
 
     # - Tipo impressao DANFE (obrigatorio - seleciona de lista) - NF_TIPOS_IMPRESSAO_DANFE
-    tipo_impressao_danfe = int()
+    tipo_impressao_danfe = 0
 
     # - Data de saida/entrada
     data_saida_entrada = None
@@ -86,13 +86,13 @@ class NotaFiscal(Entidade):
     tipo_pagamento = None
 
     # - Forma de emissao (obrigatorio - seleciona de lista) - NF_FORMAS_EMISSAO
-    forma_emissao = str()
+    forma_emissao = ""
 
     # - Finalidade de emissao (obrigatorio - seleciona de lista) - NF_FINALIDADES_EMISSAO
-    finalidade_emissao = int()
+    finalidade_emissao = 0
 
     # - Indica se a nota e para consumidor final
-    cliente_final = int()
+    cliente_final = 0
 
     # - Indica se a compra foi feita presencialmente, telefone, internet, etc
     """
@@ -104,7 +104,7 @@ class NotaFiscal(Entidade):
         5=Operação presencial, fora do estabelecimento;
         9=Operação não presencial, outros.
     """
-    indicador_presencial = int()
+    indicador_presencial = 0
 
     # - Indicador de intermediador/marketplace
     """
@@ -112,18 +112,18 @@ class NotaFiscal(Entidade):
         1=Operação em site ou plataforma de terceiros
         (intermediadores/marketplace)</xs:documentation>
     """
-    indicador_intermediador = int()
+    indicador_intermediador = 0
 
     """ nfce suporta apenas operação interna
         Identificador de local de destino da operação
         1=Operação interna;2=Operação interestadual;3=Operação com exterior.
     """
-    indicador_destino = int()
+    indicador_destino = 0
     # - UF - converter para codigos em CODIGOS_ESTADOS
-    uf = str()
+    uf = ""
 
     # - Municipio de ocorrencia
-    municipio = str()
+    municipio = ""
 
     # - Digest value da NF-e (somente leitura)
     digest_value = None
@@ -138,7 +138,7 @@ class NotaFiscal(Entidade):
     valor_icms_st_nota = Decimal()
 
     # - Protocolo (somente leitura)
-    protocolo = str()
+    protocolo = ""
 
     # - Data (somente leitura)
     data = None
@@ -311,7 +311,7 @@ class NotaFiscal(Entidade):
     totais_is = Decimal()
 
     # Reforma Tributaria - cMunFGIBS (Group B)
-    municipio_fato_gerador_ibs = str()
+    municipio_fato_gerador_ibs = ""
 
     # Transporte
     # - Modalidade do Frete (obrigatorio - seleciona de lista) - MODALIDADES_FRETE
@@ -321,7 +321,7 @@ class NotaFiscal(Entidade):
     # 3=Transporte Próprio por conta do Remetente;
     # 4=Transporte Próprio por conta do Destinatário;
     # 9=Sem Ocorrência de Transporte.
-    transporte_modalidade_frete = int()
+    transporte_modalidade_frete = 0
 
     # - Transportador (seleciona de Transportadoras)
     transporte_transportadora = None
@@ -337,36 +337,36 @@ class NotaFiscal(Entidade):
     transporte_retencao_icms_valor_servico = Decimal()
 
     #  - UF
-    transporte_retencao_icms_uf = str()
+    transporte_retencao_icms_uf = ""
 
     #  - Municipio
     transporte_retencao_icms_municipio = Decimal()
 
     #  - CFOP
-    transporte_retencao_icms_cfop = str()
+    transporte_retencao_icms_cfop = ""
 
     #  - ICMS retido
     transporte_retencao_icms_retido = Decimal()
 
     # - Veiculo
     #  - Placa
-    transporte_veiculo_placa = str()
+    transporte_veiculo_placa = ""
 
     #  - RNTC
-    transporte_veiculo_rntc = str()
+    transporte_veiculo_rntc = ""
 
     #  - UF
-    transporte_veiculo_uf = str()
+    transporte_veiculo_uf = ""
 
     # - Reboque
     #  - Placa
-    transporte_reboque_placa = str()
+    transporte_reboque_placa = ""
 
     #  - RNTC
-    transporte_reboque_rntc = str()
+    transporte_reboque_rntc = ""
 
     #  - UF
-    transporte_reboque_uf = str()
+    transporte_reboque_uf = ""
 
     # - Volumes (lista 1 para * / ManyToManyField)
     transporte_volumes = None
@@ -374,7 +374,7 @@ class NotaFiscal(Entidade):
     # Cobranca
     # - Fatura
     #  - Numero
-    fatura_numero = str()
+    fatura_numero = ""
 
     #  - Valor original
     fatura_valor_original = Decimal()
@@ -391,10 +391,10 @@ class NotaFiscal(Entidade):
     # Informacoes Adicionais
     # - Informacoes Adicionais
     #  - Informacoes adicionais de interesse do fisco
-    informacoes_adicionais_interesse_fisco = str()
+    informacoes_adicionais_interesse_fisco = ""
 
     #  - Informacoes complementares de interesse do contribuinte
-    informacoes_complementares_interesse_contribuinte = str()
+    informacoes_complementares_interesse_contribuinte = ""
 
     # - Observacoes do Contribuinte (lista 1 para * / ManyToManyField)
     observacoes_contribuinte = None
@@ -403,7 +403,7 @@ class NotaFiscal(Entidade):
     processos_referenciados = None
 
     # - pagamentos
-    pagamentos = list()
+    pagamentos: ClassVar[list] = []
     # valor do troco
     valor_troco = Decimal()
 
@@ -418,7 +418,7 @@ class NotaFiscal(Entidade):
         self.responsavel_tecnico = []
         self.pagamentos = []
 
-        super(NotaFiscal, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __str__(self):
         return " ".join([str(self.modelo), self.serie, self.numero_nf])
@@ -567,95 +567,95 @@ class NotaFiscal(Entidade):
     def identificador_unico(self):
         # Monta 'Id' da tag raiz <infNFe>
         # Ex.: NFe35080599999090910270550010000000011518005123
-        key = "%(uf)s%(ano)s%(mes)s%(cnpj)s%(mod)s%(serie)s%(nNF)s%(tpEmis)s%(cNF)s" % {
-            "uf": CODIGOS_ESTADOS[self.uf],
-            "ano": self.data_emissao.strftime("%y"),
-            "mes": self.data_emissao.strftime("%m"),
-            "cnpj": so_numeros(self.emitente.cnpj).zfill(14),
-            "mod": self.modelo,
-            "serie": str(self.serie).zfill(3),
-            "nNF": str(self.numero_nf).zfill(9),
-            "tpEmis": str(self.forma_emissao),
-            "cNF": self._codigo_numerico_aleatorio(),
-        }
-        return "NFe%(uf)s%(ano)s%(mes)s%(cnpj)s%(mod)s%(serie)s%(nNF)s%(tpEmis)s%(cNF)s%(cDV)s" % {
-            "uf": CODIGOS_ESTADOS[self.uf],
-            "ano": self.data_emissao.strftime("%y"),
-            "mes": self.data_emissao.strftime("%m"),
-            "cnpj": so_numeros(self.emitente.cnpj).zfill(14),
-            "mod": self.modelo,
-            "serie": str(self.serie).zfill(3),
-            "nNF": str(self.numero_nf).zfill(9),
-            "tpEmis": str(self.forma_emissao),
-            "cNF": str(self.codigo_numerico_aleatorio),
-            "cDV": self._dv_codigo_numerico(key),
-        }
+        key = "{uf}{ano}{mes}{cnpj}{mod}{serie}{nNF}{tpEmis}{cNF}".format(
+            uf=CODIGOS_ESTADOS[self.uf],
+            ano=self.data_emissao.strftime("%y"),
+            mes=self.data_emissao.strftime("%m"),
+            cnpj=so_numeros(self.emitente.cnpj).zfill(14),
+            mod=self.modelo,
+            serie=str(self.serie).zfill(3),
+            nNF=str(self.numero_nf).zfill(9),
+            tpEmis=str(self.forma_emissao),
+            cNF=self._codigo_numerico_aleatorio(),
+        )
+        return "NFe{uf}{ano}{mes}{cnpj}{mod}{serie}{nNF}{tpEmis}{cNF}{cDV}".format(
+            uf=CODIGOS_ESTADOS[self.uf],
+            ano=self.data_emissao.strftime("%y"),
+            mes=self.data_emissao.strftime("%m"),
+            cnpj=so_numeros(self.emitente.cnpj).zfill(14),
+            mod=self.modelo,
+            serie=str(self.serie).zfill(3),
+            nNF=str(self.numero_nf).zfill(9),
+            tpEmis=str(self.forma_emissao),
+            cNF=str(self.codigo_numerico_aleatorio),
+            cDV=self._dv_codigo_numerico(key),
+        )
 
 
 class NotaFiscalReferenciada(Entidade):
     # - Tipo (seleciona de lista) - NF_REFERENCIADA_TIPOS
-    tipo = str()
+    tipo = ""
 
     #  - Nota Fiscal eletronica
     #   - Chave de Acesso
-    chave_acesso = str()
+    chave_acesso = ""
 
     #  - Nota Fiscal
     #   - UF
-    uf = str()
+    uf = ""
 
     #   - Mes e ano de emissao
-    mes_ano_emissao = str()
+    mes_ano_emissao = ""
 
     #   - CNPJ
-    cnpj = str()
+    cnpj = ""
 
     #   - IE
-    ie = str()
+    ie = ""
 
     #   - Serie (XXX)
-    serie = str()
+    serie = ""
 
     #   - Numero
-    numero = str()
+    numero = ""
 
     #   - Modelo
-    modelo = str()
+    modelo = ""
 
 
 class NotaFiscalProduto(Entidade):
     # Campos depreciados
-    campos_deprecados = [
+    campos_deprecados: ClassVar[list[CampoDeprecated]] = [
         CampoDeprecated("fcp_percentual", "fcp_aliquota", "Consistencia de nomes"),
         CampoDeprecated("fcp_st_percentual", "fcp_st_aliquota", "Consistencia de nomes"),
     ]
     # - Dados
     #  - Codigo (obrigatorio)
-    codigo = str()
+    codigo = ""
 
     #  - Descricao (obrigatorio)
-    descricao = str()
+    descricao = ""
 
     #  - EAN
-    ean = str()
+    ean = ""
 
     #  - NCM
-    ncm = str()
+    ncm = ""
 
     #  - EX TIPI
-    ex_tipi = str()
+    ex_tipi = ""
 
     #  - CFOP (obrigatorio)
-    cfop = str()
+    cfop = ""
 
     #  - Genero
-    genero = str()
+    genero = ""
 
     # Número de controle da FCI (nFCI) - Ficha de Conteúdo de Importação.
-    nfci = str()
+    nfci = ""
 
     #  - Unidade Comercial (obrigatorio)
-    unidade_comercial = str()
+    unidade_comercial = ""
 
     #  - Quantidade Comercial (obrigatorio)
     quantidade_comercial = Decimal()
@@ -664,10 +664,10 @@ class NotaFiscalProduto(Entidade):
     valor_unitario_comercial = Decimal()
 
     #  - Unidade Tributavel (obrigatorio)
-    unidade_tributavel = str()
+    unidade_tributavel = ""
 
     # - cBenef
-    cbenef = str()
+    cbenef = ""
 
     #  - Quantidade Tributavel (obrigatorio)
     quantidade_tributavel = Decimal()
@@ -676,7 +676,7 @@ class NotaFiscalProduto(Entidade):
     valor_unitario_tributavel = Decimal()
 
     #  - EAN Tributavel
-    ean_tributavel = str()
+    ean_tributavel = ""
 
     #  - Total Frete
     total_frete = Decimal()
@@ -697,20 +697,20 @@ class NotaFiscalProduto(Entidade):
     valor_total_bruto = Decimal()
 
     # - Número do Pedido de Compra
-    numero_pedido = str()
+    numero_pedido = ""
 
     # - Item do Pedido de Compra
-    numero_item = str()
+    numero_item = ""
 
     #  - Produto especifico (seleciona de lista) - NF_PRODUTOS_ESPECIFICOS
-    produto_especifico = str()
+    produto_especifico = ""
 
     # Grupo de informações de Combustível
     # Código de produto da ANP
-    cProdANP = str()
+    cProdANP = ""
 
     # Descrição do produto conforme ANP
-    descANP = str()
+    descANP = ""
 
     # Percentual de Gás derivado do Petróleo
     pGLP = Decimal()
@@ -725,23 +725,23 @@ class NotaFiscalProduto(Entidade):
     vPart = Decimal()
 
     # Sigla da UF de consumo – (OBS: Deve ser a Sigla e não o Código da UF)
-    UFCons = str()
+    UFCons = ""
 
     # Código de autorização / registro do CODI
-    comb_codif = str()
+    comb_codif = ""
 
     # Quantidade de combustível faturada à temperatura ambiente.
-    comb_q_temp = str()
+    comb_q_temp = ""
 
     # - Grupo de informações dos encerrantes
     # Número de identificação do bico utilizado no abastecimento
-    comb_n_bico = int()
+    comb_n_bico = 0
 
     # Número de identificação da bomba ao qual o bico está interligado
-    comb_n_bomba = int()
+    comb_n_bomba = 0
 
     # Número de identificação do tanque ao qual o bico está interligado
-    comb_n_tanque = int()
+    comb_n_tanque = 0
 
     # Valor do Encerrante no início do abastecimento
     comb_v_enc_ini = Decimal()
@@ -755,14 +755,14 @@ class NotaFiscalProduto(Entidade):
     # - Tributos
     #  - ICMS
     #   - Situacao tributaria (obrigatorio - seleciona de lista) - ICMS_TIPOS_TRIBUTACAO
-    icms_modalidade = str()
+    icms_modalidade = ""
 
     #   - Origem (obrigatorio - seleciona de lista) - ICMS_ORIGENS
-    icms_origem = int()
+    icms_origem = 0
 
     #   - ICMS
     #    - Modalidade de determinacao da BC ICMS (seleciona de lista) - ICMS_MODALIDADES
-    icms_modalidade_determinacao_bc = int()
+    icms_modalidade_determinacao_bc = 0
 
     #    - Percentual reducao da BC ICMS
     icms_percentual_reducao_bc = Decimal()
@@ -780,11 +780,11 @@ class NotaFiscalProduto(Entidade):
     icms_desonerado = Decimal()
 
     #    - Motivo da desoneração do ICMS (seleciona de lista) - ICMS_MOTIVO_DESONERACAO
-    icms_motivo_desoneracao = int()
+    icms_motivo_desoneracao = 0
 
     #   - ICMS ST
     #    - Modalidade de determinacao da BC ICMS ST - ICMS_ST_MODALIDADES
-    icms_st_modalidade_determinacao_bc = int()
+    icms_st_modalidade_determinacao_bc = 0
 
     #    - Percentual da margem de valor Adicionado do ICMS ST
     icms_st_percentual_adicional = Decimal()
@@ -837,7 +837,7 @@ class NotaFiscalProduto(Entidade):
     icms_v_icms_mono_reten = Decimal()
     icms_q_bc_mono_reten = Decimal()
     icms_p_red_ad_rem = Decimal()
-    icms_mot_red_ad_rem = int()
+    icms_mot_red_ad_rem = 0
     icms_v_icms_mono_op = Decimal()
     icms_v_icms_mono_dif = Decimal()
     icms_ad_rem_icms_ret = Decimal()
@@ -847,31 +847,31 @@ class NotaFiscalProduto(Entidade):
 
     #  - IPI
     #   - Situacao tributaria (seleciona de lista) - IPI_TIPOS_TRIBUTACAO
-    ipi_situacao_tributaria = str()
+    ipi_situacao_tributaria = ""
 
     #   - Classe de enquadramento
     #    - A informacao para classe de enquadramento do IPI para Cigarros e Bebidas,
     #      quando aplicavel, deve ser informada utilizando a codificacao prevista nos
     #      Atos Normativos editados pela Receita Federal
-    ipi_classe_enquadramento = str()
+    ipi_classe_enquadramento = ""
 
     #   - Codigo do enquadramento
-    ipi_codigo_enquadramento = str()
+    ipi_codigo_enquadramento = ""
 
     #   - CNPJ do Produtor
-    ipi_cnpj_produtor = str()
+    ipi_cnpj_produtor = ""
 
     #   - Codigo do selo de controle
     #    - A informacao do codigo de selo, quando aplicavel, deve ser informada
     #      utilizando a codificacao prevista nos Atos Normativos editados pela Receita
     #      Federal
-    ipi_codigo_selo_controle = str()
+    ipi_codigo_selo_controle = ""
 
     #   - Quantidade do selo de controle
     ipi_quantidade_selo_controle = Decimal()
 
     #   - Tipo de calculo (seleciona de lista) - IPI_TIPOS_CALCULO
-    ipi_tipo_calculo = str()
+    ipi_tipo_calculo = ""
 
     #    - Percentual
     #     - Valor da base de calculo
@@ -899,10 +899,10 @@ class NotaFiscalProduto(Entidade):
     #  - PIS
     #   - PIS
     #    - Situacao tributaria (obrigatorio - seleciona de lista) - PIS_TIPOS_TRIBUTACAO
-    pis_situacao_tributaria = str()
+    pis_situacao_tributaria = ""
 
     #    - Tipo de calculo (seleciona de lista) - PIS_TIPOS_CALCULO
-    pis_tipo_calculo = str()
+    pis_tipo_calculo = ""
 
     #     - Percentual
     #      - Valor da base de calculo
@@ -923,7 +923,7 @@ class NotaFiscalProduto(Entidade):
 
     #   - PIS ST
     #    - Tipo de calculo (seleciona de lista) - PIS_TIPOS_CALCULO
-    pis_st_tipo_calculo = str()
+    pis_st_tipo_calculo = ""
 
     #     - Percentual
     #      - Valor da base de calculo
@@ -945,10 +945,10 @@ class NotaFiscalProduto(Entidade):
     #  - COFINS
     #   - COFINS
     #    - Situacao tributaria (obrigatorio - seleciona de lista) - COFINS_TIPOS_TRIBUTACAO
-    cofins_situacao_tributaria = str()
+    cofins_situacao_tributaria = ""
 
     #    - Tipo de calculo (seleciona de lista) - COFINS_TIPOS_CALCULO
-    cofins_tipo_calculo = str()
+    cofins_tipo_calculo = ""
 
     #     - Percentual
     #      - Valor da base de calculo
@@ -969,7 +969,7 @@ class NotaFiscalProduto(Entidade):
 
     #   - COFINS ST
     #    - Tipo de calculo (seleciona de lista) - COFINS_TIPOS_CALCULO
-    cofins_st_tipo_calculo = str()
+    cofins_st_tipo_calculo = ""
 
     #     - Percentual
     #      - Valor da base de calculo
@@ -998,13 +998,13 @@ class NotaFiscalProduto(Entidade):
     #   - Lista de servico (seleciona de lista)
     #   - Aceita somente valores maiores que 100,
     #   disponiveis no arquivo data/ISSQN/Lista-Servicos.txt
-    issqn_lista_servico = str()
+    issqn_lista_servico = ""
 
     #   - UF
-    issqn_uf = str()
+    issqn_uf = ""
 
     #   - Municipio de ocorrencia
-    issqn_municipio = str()
+    issqn_municipio = ""
 
     #   - Valor do ISSQN
     issqn_valor = Decimal()
@@ -1027,8 +1027,8 @@ class NotaFiscalProduto(Entidade):
     # =============================================
 
     # IBSCBS group (Group UB)
-    ibscbs_cst = str()  # CST 3-digit (e.g. "000", "222")
-    ibscbs_c_class_trib = str()  # cClassTrib 6-digit classification code
+    ibscbs_cst = ""  # CST 3-digit (e.g. "000", "222")
+    ibscbs_c_class_trib = ""  # cClassTrib 6-digit classification code
     ibscbs_vbc = Decimal()  # vBC - shared base de calculo for IBS + CBS
 
     # gIBSUF - IBS estadual (UF)
@@ -1047,15 +1047,15 @@ class NotaFiscalProduto(Entidade):
     ibscbs_v_cbs = Decimal()  # vCBS
 
     # IS (Imposto Seletivo) - Group UB-IS
-    is_cst_selec = str()  # CSTSelec (2-digit)
-    is_c_class_trib = str()  # cClassTribIS 6-digit
+    is_cst_selec = ""  # CSTSelec (2-digit)
+    is_c_class_trib = ""  # cClassTribIS 6-digit
     is_vbc = Decimal()  # vBC
     is_aliquota = Decimal()  # pIS
     is_valor = Decimal()  # vIS
 
     # - Informacoes Adicionais
     #  - Texto livre de informacoes adicionais
-    informacoes_adicionais = str()
+    informacoes_adicionais = ""
 
     # - Declaracao de Importacao (lista 1 para * / ManyToManyField)
     declaracoes_importacao = None
@@ -1063,7 +1063,7 @@ class NotaFiscalProduto(Entidade):
     def __init__(self, *args, **kwargs):
         self.declaracoes_importacao = []
 
-        super(NotaFiscalProduto, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def adicionar_declaracao_importacao(self, **kwargs):
         """Adiciona uma instancia de Declaracao de Importacao"""
@@ -1072,38 +1072,38 @@ class NotaFiscalProduto(Entidade):
 
 class NotaFiscalDeclaracaoImportacao(Entidade):
     #  - Numero DI/DSI/DA
-    numero_di_dsi_da = str()
+    numero_di_dsi_da = ""
 
     #  - Data de registro
     data_registro = None
 
     #  - Desembaraco aduaneiro
     #   - UF
-    desembaraco_aduaneiro_uf = str()
+    desembaraco_aduaneiro_uf = ""
 
     #   - Local
-    desembaraco_aduaneiro_local = str()
+    desembaraco_aduaneiro_local = ""
 
     #   - Data
-    desembaraco_aduaneiro_data = str()
+    desembaraco_aduaneiro_data = ""
 
     #   - Via de transporte internacional informada na Declaração de Importação (DI)
-    tipo_via_transporte = str()
+    tipo_via_transporte = ""
 
     #   - Valor da AFRMM - Adicional ao Frete para Renovação da Marinha Mercante
     valor_afrmm = Decimal()
 
     #   - Forma de importação quanto a intermediação
-    tipo_intermediacao = str()
+    tipo_intermediacao = ""
 
     #   - CNPJ do adquirente ou do encomendante
-    cnpj_adquirente = str()
+    cnpj_adquirente = ""
 
     #   - UFTerceiro - Sigla da UF do adquirente ou do encomendante
-    uf_terceiro = str()
+    uf_terceiro = ""
 
     #  - Codigo exportador
-    codigo_exportador = str()
+    codigo_exportador = ""
 
     #  - Adicoes (lista 1 para * / ManyToManyField)
     adicoes = None
@@ -1111,7 +1111,7 @@ class NotaFiscalDeclaracaoImportacao(Entidade):
     def __init__(self, *args, **kwargs):
         self.declaracoes_importacao = []
 
-        super(NotaFiscalDeclaracaoImportacao, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def adicionar_adicao(self, **kwargs):
         """Adiciona uma instancia de Adicao de Declaracao de Importacao"""
@@ -1120,16 +1120,16 @@ class NotaFiscalDeclaracaoImportacao(Entidade):
 
 class NotaFiscalDeclaracaoImportacaoAdicao(Entidade):
     #   - Numero
-    numero = str()
+    numero = ""
 
     #   - Desconto
     desconto = Decimal()
 
     #   - Codigo fabricante
-    codigo_fabricante = str()
+    codigo_fabricante = ""
 
     #   - Número do ato concessório de Drawback
-    numero_drawback = str()
+    numero_drawback = ""
 
 
 class NotaFiscalTransporteVolume(Entidade):
@@ -1137,13 +1137,13 @@ class NotaFiscalTransporteVolume(Entidade):
     quantidade = Decimal()
 
     #  - Especie
-    especie = str()
+    especie = ""
 
     #  - Marca
-    marca = str()
+    marca = ""
 
     #  - Numeracao
-    numeracao = str()
+    numeracao = ""
 
     #  - Peso Liquido (kg)
     peso_liquido = Decimal()
@@ -1157,7 +1157,7 @@ class NotaFiscalTransporteVolume(Entidade):
     def __init__(self, *args, **kwargs):
         self.lacres = []
 
-        super(NotaFiscalTransporteVolume, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def adicionar_lacre(self, **kwargs):
         """Adiciona uma instancia de Lacre de Volume de Transporte"""
@@ -1166,12 +1166,12 @@ class NotaFiscalTransporteVolume(Entidade):
 
 class NotaFiscalTransporteVolumeLacre(Entidade):
     #   - Numero de lacres
-    numero_lacre = str()
+    numero_lacre = ""
 
 
 class NotaFiscalCobrancaDuplicata(Entidade):
     #  - Numero
-    numero = str()
+    numero = ""
 
     #  - Data de vencimento
     data_vencimento = None
@@ -1182,15 +1182,15 @@ class NotaFiscalCobrancaDuplicata(Entidade):
 
 class NotaFiscalObservacaoContribuinte(Entidade):
     #  - Nome do campo
-    nome_campo = str()
+    nome_campo = ""
 
     #  - Observacao
-    observacao = str()
+    observacao = ""
 
 
 class NotaFiscalProcessoReferenciado(Entidade):
     #  - Identificador do processo
-    identificador_processo = str()
+    identificador_processo = ""
 
     #  - Origem (seleciona de lista) - ORIGENS_PROCESSO
     #   - SEFAZ
@@ -1198,7 +1198,7 @@ class NotaFiscalProcessoReferenciado(Entidade):
     #   - Justica estadual
     #   - Secex/RFB
     #   - Outros
-    origem = str()
+    origem = ""
 
 
 class NotaFiscalEntregaRetirada(Entidade):
@@ -1206,43 +1206,43 @@ class NotaFiscalEntregaRetirada(Entidade):
     tipo_documento = "CNPJ"
 
     # - Numero do Documento (obrigatorio)
-    numero_documento = str()
+    numero_documento = ""
 
     # - Endereco
     #  - Logradouro (obrigatorio)
-    endereco_logradouro = str()
+    endereco_logradouro = ""
 
     #  - Numero (obrigatorio)
-    endereco_numero = str()
+    endereco_numero = ""
 
     #  - Complemento
-    endereco_complemento = str()
+    endereco_complemento = ""
 
     #  - Bairro (obrigatorio)
-    endereco_bairro = str()
+    endereco_bairro = ""
 
     #  - CEP
-    endereco_cep = str()
+    endereco_cep = ""
 
     #  - Pais (seleciona de lista)
-    endereco_pais = str()
+    endereco_pais = ""
 
     #  - UF (obrigatorio)
-    endereco_uf = str()
+    endereco_uf = ""
 
     #  - Municipio (obrigatorio)
-    endereco_municipio = str()
+    endereco_municipio = ""
 
     # - Código Município (opt)
-    endereco_cod_municipio = str()
+    endereco_cod_municipio = ""
 
     #  - Telefone
-    endereco_telefone = str()
+    endereco_telefone = ""
 
 
 class NotaFiscalServico(Entidade):
     # id do rps
-    identificador = str()
+    identificador = ""
     # tag competencia
     data_emissao = None
     # Serviço executado pelo prestador
@@ -1252,20 +1252,20 @@ class NotaFiscalServico(Entidade):
     # Cliente para quem a NFS-e será emitida
     cliente = None
     # Optante Simples Nacional
-    simples = int()  # 1-Sim; 2-Não
+    simples = 0  # 1-Sim; 2-Não
     # Incentivo Fiscal
-    incentivo = int()  # 1-Sim; 2-Não
+    incentivo = 0  # 1-Sim; 2-Não
     # Serie
-    serie = str()
+    serie = ""
     # Tipo
-    tipo = str()
+    tipo = ""
     # Natureza de operação
-    natureza_operacao = int()
+    natureza_operacao = 0
     # Regime especial de tributação
-    regime_especial = int()
+    regime_especial = 0
 
     def __init__(self, *args, **kwargs):
-        super(NotaFiscalServico, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __str__(self):
         return " ".join([str(self.identificador)])
@@ -1273,31 +1273,31 @@ class NotaFiscalServico(Entidade):
 
 class NotaFiscalResponsavelTecnico(Entidade):
     # NT 2018/003
-    cnpj = str()
-    contato = str()
-    email = str()
-    fone = str()
-    csrt = str()
+    cnpj = ""
+    contato = ""
+    email = ""
+    fone = ""
+    csrt = ""
 
 
 class AutorizadosBaixarXML(Entidade):
-    CPFCNPJ = str()
+    CPFCNPJ = ""
 
 
 class NotaFiscalPagamentos(Entidade):
     # forma de pagamento flag: FORMAS_PAGAMENTO
-    t_pag = str()
+    t_pag = ""
     # descrição da forma de pagametno
-    x_pag = str()
+    x_pag = ""
     # valor
     v_pag = Decimal()
     # tipo de integracao: '', '1' integrado, '2' - não integrado
-    tp_integra = str()
+    tp_integra = ""
     # CNPJ da Credenciadora de cartão de crédito e/ou débito
-    cnpj = str()
+    cnpj = ""
     # Bandeira da operadora de cartão de crédito e/ou débito flag: BANDEIRA_CARTAO
-    t_band = int()
+    t_band = 0
     # Número de autorização da operação cartão de crédito e/ou débito
-    c_aut = str()
+    c_aut = ""
     # Indicador da Forma de Pagamento: 0=à Vista, 1=à Prazo
-    ind_pag = int()
+    ind_pag = 0

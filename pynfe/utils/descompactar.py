@@ -7,10 +7,11 @@ classe que descompacta o gzip recebido pela consulta distribuicao
 
 import base64
 import gzip
+
 from lxml import etree
 
 
-class DescompactaGzip(object):
+class DescompactaGzip:
     @staticmethod
     def descompacta(stringZipada: str):
         """

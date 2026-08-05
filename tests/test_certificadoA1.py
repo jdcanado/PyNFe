@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# *-* encoding: utf8 *-*
+# ruff: noqa: N999
 
 import tempfile
 import unittest

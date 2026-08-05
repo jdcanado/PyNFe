@@ -1,25 +1,26 @@
 #!/usr/bin/env python
-# *-* encoding: utf8 *-*
 
+import datetime
 import unittest
+from decimal import Decimal
 
 from pynfe import get_version
 from pynfe.entidades.fonte_dados import _fonte_dados
 from pynfe.entidades.manifesto import (
     Manifesto,
+    ManifestoAverbacao,
+    ManifestoCIOT,
     ManifestoCondutor,
     ManifestoContratante,
     ManifestoDocumentosNFe,
     ManifestoEmitente,
     ManifestoMunicipioCarrega,
+    ManifestoPedagio,
     ManifestoPercurso,
     ManifestoRodoviario,
     ManifestoTotais,
     ManifestoVeiculoReboque,
     ManifestoVeiculoTracao,
-    ManifestoCIOT,
-    ManifestoPedagio,
-    ManifestoAverbacao,
 )
 from pynfe.processamento.assinatura import AssinaturaA1
 from pynfe.processamento.serializacao import SerializacaoMDFe, SerializacaoQrcodeMDFe
@@ -31,8 +32,6 @@ from pynfe.utils.flags import (
     XSD_MDFE,
     XSD_MDFE_PROCESSADA,
 )
-from decimal import Decimal
-import datetime
 
 
 class SerializacaoMDFeTestCase(unittest.TestCase):
@@ -100,9 +99,9 @@ class SerializacaoMDFeTestCase(unittest.TestCase):
                 cInt="001",
                 placa="ABC1234",
                 RENAVAM="123456789",
-                tara=Decimal("5000"),
-                capKG=Decimal("4500"),
-                capM3=Decimal("400"),
+                tara=Decimal(5000),
+                capKG=Decimal(4500),
+                capM3=Decimal(400),
                 proprietario=None,
                 condutor=[condutor_1, condutor_2],
                 tpRod="01",
@@ -115,9 +114,9 @@ class SerializacaoMDFeTestCase(unittest.TestCase):
             cInt="001",
             placa="XYZ4567",
             RENAVAM="123456789",
-            tara=Decimal("4000"),
-            capKG=Decimal("3000"),
-            capM3=Decimal("300"),
+            tara=Decimal(4000),
+            capKG=Decimal(3000),
+            capM3=Decimal(300),
             proprietario=None,
             tpCar="02",
             UF="MT",
@@ -127,9 +126,9 @@ class SerializacaoMDFeTestCase(unittest.TestCase):
             cInt="002",
             placa="XYQ4567",
             RENAVAM="123456781",
-            tara=Decimal("4000"),
-            capKG=Decimal("3000"),
-            capM3=Decimal("300"),
+            tara=Decimal(4000),
+            capKG=Decimal(3000),
+            capM3=Decimal(300),
             proprietario=None,
             tpCar="02",
             UF="MT",
@@ -284,9 +283,9 @@ class SerializacaoMDFeTestCase(unittest.TestCase):
                 cInt="001",
                 placa="ABC1234",
                 RENAVAM="123456789",
-                tara=Decimal("5000"),
-                capKG=Decimal("4500"),
-                capM3=Decimal("400"),
+                tara=Decimal(5000),
+                capKG=Decimal(4500),
+                capM3=Decimal(400),
                 proprietario=None,
                 condutor=[condutor_1, condutor_2],
                 tpRod="01",

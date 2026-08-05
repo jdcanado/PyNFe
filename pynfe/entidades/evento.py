@@ -1,36 +1,35 @@
-# -*- coding: utf-8 -*-
-
 """
 @author: Junior Tada, Leonardo Tada
 """
 
 from decimal import Decimal
+
 from .base import Entidade
 
 
 class Evento(Entidade):
     # - Identificador da TAG a ser assinada, a regra de formação do Id é:
     # “ID” + tpEvento + chave da NF-e + nSeqEvento
-    id = str()
+    id = ""
     # - Código do órgão de recepção do Evento.
     # Utilizar a Tabela do IBGE, utilizar 91 para identificar o Ambiente Nacional.
-    orgao = str()
+    orgao = ""
     # - CNPJ (obrigatorio)
-    cnpj = str()
+    cnpj = ""
     # - Chave de Acesso da NF-e vinculada ao Evento
-    chave = str()
+    chave = ""
     # - Data e hora do evento no formato AAAA-MM-DDThh:mm:ssTZD
     data_emissao = None
     # - uf de onde a nota foi enviada
-    uf = str()
+    uf = ""
     # - Código do evento = Cancelamento(110111), Carta de Correcao(110110)
-    tp_evento = str()
+    tp_evento = ""
     # - Sequencial do evento para o mesmo tipo de evento.
     """ Para maioria dos eventos nSeqEvento=1, nos casos em que possa existir mais de um evento,
     como é o caso da Carta de Correção, o autor do evento deve numerar de forma sequencial."""
     n_seq_evento = 1
     # - descEvento
-    descricao = str()
+    descricao = ""
 
     @property
     def identificador(self):
@@ -38,31 +37,27 @@ class Evento(Entidade):
         Gera o valor para o campo id
         A regra de formação do Id é: “ID” + tpEvento + chave da NF-e + nSeqEvento
         """
-        self.id = "ID%(tp_evento)s%(chave)s%(n_seq_evento)s" % {
-            "tp_evento": self.tp_evento,
-            "chave": self.chave,
-            "n_seq_evento": str(self.n_seq_evento).zfill(2),
-        }
+        self.id = f"ID{self.tp_evento}{self.chave}{str(self.n_seq_evento).zfill(2)}"
         return self.id
 
 
 class EventoCancelarNota(Evento):
     def __init__(self, *args, **kwargs):
-        super(EventoCancelarNota, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # - Código do evento = 110111
         self.tp_evento = "110111"
         # - "Cancelamento"
         self.descricao = "Cancelamento"
 
     # - Informar o número do Protocolo de Autorização da NF-e a ser Cancelada. (vide item 5.8).
-    protocolo = str()
+    protocolo = ""
     # - Informar a justificativa do cancelamento (min 15 max 255 caracteres)
-    justificativa = str()
+    justificativa = ""
 
 
 class EventoCartaCorrecao(Evento):
     def __init__(self, *args, **kwargs):
-        super(EventoCartaCorrecao, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # - Código do evento = 110110
         self.tp_evento = "110110"
         # - “Carta de Correção” ou “Carta de Correcao”
@@ -87,7 +82,7 @@ class EventoCartaCorrecao(Evento):
     )
     # - xCorrecao - Correção a ser considerada, texto livre.
     # A correção mais recente substitui as anteriores. min 15 max 1000
-    correcao = str()
+    correcao = ""
 
 
 class EventoManifestacaoDest(Evento):
@@ -96,7 +91,7 @@ class EventoManifestacaoDest(Evento):
     """
 
     def __init__(self, *args, **kwargs):
-        super(EventoManifestacaoDest, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # - numero da operacao
         # 1=Confirmação da Operação
         # 2=Ciência da Emissão
@@ -130,99 +125,99 @@ class EventoManifestacaoDest(Evento):
     # - Informar a justificativa porque a operação não foi realizada,
     # este campo deve ser informado somente no evento de Operação não Realizada.
     # (min 15 max 255 caracteres)
-    justificativa = str()
+    justificativa = ""
 
 
 class EventoEncerramento(Evento):
     def __init__(self, *args, **kwargs):
-        super(EventoEncerramento, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # - Código do evento = 110112
         self.tp_evento = "110112"
         # - "Encerramento"
         self.descricao = "Encerramento"
 
     # - Informar o número do Protocolo de Autorização da MDF-e a ser Encerrada
-    protocolo = str()
+    protocolo = ""
     # - Data e hora do evento no formato AAAA-MM-DDThh:mm:ssTZD
     dtenc = None
     # - uf de onde a manifesto foi encerrado
-    cuf = str()
+    cuf = ""
     # - minicipio onde o manifesto foi encerrado
-    cmun = str()
+    cmun = ""
 
 
 class EventoInclusaoCondutor(Evento):
     def __init__(self, *args, **kwargs):
-        super(EventoInclusaoCondutor, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # - Código do evento = 110114
         self.tp_evento = "110114"
         # - "Encerramento"
         self.descricao = "Inclusão Condutor"
 
     # - Nome do motorista
-    nome_motorista = str()
+    nome_motorista = ""
     # - CPF do motorista
-    cpf_motorista = str()
+    cpf_motorista = ""
 
 
 class EventoInclusaoDFe(Evento):
     def __init__(self, *args, **kwargs):
-        super(EventoInclusaoDFe, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # - Código do evento = 110115
         self.tp_evento = "110115"
         # - "Inclusao DF-e"
         self.descricao = "Inclusao DF-e"
 
     # - Informar o número do Protocolo de Autorização da MDF-e a ser Incluida nova NF-e
-    protocolo = str()
+    protocolo = ""
     # - Código IBGE do Município de Carregamento
-    cmun_carrega = str()
+    cmun_carrega = ""
     # - Nome do Município de Carregamento
-    xmun_carrega = str()
+    xmun_carrega = ""
     # - Código IBGE do Município de Descarga
-    cmun_descarga = str()
+    cmun_descarga = ""
     # - Nome do Município de Descarga
-    xmun_descarga = str()
+    xmun_descarga = ""
     # - Chave de Acesso da NF-e a ser incluída no MDFe
-    chave_nfe = str()
+    chave_nfe = ""
 
 
 class EventoInclusaoPagamento(Evento):
     def __init__(self, *args, **kwargs):
-        super(EventoInclusaoPagamento, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         # - Código do evento = 110116
         self.tp_evento = "110116"
         # - "Pagamento Operacao MDF-e"
         self.descricao = "Pagamento Operacao MDF-e"
 
     # - Informar o número do Protocolo de Autorização da MDF-e a ser Incluida nova NF-e
-    protocolo = str()
+    protocolo = ""
 
     # - Quantidade de viagens
-    qtd_viagens = str()
+    qtd_viagens = ""
     # - Número da viagem
-    nro_viagens = str()
+    nro_viagens = ""
 
     # Informações do pagamento
     # - Nome do Contratante
-    nome_contratante = str()
+    nome_contratante = ""
     # - CPF/CNPJ do Contratante
-    cpfcnpj_contratante = str()
+    cpfcnpj_contratante = ""
 
     # Componentes do Pagamento
     # - Tipo do pagamento
-    tpComp = str()
+    tpComp = ""
     # - Valor
     vComp = Decimal()
 
     # - Valor total do contrato
     vContrato = Decimal()
     # - Tipo do pagamento (0=a vista e 1=a prazo)
-    indPag = str()
+    indPag = ""
 
     # Se o pagamento for a prazo
     # - Numero da parcela
-    nParcela = str()
+    nParcela = ""
     # - Data vencimento
     dVenc = None
     # - Valor da parcela
@@ -230,8 +225,8 @@ class EventoInclusaoPagamento(Evento):
 
     # Informações bancárias
     # - CNPJ da Instituição de Pagamento eletrônico do Frete
-    CNPJIPEF = str()
+    CNPJIPEF = ""
     # - Código do Banco
-    codBanco = str()
+    codBanco = ""
     # - Código da Agência
-    codAgencia = str()
+    codAgencia = ""

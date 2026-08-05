@@ -19,6 +19,11 @@ exclude = [
 ]
 line-length = 100
 
+[tool.ruff.lint]
+ignore = [
+    "TRY002",  # criar exceção própria: mudança de API, fora de escopo
+]
+
 [tool.poetry.dependencies]
 requests = "^2.32.4"
 signxml = ">=4.1.0"

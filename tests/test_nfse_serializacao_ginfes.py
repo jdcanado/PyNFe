@@ -1,5 +1,5 @@
-import unittest
 import re
+import unittest
 
 from pynfe.entidades.notafiscal import NotaFiscalServico
 from pynfe.processamento.serializacao import SerializacaoNfse

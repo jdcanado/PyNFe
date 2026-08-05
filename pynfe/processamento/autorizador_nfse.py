@@ -1,5 +1,6 @@
-from pyxb import BIND
 from importlib import import_module
+
+from pyxb import BIND
 
 
 class InterfaceAutorizador:
@@ -521,13 +522,13 @@ class SerializacaoGinfes(InterfaceAutorizador):
 
         ns1 = "http://www.ginfes.com.br/servico_cancelar_nfse_envio"
         ns2 = "http://www.ginfes.com.br/tipos"
-        raiz = etree.Element("{%s}CancelarNfseEnvio" % ns1, nsmap={"ns1": ns1, "ns2": ns2})
-        prestador = etree.SubElement(raiz, "{%s}Prestador" % ns1)
-        etree.SubElement(prestador, "{%s}Cnpj" % ns2).text = nfse.emitente.cnpj
+        raiz = etree.Element(f"{{{ns1}}}CancelarNfseEnvio", nsmap={"ns1": ns1, "ns2": ns2})
+        prestador = etree.SubElement(raiz, f"{{{ns1}}}Prestador")
+        etree.SubElement(prestador, f"{{{ns2}}}Cnpj").text = nfse.emitente.cnpj
         etree.SubElement(
-            prestador, "{%s}InscricaoMunicipal" % ns2
+            prestador, f"{{{ns2}}}InscricaoMunicipal"
         ).text = nfse.emitente.inscricao_municipal
-        etree.SubElement(raiz, "{%s}NumeroNfse" % ns1).text = nfse.identificador
+        etree.SubElement(raiz, f"{{{ns1}}}NumeroNfse").text = nfse.identificador
         return etree.tostring(raiz, encoding="unicode")
 
     def cabecalho(self):

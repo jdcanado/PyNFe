@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*-
-from .base import Entidade
-
 from decimal import Decimal
+
+from .base import Entidade
 
 
 class Produto(Entidade):
@@ -9,41 +8,41 @@ class Produto(Entidade):
 
     # Dados do Produto
     # - Descricao (obrigatorio)
-    descricao = str()
+    descricao = ""
 
     # - Codigo (obrigatorio) - nao pode ser alterado quando em edicao
-    codigo = str()
+    codigo = ""
 
     # - EAN
-    ean = str()
+    ean = ""
 
     # - EAN Unid. Tributavel
-    ean_unidade_tributavel = str()
+    ean_unidade_tributavel = ""
 
     # - EX TIPI
-    ex_tipi = str()
+    ex_tipi = ""
 
     # - Genero
-    genero = str()
+    genero = ""
 
     # - NCM
-    ncm = str()
+    ncm = ""
 
     # - CEST - Código especificador da substituição tributária
     # NT2015/003 http://www.nfe.fazenda.gov.br/portal/exibirArquivo.aspx?conteudo=uXFlhOSgUZc=
     # Tabela https://www.confaz.fazenda.gov.br/anexo-i.pdf
-    cest = str()
+    cest = ""
 
-    cbenef = str()
+    cbenef = ""
 
     # - Unid. Com.
-    unidade_comercial = str()
+    unidade_comercial = ""
 
     # - Valor Unitario Com.
     valor_unitario_comercial = Decimal()
 
     # - Unid. Trib.
-    unidade_tributavel = str()
+    unidade_tributavel = ""
 
     # - Qtd. Trib.
     quantidade_tributavel = Decimal()
@@ -54,15 +53,15 @@ class Produto(Entidade):
     # - indica se valor do item entra no valor total da nota fiscal
     # 0=Valor do item (vProd) não compõe o valor total da NF-e
     # 1=Valor do item (vProd) compõe o valor total da NF-e (vProd)
-    ind_total = int()
+    ind_total = 0
 
     # # Grupo de informações de Combustível
 
     # Código de produto da ANP
-    cProdANP = str()
+    cProdANP = ""
 
     # Descrição do produto conforme ANP
-    descANP = str()
+    descANP = ""
 
     # Percentual de Gás derivado do Petróleo
     pGLP = Decimal()
@@ -77,19 +76,19 @@ class Produto(Entidade):
     vPart = Decimal()
 
     # Sigla da UF de consumo – (OBS: Deve ser a Sigla e não o Código da UF)
-    UFCons = str()
+    UFCons = ""
 
     # # Impostos
 
     # - IPI
     #  - Classe de Enquadramento (cigarros e bebidas)
-    ipi_classe_enquadramento = str()
+    ipi_classe_enquadramento = ""
 
     #  - Codigo de Enquadramento Legal
-    ipi_codigo_enquadramento_legal = str()
+    ipi_codigo_enquadramento_legal = ""
 
     #  - CNPJ do Produtor
-    ipi_cnpj_produtor = str()
+    ipi_cnpj_produtor = ""
 
     # ICMS (Informar apenas um grupo por produto)
     """
@@ -108,27 +107,27 @@ class Produto(Entidade):
     """
 
     # Tributos aproximados por item
-    valor_tributos_aprox = str()
+    valor_tributos_aprox = ""
 
-    icms_modalidade = str()
-    icms_origem = int()
-    icms_csosn = str()
+    icms_modalidade = ""
+    icms_origem = 0
+    icms_csosn = ""
     icms_aliquota = Decimal()
     icms_credito = Decimal()
 
     # # PIS
-    pis_modalidade = str()
-    pis_valor_base_calculo = str()
-    pis_aliquota_percentual = str()
-    pis_valor = str()
-    pis_aliquota_reais = str()
+    pis_modalidade = ""
+    pis_valor_base_calculo = ""
+    pis_aliquota_percentual = ""
+    pis_valor = ""
+    pis_aliquota_reais = ""
 
     # # COFINS
-    cofins_modalidade = str()
-    cofins_valor_base_calculo = str()
-    cofins_aliquota_percentual = str()
-    cofins_valor = str()
-    cofins_aliquota_reais = str()
+    cofins_modalidade = ""
+    cofins_valor_base_calculo = ""
+    cofins_aliquota_percentual = ""
+    cofins_valor = ""
+    cofins_aliquota_reais = ""
 
     # # Fundo de Combate a Pobreza
     fcp_base_calculo = Decimal()
@@ -143,26 +142,26 @@ class Produto(Entidade):
         self.icms.append(ProdutoICMS(**kwargs))
 
     # Informações adicionais do produto
-    informacoes_adicionais = str()
+    informacoes_adicionais = ""
 
     def __init__(self, *args, **kwargs):
         self.icms = []
 
-        super(Produto, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __str__(self):
-        return " ".join([self.codigo, self.descricao])
+        return f"{self.codigo} {self.descricao}"
 
 
 class ProdutoICMS(Entidade):
     #  - Tipo de Tributacao (seleciona de lista) - ICMS_TIPOS_TRIBUTACAO
-    tipo_tributacao = str()
+    tipo_tributacao = ""
 
     #  - Origem (seleciona de lista) - ICMS_ORIGENS
-    origem = str()
+    origem = ""
 
     #  - Modalidade de determinacao da Base de Calculo (seleciona de lista) - ICMS_MODALIDADES
-    modalidade = str()
+    modalidade = ""
 
     #  - Aliquota ICMS
     aliquota = Decimal()
@@ -172,7 +171,7 @@ class ProdutoICMS(Entidade):
 
     #  - Modalidade de determinacao da Base de Calculo do ICMS ST (seleciona de lista)
     #  - ICMS_ST_MODALIDADES
-    st_modalidade = str()
+    st_modalidade = ""
 
     #  - Aliquota ICMS ST
     st_aliquota = Decimal()

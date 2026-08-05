@@ -1,63 +1,64 @@
-from .base import Entidade
 from pynfe.utils.flags import CODIGO_BRASIL
+
+from .base import Entidade
 
 
 class Emitente(Entidade):
     # Dados do Emitente
     # - Nome/Razao Social (obrigatorio)
-    razao_social = str()
+    razao_social = ""
 
     # - Nome Fantasia
-    nome_fantasia = str()
+    nome_fantasia = ""
 
     # - CNPJ (obrigatorio)
-    cnpj = str()
+    cnpj = ""
 
     # - Inscricao Estadual (obrigatorio)
-    inscricao_estadual = str()
+    inscricao_estadual = ""
 
     # - CNAE Fiscal
-    cnae_fiscal = str()
+    cnae_fiscal = ""
 
     # - Inscricao Municipal
-    inscricao_municipal = str()
+    inscricao_municipal = ""
 
     # - Inscricao Estadual (Subst. Tributario)
-    inscricao_estadual_subst_tributaria = str()
+    inscricao_estadual_subst_tributaria = ""
 
     # - Codigo de Regime Tributario (obrigatorio)
-    codigo_de_regime_tributario = str()
+    codigo_de_regime_tributario = ""
 
     # Endereco
     # - Logradouro (obrigatorio)
-    endereco_logradouro = str()
+    endereco_logradouro = ""
 
     # - Numero (obrigatorio)
-    endereco_numero = str()
+    endereco_numero = ""
 
     # - Complemento
-    endereco_complemento = str()
+    endereco_complemento = ""
 
     # - Bairro (obrigatorio)
-    endereco_bairro = str()
+    endereco_bairro = ""
 
     # - CEP
-    endereco_cep = str()
+    endereco_cep = ""
 
     # - Pais (aceita somente Brasil)
     endereco_pais = CODIGO_BRASIL
 
     # - UF (obrigatorio)
-    endereco_uf = str()
+    endereco_uf = ""
 
     # - Municipio (obrigatorio)
-    endereco_municipio = str()
+    endereco_municipio = ""
 
     # - Codigo Municipio (opt)
-    endereco_cod_municipio = str()
+    endereco_cod_municipio = ""
 
     # - Telefone
-    endereco_telefone = str()
+    endereco_telefone = ""
 
     # Logotipo
     logotipo = None

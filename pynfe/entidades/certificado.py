@@ -120,5 +120,5 @@ class CertificadoA1(Certificado):
             for i in self.arquivos_temp:
                 os.remove(i)
             self.arquivos_temp.clear()
-        except Exception:
+        except Exception:  # noqa: S110, BLE001
             pass

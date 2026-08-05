@@ -1,67 +1,66 @@
-# -*- coding: utf-8 -*-
 from .base import Entidade
 
 
 class Cliente(Entidade):
     # Dados do Cliente
     # - Nome/Razão Social (obrigatorio)
-    razao_social = str()
+    razao_social = ""
 
     # - Email
-    email = str()
+    email = ""
 
     # - Tipo de Documento (obrigatorio) - default CNPJ - TIPOS_DOCUMENTO
     tipo_documento = "CNPJ"
 
     # - Numero do Documento (obrigatorio)
-    numero_documento = str()
+    numero_documento = ""
 
     # - Indicador da IE do destinatário: 1 – Contribuinte ICMSpagamento à vista;
     # 2 – Contribuinte isento de inscrição; 9 – Não Contribuinte
-    indicador_ie = int()
+    indicador_ie = 0
 
     # - Inscricao Estadual
-    inscricao_estadual = str()
+    inscricao_estadual = ""
 
     # - Inscricao Municial
-    inscricao_municipal = str()
+    inscricao_municipal = ""
 
     # - Inscricao SUFRAMA
-    inscricao_suframa = str()
+    inscricao_suframa = ""
 
     # - Isento do ICMS (Sim/Nao)
     isento_icms = False
 
     # Endereco
     # - Logradouro (obrigatorio)
-    endereco_logradouro = str()
+    endereco_logradouro = ""
 
     # - Numero (obrigatorio)
-    endereco_numero = str()
+    endereco_numero = ""
 
     # - Complemento
-    endereco_complemento = str()
+    endereco_complemento = ""
 
     # - Bairro (obrigatorio)
-    endereco_bairro = str()
+    endereco_bairro = ""
 
     # - CEP
-    endereco_cep = str()
+    endereco_cep = ""
 
     # - Pais (seleciona de lista)
-    endereco_pais = str()
+    endereco_pais = ""
 
     # - UF (obrigatorio)
-    endereco_uf = str()
+    endereco_uf = ""
 
     # - Municipio (obrigatorio)
-    endereco_municipio = str()
+    endereco_municipio = ""
 
     # - Código do Município (opt)
-    endereco_cod_municipio = str()
+    endereco_cod_municipio = ""
 
     # - Telefone
-    endereco_telefone = str()
+    endereco_telefone = ""
 
     def __str__(self):
-        return " ".join([self.tipo_documento, self.numero_documento])
+        return f"{self.tipo_documento} {self.numero_documento}"

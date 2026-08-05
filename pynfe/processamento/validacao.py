@@ -1,7 +1,5 @@
-# -*- coding:utf-8 -*-
-
-from os import path
 import io
+from os import path
 
 try:
     from lxml import etree
@@ -11,7 +9,7 @@ except ImportError:
 from pynfe.utils.flags import XSD_FOLDER_NFE
 
 
-class Validacao(object):
+class Validacao:
     """Valida documentos xml a partir do xsd informado."""
 
     def __init__(self):
@@ -54,7 +52,7 @@ class Validacao(object):
         try:
             # checa se o schema ja existe no cache
             xsd_schema = self.MEM_CACHE[xsd_file]
-        except Exception:
+        except KeyError:
             # lê xsd e atualiza cache
             xsd_doc = etree.parse(xsd_file)
             xsd_schema = etree.XMLSchema(xsd_doc)

@@ -5,9 +5,10 @@ Classe que sobrescreve metodos da lib suds para comunicação via https com cert
 
 """
 
-from suds.transport.http import HttpTransport
-import urllib.request
 import http.client
+import urllib.request
+
+from suds.transport.http import HttpTransport
 
 
 class HTTPSClientAuthHandler(urllib.request.HTTPSHandler):

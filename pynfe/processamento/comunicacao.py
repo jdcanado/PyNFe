@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import datetime
 import re
 
@@ -28,7 +27,7 @@ from pynfe.utils.webservices import CTE, MDFE, NFCE, NFE, NFSE
 from .assinatura import AssinaturaA1
 
 
-class Comunicacao(object):
+class Comunicacao:
     """
     Classe abstrata responsavel por definir os metodos e logica das classes
     de comunicação com os webservices da NF-e.
@@ -322,7 +321,7 @@ class ComunicacaoSefaz(Comunicacao):
                 url = self._get_url_an(consulta="EVENTOS")
             else:
                 url = self._get_url(modelo=modelo, consulta="EVENTOS")
-        except Exception:
+        except Exception:  # noqa: BLE001
             url = self._get_url(modelo=modelo, consulta="EVENTOS")
 
         # Monta XML do corpo da requisição
@@ -375,7 +374,7 @@ class ComunicacaoSefaz(Comunicacao):
         url = self._get_url(modelo=modelo, consulta="INUTILIZACAO")
 
         # Valores default
-        ano = str(ano or datetime.date.today().year)[-2:]
+        ano = str(ano or datetime.datetime.now(datetime.timezone.utc).year)[-2:]
         uf = CODIGOS_ESTADOS[self.uf.upper()]
         cnpj = so_numeros(cnpj)
 
@@ -386,15 +385,15 @@ class ComunicacaoSefaz(Comunicacao):
 
         # Identificador da TAG a ser assinada formada com Código da UF + Ano (2 posições) +
         #  CNPJ + modelo + série + nro inicial e nro final precedida do literal “ID”
-        id_unico = "ID%(uf)s%(ano)s%(cnpj)s%(modelo)s%(serie)s%(num_ini)s%(num_fin)s" % {
-            "uf": uf,
-            "ano": ano,
-            "cnpj": cnpjcpf_chaveacesso,
-            "modelo": "55" if modelo == "nfe" else "65",  # 55=NF-e; 65=NFC-e;
-            "serie": str(serie).zfill(3),
-            "num_ini": str(numero_inicial).zfill(9),
-            "num_fin": str(numero_final).zfill(9),
-        }
+        id_unico = "ID{uf}{ano}{cnpj}{modelo}{serie}{num_ini}{num_fin}".format(
+            uf=uf,
+            ano=ano,
+            cnpj=cnpjcpf_chaveacesso,
+            modelo="55" if modelo == "nfe" else "65",
+            serie=str(serie).zfill(3),
+            num_ini=str(numero_inicial).zfill(9),
+            num_fin=str(numero_final).zfill(9),
+        )
 
         # Monta XML do corpo da requisição # FIXME
         raiz = etree.Element("inutNFe", versao=VERSAO_PADRAO, xmlns=NAMESPACE_NFE)
@@ -568,10 +567,10 @@ class ComunicacaoSefaz(Comunicacao):
     def _construir_xml_soap(self, metodo, dados, cabecalho=False):
         """Mota o XML para o envio via SOAP"""
         raiz = etree.Element(
-            "{%s}Envelope" % NAMESPACE_SOAP,
+            f"{{{NAMESPACE_SOAP}}}Envelope",
             nsmap={"xsi": NAMESPACE_XSI, "xsd": NAMESPACE_XSD, "soap": NAMESPACE_SOAP},
         )
-        body = etree.SubElement(raiz, "{%s}Body" % NAMESPACE_SOAP)
+        body = etree.SubElement(raiz, f"{{{NAMESPACE_SOAP}}}Body")
         # distribuição tem um corpo de xml diferente
 
         if metodo == "NFeDistribuicaoDFe":
@@ -633,8 +632,6 @@ class ComunicacaoSefaz(Comunicacao):
             )
             result.encoding = "utf-8"
             return result
-        except requests.exceptions.RequestException as e:
-            raise e
         finally:
             if certificado_a1:
                 certificado_a1.excluir()
@@ -755,11 +752,11 @@ class ComunicacaoNfse(Comunicacao):
 
         xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>'
         raiz = etree.Element(
-            "{%s}cabecalho" % self._namespace,
+            f"{{{self._namespace}}}cabecalho",
             nsmap={"ns2": self._namespace, "xsi": NAMESPACE_XSI},
             versao=self._versao,
         )
-        etree.SubElement(raiz, "{%s}versaoDados" % self._namespace).text = self._versao
+        etree.SubElement(raiz, f"{{{self._namespace}}}versaoDados").text = self._versao
 
         if retorna_string:
             cabecalho = etree.tostring(raiz, encoding="unicode", pretty_print=False).replace(
@@ -828,8 +825,8 @@ class ComunicacaoNfse(Comunicacao):
             # TODO outros metodos
             else:
                 raise Exception("Método não implementado no autorizador.")
-        except Exception as e:
-            raise e
+        except Exception:  # noqa: TRY203
+            raise
 
     def _post_https(self, url, xml, metodo):
         """Comunicação wsdl (https) utilizando certificado do usuário"""
@@ -872,8 +869,8 @@ class ComunicacaoNfse(Comunicacao):
             # TODO outros metodos
             else:
                 raise Exception("Método não implementado no autorizador.")
-        except Exception as e:
-            raise e
+        except Exception:  # noqa: TRY203
+            raise
 
 
 class ComunicacaoMDFe(Comunicacao):
@@ -918,7 +915,7 @@ class ComunicacaoMDFe(Comunicacao):
         elif ind_sinc == 1:
             url = self._get_url(consulta="RECEPCAO_SINC")
         else:
-            raise "ind_sinc deve ser 0=assincrono ou 1=sincrono"
+            raise Exception("ind_sinc deve ser 0=assincrono ou 1=sincrono")
 
         # Monta XML do corpo da requisição
         raiz = etree.Element("enviMDFe", xmlns=NAMESPACE_MDFE, versao=VERSAO_MDFE)
@@ -1051,7 +1048,7 @@ class ComunicacaoMDFe(Comunicacao):
         """Mota o XML para o envio via SOAP"""
 
         raiz = etree.Element(
-            "{%s}Envelope" % NAMESPACE_SOAP,
+            f"{{{NAMESPACE_SOAP}}}Envelope",
             nsmap={
                 "xsi": self._namespace_xsi,
                 "xsd": self._namespace_xsd,
@@ -1061,10 +1058,10 @@ class ComunicacaoMDFe(Comunicacao):
 
         if self._header:
             cabecalho = self._cabecalho_soap(metodo)
-            c = etree.SubElement(raiz, "{%s}Header" % self._namespace_soap)
+            c = etree.SubElement(raiz, f"{{{self._namespace_soap}}}Header")
             c.append(cabecalho)
 
-        body = etree.SubElement(raiz, "{%s}Body" % self._namespace_soap)
+        body = etree.SubElement(raiz, f"{{{self._namespace_soap}}}Body")
 
         a = etree.SubElement(body, self._envio_mensagem, xmlns=self._namespace_metodo + metodo)
 
@@ -1130,10 +1127,6 @@ class ComunicacaoMDFe(Comunicacao):
             )
             result.encoding = "utf-8"
             return result
-        except requests.exceptions.Timeout as e:
-            raise e
-        except requests.exceptions.RequestException as e:
-            raise e
         finally:
             if certificado_a1:
                 certificado_a1.excluir()
@@ -1324,16 +1317,16 @@ class ComunicacaoCTe(Comunicacao):
         """Monta o XML para o envio via SOAP"""
 
         raiz = etree.Element(
-            "{%s}Envelope" % NAMESPACE_SOAP,
+            f"{{{NAMESPACE_SOAP}}}Envelope",
             nsmap={"xsi": NAMESPACE_XSI, "xsd": NAMESPACE_XSD, "soap": NAMESPACE_SOAP},
         )
 
         if self._header:
             cabecalho = self._cabecalho_soap(metodo)
-            c = etree.SubElement(raiz, "{%s}Header" % self._namespace_soap)
+            c = etree.SubElement(raiz, f"{{{self._namespace_soap}}}Header")
             c.append(cabecalho)
 
-        body = etree.SubElement(raiz, "{%s}Body" % NAMESPACE_SOAP)
+        body = etree.SubElement(raiz, f"{{{NAMESPACE_SOAP}}}Body")
         # distribuição tem um corpo de xml diferente
         if metodo == "CTeDistribuicaoDFe":
             x = etree.SubElement(body, "cteDistDFeInteresse", xmlns=NAMESPACE_CTE_METODO + metodo)
@@ -1387,10 +1380,6 @@ class ComunicacaoCTe(Comunicacao):
             )
             result.encoding = "utf-8"
             return result
-        except requests.exceptions.Timeout as e:
-            raise e
-        except requests.exceptions.RequestException as e:
-            raise e
         finally:
             if certificado_a1:
                 certificado_a1.excluir()

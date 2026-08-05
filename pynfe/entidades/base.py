@@ -1,21 +1,19 @@
-# -*- coding: utf-8 -*-
-
 import warnings
 from dataclasses import dataclass
-from typing import List
+from typing import ClassVar
 
 
 @dataclass
-class CampoDeprecated(object):
+class CampoDeprecated:
     anterior: str
     novo: str
     motivo: str
     apenas_warning: bool = False
 
 
-class Entidade(object):
+class Entidade:
     _fonte_dados = None
-    campos_deprecados: List[CampoDeprecated] = []
+    campos_deprecados: ClassVar[list[CampoDeprecated]] = []
 
     def __init__(self, **kwargs):
         # Codigo para dinamizar a criacao de instancias de entidade,
@@ -35,7 +33,7 @@ class Entidade(object):
         return self.__class__.__name__
 
     def __repr__(self):
-        return "<%s %s>" % (self.__class__.__name__, str(self))
+        return f"<{self.__class__.__name__} {self!s}>"
 
     def __setattr__(self, name, value):
         if hasattr(self, name):
@@ -65,8 +63,8 @@ class Entidade(object):
                         f"O campo {campo_deprecado.anterior} foi deprecado e removido."
                         f"Motivo: {campo_deprecado.motivo}"
                     )
-        super(Entidade, self).__setattr__(name, value)
+        super().__setattr__(name, value)
 
 
-class Lote(object):
+class Lote:
     pass

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import random
 from decimal import Decimal
 
@@ -13,32 +12,32 @@ class Manifesto(Entidade):
     status = MDFE_STATUS[0]
 
     # - UF - converter para codigos em CODIGOS_ESTADOS
-    uf = str()
+    uf = ""
 
     # tpAmb
 
     # - Tipo Emitente
     # 1=Transportadora; 2=Carga própria; 3=CTe Globalizado
-    tipo_emitente = int()
+    tipo_emitente = 0
 
     # - Tipo transportador - 0=nenhum; 1=etc; 2=tac; 3=ctc
-    tipo_transportador = int()
+    tipo_transportador = 0
 
     # Manifesto fixo 58
     # - Modelo (formato: NN)
     modelo = 58
 
     # - Serie (obrigatorio - formato: NNN)
-    serie = str()
+    serie = ""
 
     # - Numero MDFe (obrigatorio)
-    numero_mdfe = str()
+    numero_mdfe = ""
 
     # - Código numérico aleatório que compõe a chave de acesso
-    codigo_numerico_aleatorio = str()
+    codigo_numerico_aleatorio = ""
 
     # - Digito verificador do codigo numerico aleatorio
-    dv_codigo_numerico_aleatorio = str()
+    dv_codigo_numerico_aleatorio = ""
 
     # - Tipo do modal de transporte
     # 1=Rodoviario; 2=Aereo; 3=Aquaviario; 4=Ferroviario
@@ -48,7 +47,7 @@ class Manifesto(Entidade):
     data_emissao = None
 
     # - Forma de emissao (obrigatorio - seleciona de lista) - NF_FORMAS_EMISSAO
-    forma_emissao = str()
+    forma_emissao = ""
 
     # - Processo de emissão da NF-e (obrigatorio - seleciona de lista) - NF_PROCESSOS_EMISSAO
     processo_emissao = 0
@@ -57,16 +56,16 @@ class Manifesto(Entidade):
     versao_processo_emissao = get_version()
 
     # - UF inicio. Exemplo SP, MT, PR
-    UFIni = str()
+    UFIni = ""
 
     # - UF final. Exemplo SP, MT, PR
-    UFFim = str()
+    UFFim = ""
 
     # - Digest value da NF-e (somente leitura)
     digest_value = None
 
     # - Protocolo (somente leitura)
-    protocolo = str()
+    protocolo = ""
 
     # - Data (somente leitura)
     data = None
@@ -103,10 +102,10 @@ class Manifesto(Entidade):
 
     # - Informacoes Adicionais
     #  - Informacoes adicionais de interesse do fisco
-    informacoes_adicionais_interesse_fisco = str()
+    informacoes_adicionais_interesse_fisco = ""
 
     #  - Informacoes complementares de interesse do contribuinte
-    informacoes_complementares_interesse_contribuinte = str()
+    informacoes_complementares_interesse_contribuinte = ""
 
     def __init__(self, *args, **kwargs):
         self.municipio_carrega = []
@@ -117,7 +116,7 @@ class Manifesto(Entidade):
         self.produto = []
         self.lacres = []
         self.responsavel_tecnico = []
-        super(Manifesto, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def __str__(self):
         return " ".join([str(self.modelo), self.serie, self.numero_mdfe])
@@ -201,49 +200,46 @@ class Manifesto(Entidade):
     def identificador_unico(self):
         # Monta 'Id' da tag raiz <infMDFe>
         # Ex.: MDFe35080599999090910270580010000000011518005123
-        key = "%(uf)s%(ano)s%(mes)s%(cnpj)s%(mod)s%(serie)s%(nMDF)s%(tpEmis)s%(cMDF)s" % {
-            "uf": CODIGOS_ESTADOS[self.uf],
-            "ano": self.data_emissao.strftime("%y"),
-            "mes": self.data_emissao.strftime("%m"),
-            "cnpj": so_numeros(self.emitente.cpfcnpj).zfill(14),
-            "mod": self.modelo,
-            "serie": str(self.serie).zfill(3),
-            "nMDF": str(self.numero_mdfe).zfill(9),
-            "tpEmis": str(self.forma_emissao),
-            "cMDF": self._codigo_numerico_aleatorio(),
-        }
-        return (
-            "MDFe%(uf)s%(ano)s%(mes)s%(cnpj)s%(mod)s%(serie)s%(nMDF)s%(tpEmis)s%(cMDF)s%(cDV)s"
-            % {
-                "uf": CODIGOS_ESTADOS[self.uf],
-                "ano": self.data_emissao.strftime("%y"),
-                "mes": self.data_emissao.strftime("%m"),
-                "cnpj": so_numeros(self.emitente.cpfcnpj).zfill(14),
-                "mod": self.modelo,
-                "serie": str(self.serie).zfill(3),
-                "nMDF": str(self.numero_mdfe).zfill(9),
-                "tpEmis": str(self.forma_emissao),
-                "cMDF": str(self.codigo_numerico_aleatorio),
-                "cDV": self._dv_codigo_numerico(key),
-            }
+        key = "{uf}{ano}{mes}{cnpj}{mod}{serie}{nMDF}{tpEmis}{cMDF}".format(
+            uf=CODIGOS_ESTADOS[self.uf],
+            ano=self.data_emissao.strftime("%y"),
+            mes=self.data_emissao.strftime("%m"),
+            cnpj=so_numeros(self.emitente.cpfcnpj).zfill(14),
+            mod=self.modelo,
+            serie=str(self.serie).zfill(3),
+            nMDF=str(self.numero_mdfe).zfill(9),
+            tpEmis=str(self.forma_emissao),
+            cMDF=self._codigo_numerico_aleatorio(),
+        )
+        return "MDFe{uf}{ano}{mes}{cnpj}{mod}{serie}{nMDF}{tpEmis}{cMDF}{cDV}".format(
+            uf=CODIGOS_ESTADOS[self.uf],
+            ano=self.data_emissao.strftime("%y"),
+            mes=self.data_emissao.strftime("%m"),
+            cnpj=so_numeros(self.emitente.cpfcnpj).zfill(14),
+            mod=self.modelo,
+            serie=str(self.serie).zfill(3),
+            nMDF=str(self.numero_mdfe).zfill(9),
+            tpEmis=str(self.forma_emissao),
+            cMDF=str(self.codigo_numerico_aleatorio),
+            cDV=self._dv_codigo_numerico(key),
         )
 
 
 class ManifestoMunicipioCarrega(Entidade):
     # - Codigo municipio
-    cMunCarrega = str()
+    cMunCarrega = ""
 
     # - Nome do municipio
-    xMunCarrega = str()
+    xMunCarrega = ""
 
 
 class ManifestoPercurso(Entidade):
     # - Nome da UF (2 digitos)
-    UFPer = str()
+    UFPer = ""
 
 
 class ManifestoRodoviario(Entidade):
-    rntrc = str()
+    rntrc = ""
     ciot = None
     pedagio = None
     contratante = None
@@ -253,60 +249,60 @@ class ManifestoRodoviario(Entidade):
 
 
 class ManifestoCIOT(Entidade):
-    numero_ciot = str()
-    cpfcnpj = str()
+    numero_ciot = ""
+    cpfcnpj = ""
 
 
 class ManifestoPedagio(Entidade):
-    cnpj_fornecedor = str()
-    cpfcnpj_pagador = str()
-    numero_compra = str()
+    cnpj_fornecedor = ""
+    cpfcnpj_pagador = ""
+    numero_compra = ""
     valor_pedagio = Decimal()
 
 
 class ManifestoContratante(Entidade):
-    nome = str()
-    cpfcnpj = str()
-    NroContrato = str()
+    nome = ""
+    cpfcnpj = ""
+    NroContrato = ""
     vContratoGlobal = Decimal()
 
 
 class ManifestoVeiculoTracao(Entidade):
-    cInt = str()
-    placa = str()
-    RENAVAM = str()
-    tara = str()
-    capKG = str()
-    capM3 = str()
+    cInt = ""
+    placa = ""
+    RENAVAM = ""
+    tara = ""
+    capKG = ""
+    capM3 = ""
     proprietario = None
     condutor = None
-    tpRod = str()
-    tpCar = str()
-    UF = str()
+    tpRod = ""
+    tpCar = ""
+    UF = ""
 
 
 class ManifestoVeiculoReboque(Entidade):
-    cInt = str()
-    placa = str()
-    RENAVAM = str()
-    tara = str()
-    capKG = str()
-    capM3 = str()
+    cInt = ""
+    placa = ""
+    RENAVAM = ""
+    tara = ""
+    capKG = ""
+    capM3 = ""
     proprietario = None
-    tpCar = str()
-    UF = str()
+    tpCar = ""
+    UF = ""
 
 
 class ManifestoCondutor(Entidade):
-    nome_motorista = str()
-    cpf_motorista = str()
+    nome_motorista = ""
+    cpf_motorista = ""
 
 
 class ManifestoDocumentos(Entidade):
     # Código do municipio de descarga
-    cMunDescarga = str()
+    cMunDescarga = ""
     # Nome do municipio de descarga
-    xMunDescarga = str()
+    xMunDescarga = ""
 
     # Documentos vinculados
     documentos_nfe = None
@@ -314,28 +310,28 @@ class ManifestoDocumentos(Entidade):
 
 
 class ManifestoDocumentosNFe(Entidade):
-    chave_acesso_nfe = str()
+    chave_acesso_nfe = ""
 
 
 class ManifestoDocumentosCTe(Entidade):
-    chave_acesso_cte = str()
+    chave_acesso_cte = ""
 
 
 class ManifestoSeguradora(Entidade):
     # infResp - Responsavel seguro
     # 1=Emitente; 2=Tomador
-    responsavel_seguro = str()
+    responsavel_seguro = ""
     # - CNPJ do responsavel
-    cnpj_responsavel = str()
+    cnpj_responsavel = ""
 
     # infSeg - Seguradora
     # - Nome da seguradora
-    nome_seguradora = str()
+    nome_seguradora = ""
     # - CNPJ seguradora
-    cnpj_seguradora = str()
+    cnpj_seguradora = ""
 
     # Apolice do Seguro
-    numero_apolice = str()
+    numero_apolice = ""
 
     # Lista de Averbacoes
     averbacoes = None
@@ -343,7 +339,7 @@ class ManifestoSeguradora(Entidade):
 
 class ManifestoAverbacao(Entidade):
     # Numero da Averbacao
-    numero = str()
+    numero = ""
 
 
 class ManifestoProduto(Entidade):
@@ -359,58 +355,58 @@ class ManifestoProduto(Entidade):
     #   09=PerigosaCargaFrigorificada
     #   10=PerigosaConteinerizada
     #   11=PerigosaCargaGeral
-    tipo_carga = str()
+    tipo_carga = ""
 
-    nome_produto = str()
-    cean = str()
-    ncm = str()
+    nome_produto = ""
+    cean = ""
+    ncm = ""
 
 
 class ManifestoEmitente(Entidade):
     # Dados do Emitente
 
     # - CPF ou CNPJ (obrigatorio)
-    cpfcnpj = str()
+    cpfcnpj = ""
 
     # - Inscricao Estadual (obrigatorio)
-    inscricao_estadual = str()
+    inscricao_estadual = ""
 
     # - Nome/Razao Social (obrigatorio)
-    razao_social = str()
+    razao_social = ""
 
     # - Nome Fantasia
-    nome_fantasia = str()
+    nome_fantasia = ""
 
     # Endereco
     # - Logradouro (obrigatorio)
-    endereco_logradouro = str()
+    endereco_logradouro = ""
 
     # - Numero (obrigatorio)
-    endereco_numero = str()
+    endereco_numero = ""
 
     # - Complemento
-    endereco_complemento = str()
+    endereco_complemento = ""
 
     # - Bairro (obrigatorio)
-    endereco_bairro = str()
+    endereco_bairro = ""
 
     # - Codigo Municipio (opt)
-    endereco_cod_municipio = str()
+    endereco_cod_municipio = ""
 
     # - Municipio (obrigatorio)
-    endereco_municipio = str()
+    endereco_municipio = ""
 
     # - CEP
-    endereco_cep = str()
+    endereco_cep = ""
 
     # - UF (obrigatorio)
-    endereco_uf = str()
+    endereco_uf = ""
 
     # - Telefone
-    endereco_telefone = str()
+    endereco_telefone = ""
 
     # - Email
-    endereco_email = str()
+    endereco_email = ""
 
     def __str__(self):
         return self.cpfcnpj
@@ -418,30 +414,30 @@ class ManifestoEmitente(Entidade):
 
 class ManifestoTotais(Entidade):
     # Quantidade total de CT-e relacionados no Manifesto
-    qCTe = int()
+    qCTe = 0
 
     # Quantidade total de NF-e relacionadas no Manifesto
-    qNFe = int()
+    qNFe = 0
 
     # Valor total da carga / mercadorias transportadas
     vCarga = Decimal()
 
     # - Código da unidade de medida do Peso Bruto da Carga / Mercadorias transportadas
     # Unidades: 01 – KG;  02 - TON
-    cUnid = str()
+    cUnid = ""
 
     # - Peso Bruto Total da Carga / Mercadorias transportadas
     qCarga = Decimal()
 
 
 class ManifestoLacres(Entidade):
-    nLacre = str()
+    nLacre = ""
 
 
 class ManifestoResponsavelTecnico(Entidade):
     # NT 2018/003
-    cnpj = str()
-    contato = str()
-    email = str()
-    fone = str()
-    csrt = str()
+    cnpj = ""
+    contato = ""
+    email = ""
+    fone = ""
+    csrt = ""

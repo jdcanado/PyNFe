@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# *-* encoding: utf8 *-*
 
 """Tests for Reforma Tributaria IBS/CBS serialization (NT 2025.002-RTC).
 
@@ -13,8 +12,8 @@ from decimal import Decimal
 
 from pynfe.entidades.cliente import Cliente
 from pynfe.entidades.emitente import Emitente
-from pynfe.entidades.notafiscal import NotaFiscal
 from pynfe.entidades.fonte_dados import _fonte_dados
+from pynfe.entidades.notafiscal import NotaFiscal
 from pynfe.processamento.assinatura import AssinaturaA1
 from pynfe.processamento.serializacao import SerializacaoXML
 from pynfe.utils.flags import CODIGO_BRASIL, NAMESPACE_NFE
@@ -93,34 +92,34 @@ class ReformaTributariaSerializacaoTestCase(unittest.TestCase):
 
     def _base_product_kwargs(self):
         """Common product kwargs without reforma tributaria fields."""
-        return dict(
-            codigo="001",
-            descricao="Produto teste reforma tributaria",
-            ncm="99999999",
-            ean="SEM GTIN",
-            cfop="5102",
-            unidade_comercial="UN",
-            quantidade_comercial=Decimal("10"),
-            valor_unitario_comercial=Decimal("100.00"),
-            valor_total_bruto=Decimal("1000.00"),
-            unidade_tributavel="UN",
-            quantidade_tributavel=Decimal("10"),
-            valor_unitario_tributavel=Decimal("100.00"),
-            ean_tributavel="SEM GTIN",
-            ind_total=1,
-            icms_modalidade="00",
-            icms_origem=0,
-            icms_csosn="",
-            pis_modalidade="99",
-            cofins_modalidade="99",
-            pis_valor_base_calculo=Decimal("0.00"),
-            pis_aliquota_percentual=Decimal("0.00"),
-            pis_valor=Decimal("0.00"),
-            cofins_valor_base_calculo=Decimal("0.00"),
-            cofins_aliquota_percentual=Decimal("0.00"),
-            cofins_valor=Decimal("0.00"),
-            valor_tributos_aprox="0",
-        )
+        return {
+            "codigo": "001",
+            "descricao": "Produto teste reforma tributaria",
+            "ncm": "99999999",
+            "ean": "SEM GTIN",
+            "cfop": "5102",
+            "unidade_comercial": "UN",
+            "quantidade_comercial": Decimal(10),
+            "valor_unitario_comercial": Decimal("100.00"),
+            "valor_total_bruto": Decimal("1000.00"),
+            "unidade_tributavel": "UN",
+            "quantidade_tributavel": Decimal(10),
+            "valor_unitario_tributavel": Decimal("100.00"),
+            "ean_tributavel": "SEM GTIN",
+            "ind_total": 1,
+            "icms_modalidade": "00",
+            "icms_origem": 0,
+            "icms_csosn": "",
+            "pis_modalidade": "99",
+            "cofins_modalidade": "99",
+            "pis_valor_base_calculo": Decimal("0.00"),
+            "pis_aliquota_percentual": Decimal("0.00"),
+            "pis_valor": Decimal("0.00"),
+            "cofins_valor_base_calculo": Decimal("0.00"),
+            "cofins_aliquota_percentual": Decimal("0.00"),
+            "cofins_valor": Decimal("0.00"),
+            "valor_tributos_aprox": "0",
+        }
 
     def _serializar_e_assinar(self):
         serializador = SerializacaoXML(_fonte_dados, homologacao=self.homologacao)
@@ -220,10 +219,10 @@ class ReformaTributariaSerializacaoTestCase(unittest.TestCase):
         kwargs.update(
             codigo="002",
             descricao="Produto isento reforma tributaria",
-            quantidade_comercial=Decimal("1"),
+            quantidade_comercial=Decimal(1),
             valor_unitario_comercial=Decimal("50.00"),
             valor_total_bruto=Decimal("50.00"),
-            quantidade_tributavel=Decimal("1"),
+            quantidade_tributavel=Decimal(1),
             valor_unitario_tributavel=Decimal("50.00"),
             ibscbs_cst="222",
             ibscbs_c_class_trib="000002",
@@ -268,11 +267,11 @@ class ReformaTributariaSerializacaoTestCase(unittest.TestCase):
             ean="SEM GTIN",
             cfop="5102",
             unidade_comercial="UN",
-            quantidade_comercial=Decimal("1"),
+            quantidade_comercial=Decimal(1),
             valor_unitario_comercial=Decimal("100.00"),
             valor_total_bruto=Decimal("100.00"),
             unidade_tributavel="UN",
-            quantidade_tributavel=Decimal("1"),
+            quantidade_tributavel=Decimal(1),
             valor_unitario_tributavel=Decimal("100.00"),
             ean_tributavel="SEM GTIN",
             ind_total=1,
@@ -339,10 +338,10 @@ class ReformaTributariaSerializacaoTestCase(unittest.TestCase):
         p2.update(
             codigo="005",
             descricao="Produto 2 reforma",
-            quantidade_comercial=Decimal("5"),
+            quantidade_comercial=Decimal(5),
             valor_unitario_comercial=Decimal("100.00"),
             valor_total_bruto=Decimal("500.00"),
-            quantidade_tributavel=Decimal("5"),
+            quantidade_tributavel=Decimal(5),
             valor_unitario_tributavel=Decimal("100.00"),
             ibscbs_cst="000",
             ibscbs_c_class_trib="000001",
@@ -401,11 +400,11 @@ class ReformaTributariaSerializacaoTestCase(unittest.TestCase):
             ean="SEM GTIN",
             cfop="5102",
             unidade_comercial="UN",
-            quantidade_comercial=Decimal("1"),
+            quantidade_comercial=Decimal(1),
             valor_unitario_comercial=Decimal("200.00"),
             valor_total_bruto=Decimal("200.00"),
             unidade_tributavel="UN",
-            quantidade_tributavel=Decimal("1"),
+            quantidade_tributavel=Decimal(1),
             valor_unitario_tributavel=Decimal("200.00"),
             ean_tributavel="SEM GTIN",
             ind_total=1,
