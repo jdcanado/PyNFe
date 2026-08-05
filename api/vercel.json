@@ -16,6 +16,35 @@
       "memory": 1024,
       "maxDuration": 30,
       "runtime": "python3.11"
+    },
+    "api/tasks/poller.py": {
+      "schedule": "*/2 * * * *",
+      "memory": 1024,
+      "maxDuration": 30,
+      "runtime": "python3.11"
+    },
+    "api/tasks/warmer.py": {
+      "schedule": "*/5 * * * *",
+      "memory": 1024,
+      "maxDuration": 30,
+      "runtime": "python3.11"
     }
-  }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.py" },
+    { "source": "/docs", "destination": "/api/index.py" },
+    { "source": "/openapi.json", "destination": "/api/index.py" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        }
+      ]
+    }
+  ]
 }
