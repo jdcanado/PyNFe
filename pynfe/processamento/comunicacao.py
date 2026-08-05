@@ -40,11 +40,15 @@ class Comunicacao(object):
     certificado_senha = None
     url = None
 
-    def __init__(self, uf, certificado, certificado_senha, homologacao=False):
+    def __init__(
+        self, uf, certificado, certificado_senha, homologacao=False, cert_pem=None, key_pem=None
+    ):
         self.uf = uf
         self.certificado = certificado
         self.certificado_senha = certificado_senha
         self._ambiente = 2 if homologacao else 1
+        self._cert_pem = cert_pem
+        self._key_pem = key_pem
 
 
 class ComunicacaoSefaz(Comunicacao):
@@ -596,12 +600,17 @@ class ComunicacaoSefaz(Comunicacao):
         return response
 
     def _post(self, url, xml, timeout=None):
-        if isinstance(self.certificado, bytes):
-            certificado_a1 = CertificadoA1(pfx_bytes=self.certificado)
+        certificado_a1 = None
+        if self._cert_pem is not None and self._key_pem is not None:
+            # Atalho: certificado já em memória (PEM), sem arquivos temporários
+            chave_cert = (self._cert_pem, self._key_pem)
         else:
-            certificado_a1 = CertificadoA1(self.certificado)
-        chave, cert = certificado_a1.separar_arquivo(self.certificado_senha, caminho=True)
-        chave_cert = (cert, chave)
+            if isinstance(self.certificado, bytes):
+                certificado_a1 = CertificadoA1(pfx_bytes=self.certificado)
+            else:
+                certificado_a1 = CertificadoA1(self.certificado)
+            chave, cert = certificado_a1.separar_arquivo(self.certificado_senha, caminho=True)
+            chave_cert = (cert, chave)
         # Abre a conexão HTTPS
         try:
             xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>'
@@ -627,7 +636,8 @@ class ComunicacaoSefaz(Comunicacao):
         except requests.exceptions.RequestException as e:
             raise e
         finally:
-            certificado_a1.excluir()
+            if certificado_a1:
+                certificado_a1.excluir()
 
 
 class ComunicacaoNfse(Comunicacao):
@@ -1082,12 +1092,17 @@ class ComunicacaoMDFe(Comunicacao):
         return header
 
     def _post(self, url, xml):
-        if isinstance(self.certificado, bytes):
-            certificado_a1 = CertificadoA1(pfx_bytes=self.certificado)
+        certificado_a1 = None
+        if self._cert_pem is not None and self._key_pem is not None:
+            # Atalho: certificado já em memória (PEM), sem arquivos temporários
+            chave_cert = (self._cert_pem, self._key_pem)
         else:
-            certificado_a1 = CertificadoA1(self.certificado)
-        chave, cert = certificado_a1.separar_arquivo(self.certificado_senha, caminho=True)
-        chave_cert = (cert, chave)
+            if isinstance(self.certificado, bytes):
+                certificado_a1 = CertificadoA1(pfx_bytes=self.certificado)
+            else:
+                certificado_a1 = CertificadoA1(self.certificado)
+            chave, cert = certificado_a1.separar_arquivo(self.certificado_senha, caminho=True)
+            chave_cert = (cert, chave)
         # Abre a conexão HTTPS
         try:
             xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>'
@@ -1120,7 +1135,8 @@ class ComunicacaoMDFe(Comunicacao):
         except requests.exceptions.RequestException as e:
             raise e
         finally:
-            certificado_a1.excluir()
+            if certificado_a1:
+                certificado_a1.excluir()
 
     def _cabecalho_soap(self, metodo):
         """Monta o XML do cabeçalho da requisição SOAP"""
@@ -1337,12 +1353,17 @@ class ComunicacaoCTe(Comunicacao):
         return response
 
     def _post(self, url, xml):
-        if isinstance(self.certificado, bytes):
-            certificado_a1 = CertificadoA1(pfx_bytes=self.certificado)
+        certificado_a1 = None
+        if self._cert_pem is not None and self._key_pem is not None:
+            # Atalho: certificado já em memória (PEM), sem arquivos temporários
+            chave_cert = (self._cert_pem, self._key_pem)
         else:
-            certificado_a1 = CertificadoA1(self.certificado)
-        chave, cert = certificado_a1.separar_arquivo(self.certificado_senha, caminho=True)
-        chave_cert = (cert, chave)
+            if isinstance(self.certificado, bytes):
+                certificado_a1 = CertificadoA1(pfx_bytes=self.certificado)
+            else:
+                certificado_a1 = CertificadoA1(self.certificado)
+            chave, cert = certificado_a1.separar_arquivo(self.certificado_senha, caminho=True)
+            chave_cert = (cert, chave)
         # Abre a conexão HTTPS
         try:
             xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>'
@@ -1371,4 +1392,5 @@ class ComunicacaoCTe(Comunicacao):
         except requests.exceptions.RequestException as e:
             raise e
         finally:
-            certificado_a1.excluir()
+            if certificado_a1:
+                certificado_a1.excluir()
