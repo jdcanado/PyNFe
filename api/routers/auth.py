@@ -28,9 +28,7 @@ async def login(
     db: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> TokenResponse:
     """Gera um JWT a partir de api_key + api_secret válidos."""
-    result = await db.execute(
-        select(APIClient).where(APIClient.api_key_hash == api_key)
-    )
+    result = await db.execute(select(APIClient).where(APIClient.api_key_hash == api_key))
     client = result.scalar_one_or_none()
 
     if client is None or not client.is_active:

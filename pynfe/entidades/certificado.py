@@ -1,4 +1,3 @@
-
 import os
 import tempfile
 
@@ -11,9 +10,10 @@ from cryptography.hazmat.primitives.serialization import (
 
 from .base import Entidade
 
-#from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
-#load_dotenv()  # Carrega as variáveis do arquivo .env
+# load_dotenv()  # Carrega as variáveis do arquivo .env
+
 
 class Certificado(Entidade):
     """Classe abstrata responsavel por definir o modelo padrao para as demais
@@ -66,9 +66,7 @@ class CertificadoA1(Certificado):
                     "Falha ao abrir arquivo do certificado digital A1. Causa desconhecida."
                 ) from exc
         else:
-            raise ValueError(
-                "Nenhum certificado fornecido. Informe caminho_arquivo ou pfx_bytes."
-            )
+            raise ValueError("Nenhum certificado fornecido. Informe caminho_arquivo ou pfx_bytes.")
 
         if not isinstance(senha, bytes):
             senha = str.encode(senha)
@@ -104,16 +102,16 @@ class CertificadoA1(Certificado):
         else:
             # Certificado
             cert = cert.public_bytes(Encoding.PEM).decode("utf-8")
-            #LOCAL
-            #cert = base64.b64decode(os.getenv("CERTIFICADO"))
-            #VERCEL
-            #cert = base64.b64decode(os.environ.get("CERTIFICADO"))
+            # LOCAL
+            # cert = base64.b64decode(os.getenv("CERTIFICADO"))
+            # VERCEL
+            # cert = base64.b64decode(os.environ.get("CERTIFICADO"))
             # Chave, string decodificada da chave privada
             chave = chave.private_bytes(Encoding.PEM, PrivateFormat.PKCS8, NoEncryption())
-            #LOCAL
-            #chave = base64.b64decode(os.getenv("CHAVE"))
-            #VERCEL
-            #chave = base64.b64decode(os.environ.get("CHAVE"))
+            # LOCAL
+            # chave = base64.b64decode(os.getenv("CHAVE"))
+            # VERCEL
+            # chave = base64.b64decode(os.environ.get("CHAVE"))
             return chave, cert
 
     def excluir(self):
@@ -124,4 +122,3 @@ class CertificadoA1(Certificado):
             self.arquivos_temp.clear()
         except Exception:
             pass
-

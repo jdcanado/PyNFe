@@ -29,6 +29,4 @@ class TimestampMixin:
 class UUIDMixin:
     """Mixin que adiciona PK UUID (default uuid4)."""
 
-    id: Mapped[object] = mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid4
-    )
+    id: Mapped[object] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)

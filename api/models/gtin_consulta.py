@@ -13,9 +13,7 @@ class GtinConsulta(UUIDMixin, TimestampMixin, Base):
 
     __tablename__ = "gtin_consultas"
 
-    codigo_gtin: Mapped[str] = mapped_column(
-        String(14), index=True, nullable=False
-    )
+    codigo_gtin: Mapped[str] = mapped_column(String(14), index=True, nullable=False)
     descricao: Mapped[str | None] = mapped_column(String(200))
     ncm: Mapped[str | None] = mapped_column(String(8))
     cest: Mapped[str | None] = mapped_column(String(7))

@@ -294,18 +294,18 @@ class ComunicacaoSefaz(Comunicacao):
         xml = self._construir_xml_soap("CadConsultaCadastro4", raiz)
         # Chama método que efetua a requisição POST no servidor SOAP
         return self._post(url, xml)
-    
+
     def consulta_gtin(self, gtin):
-        url = NFE["SP"]["GTIN"]#self._get_url("nfe", consulta="GTIN")
+        url = NFE["SP"]["GTIN"]  # self._get_url("nfe", consulta="GTIN")
 
         raiz = etree.Element("consGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
         etree.SubElement(raiz, "GTIN").text = gtin
-        
+
         # Monta XML para envio da requisição
         xml = self._construir_xml_soap("ccgConsGTIN", raiz)
         # Chama método que efetua a requisição POST no servidor SOAP
         return self._post(url, xml)
-    
+
     def evento(self, modelo, evento, id_lote=1):
         """
         Envia um evento de nota fiscal (cancelamento e carta de correção)
@@ -573,7 +573,7 @@ class ComunicacaoSefaz(Comunicacao):
         )
         body = etree.SubElement(raiz, "{%s}Body" % NAMESPACE_SOAP)
         # distribuição tem um corpo de xml diferente
-        
+
         if metodo == "NFeDistribuicaoDFe":
             x = etree.SubElement(body, "nfeDistDFeInteresse", xmlns=NAMESPACE_METODO + metodo)
             a = etree.SubElement(x, "nfeDadosMsg")
@@ -593,7 +593,7 @@ class ComunicacaoSefaz(Comunicacao):
         # PE é a única UF que exige SOAPAction no header
         response = {
             "content-type": "application/soap+xml; charset=utf-8;",
-            "Accept": "application/soap+xml; charset=utf-8;"
+            "Accept": "application/soap+xml; charset=utf-8;",
         }
         if self.uf.upper() == "PE":
             response["SOAPAction"] = ""

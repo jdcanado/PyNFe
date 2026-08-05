@@ -26,9 +26,7 @@ def hash_api_key(api_key: str) -> str:
 
 def create_jwt_token(subject: str, extra_claims: dict | None = None) -> str:
     """Cria um token JWT assinado com as configurações da API."""
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.jwt_expire_minutes
-    )
+    expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expire_minutes)
     payload = {
         "sub": subject,
         "exp": expire,
@@ -41,6 +39,4 @@ def create_jwt_token(subject: str, extra_claims: dict | None = None) -> str:
 
 def decode_jwt_token(token: str) -> dict:
     """Decodifica e valida um token JWT. Levanta JWTError em caso de falha."""
-    return jwt.decode(
-        token, settings.jwt_secret, algorithms=[settings.jwt_algorithm]
-    )
+    return jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_algorithm])

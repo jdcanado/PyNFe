@@ -16,17 +16,13 @@ class NotaFiscal(UUIDMixin, TimestampMixin, Base):
     """Nota fiscal eletrônica (NF-e/NFC-e) emitida pela API."""
 
     __tablename__ = "notas_fiscais"
-    __table_args__ = (
-        Index("ix_notas_fiscais_empresa_status", "empresa_id", "status"),
-    )
+    __table_args__ = (Index("ix_notas_fiscais_empresa_status", "empresa_id", "status"),)
 
     empresa_id: Mapped[UUID] = mapped_column(
         PGUUID(as_uuid=True), ForeignKey("empresas.id"), nullable=False
     )
 
-    chave_acesso: Mapped[str] = mapped_column(
-        String(44), unique=True, index=True, nullable=False
-    )
+    chave_acesso: Mapped[str] = mapped_column(String(44), unique=True, index=True, nullable=False)
     numero: Mapped[int] = mapped_column(Integer, nullable=False)
     serie: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     modelo: Mapped[str] = mapped_column(String(2), nullable=False, default="55")
