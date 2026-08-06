@@ -22,6 +22,7 @@ line-length = 100
 [tool.ruff.lint]
 ignore = [
     "TRY002",  # criar exceção própria: mudança de API, fora de escopo
+    "UP045",  # manter Optional[] nos models: Mapped[X | None] quebra no Python 3.9
 ]
 
 [tool.poetry.dependencies]

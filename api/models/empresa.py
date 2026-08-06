@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Optional
+
 from sqlalchemy import Boolean, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -15,15 +17,15 @@ class Empresa(UUIDMixin, TimestampMixin, Base):
 
     cnpj: Mapped[str] = mapped_column(String(14), unique=True, index=True, nullable=False)
     razao_social: Mapped[str] = mapped_column(String(200), nullable=False)
-    nome_fantasia: Mapped[str | None] = mapped_column(String(200))
-    inscricao_estadual: Mapped[str | None] = mapped_column(String(20))
-    uf: Mapped[str | None] = mapped_column(String(2))
+    nome_fantasia: Mapped[Optional[str]] = mapped_column(String(200))
+    inscricao_estadual: Mapped[Optional[str]] = mapped_column(String(20))
+    uf: Mapped[Optional[str]] = mapped_column(String(2))
 
     # Certificado A1 (PEM)
-    cert_pem: Mapped[str | None] = mapped_column(String)
-    key_pem: Mapped[str | None] = mapped_column(String)
-    certificado_senha: Mapped[str | None] = mapped_column(String)
-    certificado_blob_url: Mapped[str | None] = mapped_column(String(500))
+    cert_pem: Mapped[Optional[str]] = mapped_column(String)
+    key_pem: Mapped[Optional[str]] = mapped_column(String)
+    certificado_senha: Mapped[Optional[str]] = mapped_column(String)
+    certificado_blob_url: Mapped[Optional[str]] = mapped_column(String(500))
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 

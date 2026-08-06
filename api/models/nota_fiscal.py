@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
@@ -28,12 +29,12 @@ class NotaFiscal(UUIDMixin, TimestampMixin, Base):
     modelo: Mapped[str] = mapped_column(String(2), nullable=False, default="55")
     status: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
 
-    protocolo: Mapped[str | None] = mapped_column(String(15))
-    xml_assinado: Mapped[str | None] = mapped_column(Text)
-    xml_protocolado: Mapped[str | None] = mapped_column(Text)
-    valor_total: Mapped[float | None] = mapped_column()
+    protocolo: Mapped[Optional[str]] = mapped_column(String(15))
+    xml_assinado: Mapped[Optional[str]] = mapped_column(Text)
+    xml_protocolado: Mapped[Optional[str]] = mapped_column(Text)
+    valor_total: Mapped[Optional[float]] = mapped_column()
 
-    emitida_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    autorizada_em: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    emitida_em: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    autorizada_em: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
 
     empresa: Mapped[Empresa] = relationship(back_populates="notas_fiscais")  # noqa: F821
