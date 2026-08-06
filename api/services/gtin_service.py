@@ -24,8 +24,6 @@ logger = get_logger("api.gtin_service")
 GTIN_CACHE_TTL = 86_400  # 24 horas
 GTIN_CACHE_KEY = "gtin:{codigo}"
 
-# Serializa o acesso à sessão compartilhada entre as consultas do lote
-_registro_lock = asyncio.Lock()
 
 # cStat da SEFAZ SP que indica GTIN localizado
 CSTAT_GTIN_ENCONTRADO = ("138",)
@@ -84,16 +82,15 @@ async def _registrar_consulta(db: Any, codigo_gtin: str, resultado: dict) -> Non
     """
     from api.models import GtinConsulta
 
-    async with _registro_lock:
-        consulta = GtinConsulta(
-            codigo_gtin=codigo_gtin,
-            descricao=resultado.get("descricao"),
-            ncm=resultado.get("ncm"),
-            cest=resultado.get("cest"),
-            resultado_json=json.dumps(resultado),
-        )
-        db.add(consulta)
-        await db.commit()
+    consulta = GtinConsulta(
+        codigo_gtin=codigo_gtin,
+        descricao=resultado.get("descricao"),
+        ncm=resultado.get("ncm"),
+        cest=resultado.get("cest"),
+        resultado_json=json.dumps(resultado),
+    )
+    db.add(consulta)
+    await db.commit()
 
 
 async def consultar_individual(
@@ -102,6 +99,7 @@ async def consultar_individual(
     codigo_gtin: str,
     *,
     ttl: int = GTIN_CACHE_TTL,
+    registrar: bool = True,
 ) -> dict:
     """Consulta um GTIN individualmente (cache KV -> SEFAZ -> registro)."""
     key = GTIN_CACHE_KEY.format(codigo=codigo_gtin)
@@ -118,8 +116,9 @@ async def consultar_individual(
     if ttl > 0:
         await redis.set(key, json.dumps(resultado), ex=ttl)
 
-    # 4. Registra a consulta no banco
-    await _registrar_consulta(db, codigo_gtin, resultado)
+    # 4. Registra a consulta no banco (opcional: o lote registra em sequência)
+    if registrar:
+        await _registrar_consulta(db, codigo_gtin, resultado)
 
     return resultado
 
@@ -127,11 +126,14 @@ async def consultar_individual(
 async def consultar_lote(db: Any, redis: Any, codigos: list[str]) -> list[dict]:
     """Consulta até 50 GTINs em paralelo (`asyncio.gather`).
 
-    O registro no banco é serializado por `_registro_lock` porque a sessão
-    recebida (do Depends) não é segura para uso concorrente.
+    O `gather` paraleliza a SEFAZ e o cache; o registro no banco é feito em
+    sequência porque a sessão recebida (do Depends) não é segura para uso
+    concorrente.
     """
     codigos = codigos[:50]
     resultados = await asyncio.gather(
-        *(consultar_individual(db, redis, codigo) for codigo in codigos)
+        *(consultar_individual(None, redis, codigo, registrar=False) for codigo in codigos)
     )
+    for resultado in resultados:
+        await _registrar_consulta(db, resultado["codigo_gtin"], resultado)
     return list(resultados)
