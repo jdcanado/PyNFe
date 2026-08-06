@@ -16,6 +16,7 @@ para permitir testes sem SEFAZ real.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timezone
 from typing import Any, Callable
 from uuid import UUID
@@ -143,9 +144,14 @@ async def emitir_nfe(
         cert_pem=cert_pem,
         key_pem=key_pem,
     )
-    # autorizacao() é síncrono no PyNFe (requests); roda direto no loop.
+    # autorizacao() é síncrono no PyNFe (requests); roda em thread para
+    # não bloquear o event loop durante o request à SEFAZ.
     modelo_comunicacao = "nfe" if schema.modelo == 55 else "nfce"
-    resultado = comunicacao.autorizacao(modelo=modelo_comunicacao, nota_fiscal=xml_assinado)
+    resultado = await asyncio.to_thread(
+        comunicacao.autorizacao,
+        modelo=modelo_comunicacao,
+        nota_fiscal=xml_assinado,
+    )
 
     # 6. Processa a resposta
     status_code = resultado[0]
