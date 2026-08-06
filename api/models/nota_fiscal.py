@@ -32,6 +32,8 @@ class NotaFiscal(UUIDMixin, TimestampMixin, Base):
     destinatario: Mapped[Optional[str]] = mapped_column(String(14))
 
     protocolo: Mapped[Optional[str]] = mapped_column(String(15))
+    # nRec do lote assíncrono (usado pelo poller para consultar o resultado)
+    recibo: Mapped[Optional[str]] = mapped_column(String(15))
     xml_assinado: Mapped[Optional[str]] = mapped_column(Text)
     xml_protocolado: Mapped[Optional[str]] = mapped_column(Text)
     valor_total: Mapped[Optional[float]] = mapped_column()
