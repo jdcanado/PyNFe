@@ -193,11 +193,11 @@ Gera um JWT a partir das credenciais do API client, enviadas nos headers `api-ke
 
 ```sh
 curl -X POST http://localhost:8000/api/v1/auth/token \
-  -H "api-key: <hash-da-api-key>" \
+  -H "api-key: <prefixo-da-api-key>" \
   -H "api-secret: <segredo-da-api-key>"
 ```
 
-> Nota: o endpoint compara o header `api-key` com o hash armazenado em `api_clients.api_key_hash`.
+> Nota: o header `api-key` deve conter o prefixo público do API client (`api_clients.api_key_prefix`); o segredo é verificado contra o hash armazenado em `api_clients.api_key_hash`.
 
 Resposta (200):
 

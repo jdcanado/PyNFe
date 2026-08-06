@@ -6,12 +6,12 @@ from tests.api.conftest import run
 
 
 def test_token_com_credenciais_validas(client, api_client):
-    """Cenário feliz: api_key + secret válidos retornam JWT."""
+    """Cenário feliz: api-key (prefixo) + api-secret válidos retornam JWT."""
     resp = run(
         client.post(
             "/api/v1/auth/token",
             headers={
-                "api-key": api_client.api_key_hash,
+                "api-key": api_client.api_key_prefix,
                 "api-secret": "segredo-da-chave",
             },
         )
@@ -26,12 +26,12 @@ def test_token_com_credenciais_validas(client, api_client):
 
 
 def test_token_com_api_key_inexistente(client, api_client):
-    """Cenário de erro: api_key desconhecida retorna 401."""
+    """Cenário de erro: prefixo desconhecido retorna 401."""
     resp = run(
         client.post(
             "/api/v1/auth/token",
             headers={
-                "api-key": "hash-que-nao-existe",
+                "api-key": "prefixo-inexistente",
                 "api-secret": "segredo-da-chave",
             },
         )
@@ -47,7 +47,7 @@ def test_token_com_secret_invalido(client, api_client):
         client.post(
             "/api/v1/auth/token",
             headers={
-                "api-key": api_client.api_key_hash,
+                "api-key": api_client.api_key_prefix,
                 "api-secret": "segredo-errado",
             },
         )
