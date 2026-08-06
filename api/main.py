@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.core.config import get_settings
 from api.core.logging import RequestLoggingMiddleware
 from api.core.ratelimit import RateLimitMiddleware
+from api.routers.admin import router as admin_router
 from api.routers.auth import router as auth_router
 from api.routers.empresa import router as empresa_router
 from api.routers.gtin import router as gtin_router
@@ -31,11 +32,31 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 
+TAGS_PT_BR = [
+    {"name": "auth", "description": "Autenticação: geração e validação de tokens de acesso."},
+    {"name": "empresa", "description": "Empresas emitentes e upload de certificado digital A1."},
+    {
+        "name": "nfe",
+        "description": "Emissão, listagem, cancelamento e inutilização de NF-e (modelo 55).",
+    },
+    {"name": "nfce", "description": "Emissão, consulta e eventos de NFC-e (modelo 65)."},
+    {"name": "gtin", "description": "Consulta de GTIN (código de barras / tributação aproximada)."},
+    {"name": "sefaz", "description": "Status dos webservices SEFAZ por UF."},
+    {"name": "webhooks", "description": "Configuração, histórico e teste de webhooks."},
+    {"name": "admin", "description": "Métricas e gestão administrativa da API."},
+    {"name": "gdpr", "description": "Solicitações LGPD: anonimização de dados pessoais."},
+    {"name": "tasks", "description": "Tarefas internas (crons da Vercel)."},
+]
+
+
 def create_app() -> FastAPI:
     """Cria a aplicação FastAPI."""
     app = FastAPI(
-        title=settings.app_name,
-        version=settings.version,
+        title="PyNFe API",
+        description="API REST para emissão de NF-e, NFC-e e consulta GTIN. "
+        "Documentação completa em docs.api.pynfe.com.br",
+        version="1.0.0",
+        openapi_tags=TAGS_PT_BR,
         lifespan=lifespan,
     )
 
@@ -61,6 +82,7 @@ def create_app() -> FastAPI:
         """Health check."""
         return {"status": "ok", "version": settings.version}
 
+    api_router.include_router(admin_router)
     api_router.include_router(auth_router)
     api_router.include_router(empresa_router)
     api_router.include_router(gtin_router)
