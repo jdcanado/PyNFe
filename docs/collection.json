@@ -1,0 +1,198 @@
+{
+  "info": {
+    "name": "PyNFe API",
+    "description": "API REST do PyNFe — emissão de documentos fiscais (NF-e, NFC-e), consulta GTIN e autenticação. Base URL: http://localhost:8000/api/v1",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8000/api/v1/health",
+        "header": [],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "Auth - Token",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/v1/auth/token",
+        "header": [
+          {
+            "key": "api-key",
+            "value": "<hash-da-api-key>"
+          },
+          {
+            "key": "api-secret",
+            "value": "<segredo-da-api-key>"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "Auth - Refresh",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/v1/auth/refresh",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <jwt>"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "Empresa - Certificado",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/v1/empresa/certificado",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <jwt>"
+          }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "senha",
+              "value": "<senha-do-pfx>"
+            },
+            {
+              "key": "arquivo",
+              "type": "file",
+              "src": "certificado.pfx"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "NFe - Emitir",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/v1/nfe/emitir",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <jwt>"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"empresa_id\": \"00000000-0000-0000-0000-000000000001\",\n  \"uf\": \"PR\",\n  \"municipio\": \"4118402\",\n  \"natureza_operacao\": \"VENDA\",\n  \"tipo_documento\": 1,\n  \"data_emissao\": \"2026-08-05T12:00:00Z\",\n  \"modelo\": 55,\n  \"serie\": \"1\",\n  \"numero\": \"111\",\n  \"forma_emissao\": \"1\",\n  \"finalidade_emissao\": \"1\",\n  \"emitente\": {\n    \"razao_social\": \"Empresa Teste LTDA\",\n    \"cnpj\": \"99999999000199\",\n    \"inscricao_estadual\": \"9999999999\",\n    \"codigo_de_regime_tributario\": \"3\",\n    \"endereco_logradouro\": \"Rua da Paz\",\n    \"endereco_numero\": \"666\",\n    \"endereco_bairro\": \"Sossego\",\n    \"endereco_uf\": \"PR\",\n    \"endereco_municipio\": \"Paranavaí\",\n    \"endereco_cod_municipio\": \"4118402\",\n    \"endereco_cep\": \"87704000\"\n  },\n  \"cliente\": {\n    \"razao_social\": \"JOSE DA SILVA\",\n    \"tipo_documento\": \"CPF\",\n    \"numero_documento\": \"12345678900\",\n    \"indicador_ie\": 9,\n    \"endereco_logradouro\": \"Rua dos Bobos\",\n    \"endereco_numero\": \"Zero\",\n    \"endereco_bairro\": \"Aquele Mesmo\",\n    \"endereco_uf\": \"DF\",\n    \"endereco_municipio\": \"Brasilia\",\n    \"endereco_cep\": \"12345123\"\n  },\n  \"produtos\": [\n    {\n      \"codigo\": \"000328\",\n      \"descricao\": \"Produto teste\",\n      \"ncm\": \"99999999\",\n      \"cfop\": \"5102\",\n      \"ean\": \"1234567890121\",\n      \"unidade_comercial\": \"UN\",\n      \"quantidade_comercial\": \"12\",\n      \"valor_unitario_comercial\": \"9.75\",\n      \"valor_total_bruto\": \"117.00\",\n      \"icms\": {\n        \"modalidade\": \"00\",\n        \"origem\": 0,\n        \"valor_base_calculo\": \"117.00\",\n        \"aliquota\": \"18.00\",\n        \"valor\": \"21.06\"\n      },\n      \"pis\": {\n        \"situacao_tributaria\": \"01\",\n        \"valor_base_calculo\": \"117.00\",\n        \"aliquota_percentual\": \"0.65\",\n        \"valor\": \"0.76\"\n      },\n      \"cofins\": {\n        \"situacao_tributaria\": \"01\",\n        \"valor_base_calculo\": \"117.00\",\n        \"aliquota_percentual\": \"3.00\",\n        \"valor\": \"3.51\"\n      }\n    }\n  ],\n  \"pagamentos\": [\n    {\n      \"forma_pagamento\": \"01\",\n      \"valor\": \"117.00\"\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "NFe - Listar",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8000/api/v1/nfe/listar?page=1&size=20",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <jwt>"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "NFCe - Emitir",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/v1/nfce/emitir",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <jwt>"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"empresa_id\": \"00000000-0000-0000-0000-000000000001\",\n  \"uf\": \"PR\",\n  \"municipio\": \"4118402\",\n  \"natureza_operacao\": \"VENDA\",\n  \"data_emissao\": \"2026-08-05T12:00:00Z\",\n  \"serie\": \"1\",\n  \"numero\": \"222\",\n  \"indicador_presencial\": 1,\n  \"tipo_impressao_danfe\": 4,\n  \"emitente\": {\n    \"razao_social\": \"Empresa Teste LTDA\",\n    \"cnpj\": \"99999999000199\",\n    \"inscricao_estadual\": \"9999999999\",\n    \"codigo_de_regime_tributario\": \"3\",\n    \"endereco_logradouro\": \"Rua da Paz\",\n    \"endereco_numero\": \"666\",\n    \"endereco_bairro\": \"Sossego\",\n    \"endereco_uf\": \"PR\",\n    \"endereco_municipio\": \"Paranavaí\",\n    \"endereco_cod_municipio\": \"4118402\",\n    \"endereco_cep\": \"87704000\"\n  },\n  \"cliente\": null,\n  \"produtos\": [\n    {\n      \"codigo\": \"000328\",\n      \"descricao\": \"Produto teste\",\n      \"ncm\": \"99999999\",\n      \"cfop\": \"5102\",\n      \"ean\": \"1234567890121\",\n      \"unidade_comercial\": \"UN\",\n      \"quantidade_comercial\": \"12\",\n      \"valor_unitario_comercial\": \"9.75\",\n      \"valor_total_bruto\": \"117.00\",\n      \"icms\": {\n        \"modalidade\": \"00\",\n        \"origem\": 0,\n        \"valor_base_calculo\": \"117.00\",\n        \"aliquota\": \"18.00\",\n        \"valor\": \"21.06\"\n      },\n      \"pis\": {\n        \"situacao_tributaria\": \"01\",\n        \"valor_base_calculo\": \"117.00\",\n        \"aliquota_percentual\": \"0.65\",\n        \"valor\": \"0.76\"\n      },\n      \"cofins\": {\n        \"situacao_tributaria\": \"01\",\n        \"valor_base_calculo\": \"117.00\",\n        \"aliquota_percentual\": \"3.00\",\n        \"valor\": \"3.51\"\n      }\n    }\n  ],\n  \"pagamentos\": [\n    {\n      \"forma_pagamento\": \"01\",\n      \"valor\": \"117.00\"\n    }\n  ]\n}"
+        }
+      }
+    },
+    {
+      "name": "NFCe - Consultar",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8000/api/v1/nfce/consultar/{chave}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <jwt>"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "NFCe - Listar",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8000/api/v1/nfce/listar?page=1&size=20",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <jwt>"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "GTIN - Consultar",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:8000/api/v1/gtin/consultar/{codigo}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <jwt>"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "GTIN - Consultar Lote",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:8000/api/v1/gtin/consultar/lote",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer <jwt>"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"codigos\": [\n    \"7891234567890\",\n    \"7891234567891\"\n  ]\n}"
+        }
+      }
+    }
+  ]
+}
