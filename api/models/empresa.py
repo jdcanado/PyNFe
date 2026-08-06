@@ -27,6 +27,10 @@ class Empresa(UUIDMixin, TimestampMixin, Base):
     certificado_senha: Mapped[Optional[str]] = mapped_column(String)
     certificado_blob_url: Mapped[Optional[str]] = mapped_column(String(500))
 
+    # NFC-e (QR Code)
+    csc: Mapped[Optional[str]] = mapped_column(String(36))
+    csc_id: Mapped[Optional[str]] = mapped_column(String(6))
+
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     api_clients: Mapped[list[APIClient]] = relationship(  # noqa: F821

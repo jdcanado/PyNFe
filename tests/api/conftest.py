@@ -278,6 +278,8 @@ def empresa(db) -> Empresa:
                 uf="PR",
                 cert_pem=cert_pem,
                 key_pem=key_pem,
+                csc="0123456789abcdef0123456789abcdef01234567",
+                csc_id="000001",
             )
             session.add(empresa)
             await session.commit()
@@ -362,6 +364,69 @@ def payload_nfe(empresa) -> dict:
             "endereco_municipio": "Brasilia",
             "endereco_cep": "12345123",
         },
+        "produtos": [
+            {
+                "codigo": "000328",
+                "descricao": "Produto teste",
+                "ncm": "99999999",
+                "cfop": "5102",
+                "ean": "1234567890121",
+                "unidade_comercial": "UN",
+                "quantidade_comercial": "12",
+                "valor_unitario_comercial": "9.75",
+                "valor_total_bruto": "117.00",
+                "icms": {
+                    "modalidade": "00",
+                    "origem": 0,
+                    "valor_base_calculo": "117.00",
+                    "aliquota": "18.00",
+                    "valor": "21.06",
+                },
+                "pis": {
+                    "situacao_tributaria": "01",
+                    "valor_base_calculo": "117.00",
+                    "aliquota_percentual": "0.65",
+                    "valor": "0.76",
+                },
+                "cofins": {
+                    "situacao_tributaria": "01",
+                    "valor_base_calculo": "117.00",
+                    "aliquota_percentual": "3.00",
+                    "valor": "3.51",
+                },
+            }
+        ],
+        "pagamentos": [{"forma_pagamento": "01", "valor": "117.00"}],
+    }
+
+
+@pytest.fixture
+def payload_nfce(empresa) -> dict:
+    """Payload JSON válido de emissão de NFC-e (sem destinatário)."""
+    return {
+        "empresa_id": str(empresa.id),
+        "uf": "PR",
+        "municipio": "4118402",
+        "natureza_operacao": "VENDA",
+        "data_emissao": "2026-08-05T12:00:00Z",
+        "serie": "1",
+        "numero": "222",
+        "indicador_presencial": 1,
+        "tipo_impressao_danfe": 4,
+        "emitente": {
+            "razao_social": "Empresa Teste LTDA",
+            "cnpj": "99999999000199",
+            "inscricao_estadual": "9999999999",
+            "codigo_de_regime_tributario": "3",
+            "endereco_logradouro": "Rua da Paz",
+            "endereco_numero": "666",
+            "endereco_bairro": "Sossego",
+            "endereco_uf": "PR",
+            "endereco_municipio": "Paranavaí",
+            "endereco_cod_municipio": "4118402",
+            "endereco_cep": "87704000",
+        },
+        "cliente": None,
         "produtos": [
             {
                 "codigo": "000328",
