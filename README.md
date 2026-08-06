@@ -163,6 +163,8 @@ cp api/.env.example api/.env
 
 Variáveis obrigatórias: `DATABASE_URL`, `KV_URL`, `KV_TOKEN`, `BLOB_READ_WRITE_TOKEN`, `JWT_SECRET` e `FERNET_KEY` (chave Fernet de 32 bytes em base64). Para gerar a chave Fernet:
 
+> **Banco de dados**: a API usa PostgreSQL assíncrono (asyncpg) — recomendamos o **Neon** (serverless). Copie a connection string do Neon (preferencialmente a de *pooling*, host `...-pooler.aws.neon.tech`) e adicione `?sslmode=require`. Ex.: `postgresql+asyncpg://user:password@ep-xxx-pooler.aws.neon.tech/pynfe?sslmode=require`.
+
 ```sh
 python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 ```
