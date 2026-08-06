@@ -17,6 +17,7 @@ para permitir testes sem SEFAZ real.
 from __future__ import annotations
 
 import asyncio
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from typing import Any, Callable
 from uuid import UUID
@@ -28,13 +29,30 @@ from api.integrations.pynfe_adapter import converter_nota_fiscal
 from api.schemas.nfe import NFeEmitirResponse
 from api.schemas.nota_item import NotaFiscalSchema
 from api.services.certificado_service import _session_ctx, _upload_blob, obter_pem
-from pynfe.entidades.fonte_dados import _fonte_dados
+from pynfe.entidades import fonte_dados
 from pynfe.processamento.serializacao import SerializacaoXML
 from pynfe.utils import CustomXMLSigner, remover_acentos
 
 STATUS_AUTORIZADA = "AUTORIZADA"
 STATUS_REJEITADA = "REJEITADA"
 STATUS_ERRO = "ERRO"
+
+
+@contextmanager
+def _fonte_dados_isolada():
+    """Troca temporariamente o singleton global por uma FonteDados por request.
+
+    As entidades PyNFe se registram no singleton `fonte_dados._fonte_dados`
+    (via `Entidade.__init__`); trocá-lo por uma instância local durante a
+    montagem e serialização evita corrida entre requests concorrentes.
+    """
+    original = fonte_dados._fonte_dados
+    instancia = fonte_dados.FonteDados()
+    fonte_dados._fonte_dados = instancia
+    try:
+        yield instancia
+    finally:
+        fonte_dados._fonte_dados = original
 
 
 def _get_session_factory():
@@ -109,14 +127,13 @@ async def emitir_nfe(
 ) -> NFeEmitirResponse:
     """Executa o pipeline completo de emissão de NF-e e persiste o resultado."""
     empresa_id = schema.empresa_id
-    _fonte_dados.limpar_dados()
 
-    # 1. Monta a entidade PyNFe (registra na fonte de dados global)
-    nota = converter_nota_fiscal(schema)
-
-    # 2. Serializa para XML
-    serializador = SerializacaoXML(_fonte_dados, homologacao=homologacao)
-    xml = serializador.exportar(limpar=False)
+    # 1+2. Monta a entidade e serializa usando FonteDados isolada (por request),
+    # evitando que requests concorrentes misturem entidades no singleton global.
+    with _fonte_dados_isolada() as fonte:
+        nota = converter_nota_fiscal(schema)
+        serializador = SerializacaoXML(fonte, homologacao=homologacao)
+        xml = serializador.exportar(limpar=False)
 
     # 3. Carrega o certificado (KV cache -> Postgres)
     get_pem = get_pem or obter_pem
