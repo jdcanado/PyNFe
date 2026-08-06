@@ -16,7 +16,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
@@ -140,7 +140,7 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         # Resolve o plano do client (default free se não encontrado).
         plan = DEFAULT_PLAN
         async with SessionFactory() as session:
-            client = await session.get(APIClient, client_id)
+            client = await session.get(APIClient, UUID(client_id))
             if client is not None:
                 plan = client.plano
 

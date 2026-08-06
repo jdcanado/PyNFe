@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
+from uuid import UUID
 
 import redis.asyncio as redis_async
 from fastapi import Depends, Header, HTTPException, status
@@ -31,11 +32,11 @@ def get_redis() -> redis_async.Redis:
 
 
 async def get_current_client(
-    authorization: str = Header(...),
+    authorization: str | None = Header(default=None),
     db: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> APIClient:
     """Extrai o JWT do header Authorization e busca o APIClient no banco."""
-    if not authorization.startswith("Bearer "):
+    if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authorization header",
@@ -57,7 +58,15 @@ async def get_current_client(
             detail="Token missing subject",
         )
 
-    client = await db.get(APIClient, client_id)
+    try:
+        client_id_uuid = UUID(client_id)
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token missing subject",
+        ) from None
+
+    client = await db.get(APIClient, client_id_uuid)
     if client is None or not client.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
