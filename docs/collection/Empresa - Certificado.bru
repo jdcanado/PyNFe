@@ -1,0 +1,20 @@
+meta {
+  name: Empresa - Certificado
+  type: http
+  seq: 4
+}
+
+post {
+  url: http://localhost:8000/api/v1/empresa/certificado
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  Authorization: Bearer <jwt>
+}
+
+body:multipart-form {
+  senha: <senha-do-pfx>
+  arquivo: @certificado.pfx
+}
