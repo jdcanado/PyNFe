@@ -23,6 +23,7 @@ class Empresa(UUIDMixin, TimestampMixin, Base):
     cert_pem: Mapped[str | None] = mapped_column(String)
     key_pem: Mapped[str | None] = mapped_column(String)
     certificado_senha: Mapped[str | None] = mapped_column(String)
+    certificado_blob_url: Mapped[str | None] = mapped_column(String(500))
 
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 

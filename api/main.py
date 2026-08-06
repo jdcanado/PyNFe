@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.core.config import get_settings
 from api.routers.auth import router as auth_router
+from api.routers.empresa import router as empresa_router
 
 settings = get_settings()
 
@@ -50,6 +51,7 @@ def create_app() -> FastAPI:
         return {"status": "ok", "version": settings.version}
 
     api_router.include_router(auth_router)
+    api_router.include_router(empresa_router)
     app.include_router(api_router)
 
     return app
