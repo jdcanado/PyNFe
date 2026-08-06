@@ -1,6 +1,7 @@
 """Schemas Pydantic da API."""
 
 from api.schemas.auth import TokenRequest, TokenResponse
+from api.schemas.empresa import CertificadoUploadResponse
 from api.schemas.nota_item import (
     ClienteSchema,
     CofinsSchema,
@@ -15,6 +16,7 @@ from api.schemas.nota_item import (
 )
 
 __all__ = [
+    "CertificadoUploadResponse",
     "ClienteSchema",
     "CofinsSchema",
     "EmitenteSchema",
