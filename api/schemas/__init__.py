@@ -8,9 +8,7 @@ from api.schemas.nfce import NFCeEmitirRequest, NFCeResponse
 from api.schemas.nfe import (
     CancelarRequest,
     InutilizarRequest,
-    NFeEmitirRequest,
     NFeEmitirResponse,
-    NFeResponse,
 )
 from api.schemas.nota_item import (
     ClienteSchema,
@@ -41,9 +39,7 @@ __all__ = [
     "IpiSchema",
     "NFCeEmitirRequest",
     "NFCeResponse",
-    "NFeEmitirRequest",
     "NFeEmitirResponse",
-    "NFeResponse",
     "NotaFiscalSchema",
     "PagamentoSchema",
     "PaginatedResponse",
