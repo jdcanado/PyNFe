@@ -26,6 +26,7 @@ import signxml
 from lxml import etree
 
 from api.core.exceptions import CertificadoError
+from api.core.logging import get_logger
 from api.integrations.pynfe_adapter import converter_nota_fiscal
 from api.schemas.nfe import NFeEmitirResponse
 from api.schemas.nota_item import NotaFiscalSchema
@@ -35,6 +36,8 @@ from pynfe.processamento.serializacao import SerializacaoXML
 from pynfe.utils import CustomXMLSigner, remover_acentos
 
 STATUS_AUTORIZADA = "AUTORIZADA"
+
+logger = get_logger("api.nfe_service")
 STATUS_REJEITADA = "REJEITADA"
 STATUS_ERRO = "ERRO"
 
@@ -189,9 +192,9 @@ async def emitir_nfe(
             nome_arquivo,
             http_client=http_client,
         )
-    except Exception:  # noqa: BLE001, S110
+    except Exception as exc:  # noqa: BLE001
         # Blob é camada auxiliar: falha não deve impedir a autorização
-        pass
+        logger.warning("Falha ao salvar XML da NF-e no Blob: %s", exc)
 
     # 8. Persiste no banco
     emitida_em = schema.data_emissao or datetime.now(timezone.utc)

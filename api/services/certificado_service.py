@@ -27,7 +27,11 @@ from pynfe.entidades.certificado import CertificadoA1
 BLOB_BASE_URL = "https://blob.vercel-storage.com"
 PEM_CACHE_TTL = 3_600  # 1 hora
 
+from api.core.logging import get_logger
+
 PEM_CACHE_KEY = "cert:pem:{empresa_id}"
+
+logger = get_logger("api.certificado_service")
 
 
 def _get_settings():
@@ -92,7 +96,8 @@ def _validade_certificado(cert_pem: str) -> datetime | None:
             return cert.not_valid_after_utc
         except AttributeError:
             return cert.not_valid_after
-    except Exception:  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Falha ao extrair validade do certificado: %s", exc)
         return None
 
 
