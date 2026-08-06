@@ -120,11 +120,57 @@ def db(monkeypatch):
 # ---------------------------------------------------------------------------
 
 
+class FakePipeline:
+    """Pipeline Redis em memória que executa os comandos na ordem."""
+
+    def __init__(self, store: dict) -> None:
+        self._store = store
+        self._commands: list[tuple] = []
+
+    def zremrangebyscore(self, key: str, min_: float, max_: float) -> FakePipeline:
+        self._commands.append(("zremrangebyscore", key, min_, max_))
+        return self
+
+    def zadd(self, key: str, mapping: dict[str, float]) -> FakePipeline:
+        self._commands.append(("zadd", key, mapping))
+        return self
+
+    def zcard(self, key: str) -> FakePipeline:
+        self._commands.append(("zcard", key))
+        return self
+
+    def expire(self, key: str, ttl: int) -> FakePipeline:
+        self._commands.append(("expire", key, ttl))
+        return self
+
+    async def execute(self) -> list:
+        results: list = []
+        for command, *args in self._commands:
+            if command == "zremrangebyscore":
+                key, min_, max_ = args
+                self._store[key] = {
+                    member: score
+                    for member, score in self._store.get(key, {}).items()
+                    if not (min_ <= score <= max_)
+                }
+                results.append(None)
+            elif command == "zadd":
+                key, mapping = args
+                self._store.setdefault(key, {}).update(mapping)
+                results.append(len(mapping))
+            elif command == "zcard":
+                key = args[0]
+                results.append(len(self._store.get(key, {})))
+            elif command == "expire":
+                results.append(True)
+        return results
+
+
 class FakeRedis:
-    """Redis em memória com get/set."""
+    """Redis em memória com get/set (cache PEM) e pipeline (rate limit)."""
 
     def __init__(self) -> None:
-        self.store: dict[str, str] = {}
+        self.store: dict = {}
 
     async def get(self, key: str) -> str | None:
         return self.store.get(key)
@@ -132,8 +178,11 @@ class FakeRedis:
     async def set(self, key: str, value: str, ex: int | None = None) -> None:
         self.store[key] = value
 
+    def pipeline(self) -> FakePipeline:
+        return FakePipeline(self.store)
 
-@pytest.fixture
+
+@pytest.fixture(autouse=True)
 def redis_fake(monkeypatch):
     """Substitui o cliente Redis (Upstash) por um fake em memória."""
     fake = FakeRedis()
@@ -258,6 +307,19 @@ def api_client(db, empresa) -> APIClient:
             return client
 
     return run(_criar())
+
+
+@pytest.fixture
+def auth_token(api_client) -> str:
+    """JWT válido do API client de teste (header Authorization: Bearer)."""
+    from api.core.security import create_jwt_token
+
+    return create_jwt_token(str(api_client.id), {"client": api_client.name})
+
+
+def authorization_headers(auth_token: str) -> dict:
+    """Headers com o token de autenticação."""
+    return {"Authorization": f"Bearer {auth_token}"}
 
 
 @pytest.fixture
