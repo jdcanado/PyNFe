@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import os
-from typing import Self
 
 # --- env vars ANTES dos imports da API -------------------------------------
 from cryptography.fernet import Fernet
+from typing_extensions import Self
 
 os.environ["DATABASE_URL"] = "postgresql+asyncpg://u:p@localhost:5432/db"
 os.environ["KV_URL"] = "redis://localhost:6379"
