@@ -8,6 +8,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.core.config import get_settings
+from api.core.ratelimit import RateLimitMiddleware
 from api.routers.auth import router as auth_router
 
 settings = get_settings()
@@ -41,6 +42,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Rate limit por API key (Vercel KV / Upstash Redis, sliding window)
+    app.add_middleware(RateLimitMiddleware)
 
     api_router = APIRouter(prefix=API_V1_PREFIX)
 
