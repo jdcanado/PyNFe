@@ -1,6 +1,8 @@
-"""Criptografia Fernet para senhas de certificado."""
+"""Criptografia Fernet e hash de documentos (LGPD)."""
 
 from __future__ import annotations
+
+import hashlib
 
 from cryptography.fernet import Fernet
 
@@ -36,3 +38,11 @@ def encrypt_bytes(dados: bytes) -> str:
 def decrypt_bytes(token: str) -> bytes:
     """Descriptografa dados Fernet (base64) de volta para bytes."""
     return _get_fernet().decrypt(token.encode())
+
+
+def hash_documento(documento: str) -> str:
+    """Hash SHA-256 irreversível de um documento (CPF/CNPJ) — LGPD.
+
+    Usado para anonimizar e para filtrar/consultar sem expor o dado pessoal.
+    """
+    return hashlib.sha256(documento.encode()).hexdigest()

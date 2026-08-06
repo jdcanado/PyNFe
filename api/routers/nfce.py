@@ -32,6 +32,7 @@ from api.schemas.nfe import (
 )
 from api.services.nfce_service import emitir_nfce
 from api.services.nfe_service import cancelar_nota, carta_correcao_nota, inutilizar_nota
+from api.utils.crypto import hash_documento
 
 router = APIRouter(prefix="/nfce", tags=["nfce"])
 
@@ -147,7 +148,8 @@ async def listar(
     if data_fim:
         query = query.where(NotaFiscal.emitida_em < data_fim + timedelta(days=1))
     if destinatario:
-        query = query.where(NotaFiscal.destinatario == destinatario)
+        # LGPD: o banco guarda apenas o hash do documento
+        query = query.where(NotaFiscal.destinatario == hash_documento(destinatario))
 
     query = query.order_by(NotaFiscal.emitida_em.desc())
 
