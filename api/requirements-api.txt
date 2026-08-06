@@ -11,3 +11,4 @@ pydantic-settings==2.7.*
 httpx==0.28.*
 cryptography==44.0.*
 redis==5.2.*
+aiosqlite==0.22.*
