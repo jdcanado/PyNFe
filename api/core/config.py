@@ -1,12 +1,25 @@
 """Configurações centrais da API PyNFe via Pydantic Settings."""
 
 from functools import lru_cache
+from pathlib import Path
 
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Caminho do arquivo .env (api/.env) relativo a este módulo
+ENV_FILE = Path(__file__).resolve().parent.parent / ".env"
 
 
 class Settings(BaseSettings):
-    """Configurações da API lidas de variáveis de ambiente."""
+    """Configurações da API lidas de variáveis de ambiente.
+
+    Lê também o arquivo `api/.env` (veja `api/.env.example`). Variáveis de
+    ambiente reais têm precedência sobre o arquivo.
+    """
+
+    model_config = SettingsConfigDict(
+        env_file=ENV_FILE,
+        env_file_encoding="utf-8",
+    )
 
     app_name: str = "PyNFe API"
     version: str = "1.0.0"
