@@ -9,9 +9,12 @@ class GtinResponse(BaseModel):
     """Resultado de consulta de um GTIN."""
 
     codigo_gtin: str
+    encontrado: bool = False
     descricao: str | None = None
+    marca: str | None = None
     ncm: str | None = None
     cest: str | None = None
+    gpc: str | None = None
     resultado_json: dict | None = None
 
 
