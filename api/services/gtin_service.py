@@ -18,7 +18,6 @@ from typing import Any
 from lxml import etree
 
 from api.core.logging import get_logger
-from api.services.certificado_service import _session_ctx
 
 logger = get_logger("api.gtin_service")
 
@@ -76,10 +75,16 @@ async def _consultar_sefaz(codigo_gtin: str) -> dict:
 
 
 async def _registrar_consulta(db: Any, codigo_gtin: str, resultado: dict) -> None:
-    """Registra a consulta (cache miss) na tabela `gtin_consultas`."""
+    """Registra a consulta (cache miss) na tabela `gtin_consultas`.
+
+    Usa a sessão recebida diretamente (sem `async with`): a sessão do
+    `Depends(get_db)` já é gerenciada pelo contexto do FastAPI — fechá-la
+    aqui quebraria o request. O `_registro_lock` serializa o acesso entre
+    as consultas concorrentes do lote.
+    """
     from api.models import GtinConsulta
 
-    async with _registro_lock, _session_ctx(db) as session:
+    async with _registro_lock:
         consulta = GtinConsulta(
             codigo_gtin=codigo_gtin,
             descricao=resultado.get("descricao"),
@@ -87,8 +92,8 @@ async def _registrar_consulta(db: Any, codigo_gtin: str, resultado: dict) -> Non
             cest=resultado.get("cest"),
             resultado_json=json.dumps(resultado),
         )
-        session.add(consulta)
-        await session.commit()
+        db.add(consulta)
+        await db.commit()
 
 
 async def consultar_individual(
