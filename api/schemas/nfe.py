@@ -46,6 +46,19 @@ class InutilizarRequest(BaseModel):
         return v
 
 
+class NotaFiscalResumo(BaseModel):
+    """Resumo de uma nota para listagem (sem XML)."""
+
+    id: UUID
+    chave_acesso: str = Field(min_length=44, max_length=44)
+    modelo: str = "55"
+    status: str
+    valor_total: float | None = None
+    data_emissao: datetime | None = None
+    natureza_operacao: str | None = None
+    destinatario: str | None = None
+
+
 class NFeEmitirResponse(BaseModel):
     """Resposta da emissão de NF-e."""
 

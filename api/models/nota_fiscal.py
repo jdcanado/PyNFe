@@ -28,6 +28,8 @@ class NotaFiscal(UUIDMixin, TimestampMixin, Base):
     serie: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
     modelo: Mapped[str] = mapped_column(String(2), nullable=False, default="55")
     status: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
+    natureza_operacao: Mapped[Optional[str]] = mapped_column(String(60))
+    destinatario: Mapped[Optional[str]] = mapped_column(String(14))
 
     protocolo: Mapped[Optional[str]] = mapped_column(String(15))
     xml_assinado: Mapped[Optional[str]] = mapped_column(Text)

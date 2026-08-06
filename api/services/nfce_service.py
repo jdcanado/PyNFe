@@ -184,6 +184,8 @@ async def emitir_nfce(
             valor_total=float(nota.totais_icms_total_nota),
             emitida_em=emitida_em,
             autorizada_em=autorizada_em,
+            natureza_operacao=schema.natureza_operacao,
+            destinatario=(schema.cliente.numero_documento if schema.cliente is not None else None),
         )
         db.add(registro)
         await db.commit()
