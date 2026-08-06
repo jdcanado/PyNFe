@@ -10,6 +10,7 @@ Dependências (Redis, sessão, HTTP) são injetáveis para permitir testes.
 from __future__ import annotations
 
 import json
+from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -47,6 +48,23 @@ def _get_session_factory():
     from api.core.database import SessionFactory
 
     return SessionFactory
+
+
+@asynccontextmanager
+async def _session_ctx(session: Any | None):
+    """Abre uma sessão a partir de uma AsyncSession ou async_sessionmaker.
+
+    Aceita tanto uma instância de sessão (testes) quanto o factory padrão
+    (`async_sessionmaker`), que precisa ser chamado para criar a sessão.
+    """
+    if session is None:
+        session = _get_session_factory()
+    if hasattr(session, "__aenter__"):
+        async with session as db:
+            yield db
+    else:
+        async with session() as db:
+            yield db
 
 
 # ---------------------------------------------------------------------------
@@ -142,7 +160,7 @@ async def upload_certificado(
     redis = redis or _get_redis()
     session = session if session is not None else _get_session_factory()
 
-    async with session as db:
+    async with _session_ctx(session) as db:
         empresa = await db.get(Empresa, empresa_id)
         if empresa is None:
             raise ValueError(f"Empresa {empresa_id} não encontrada")
@@ -190,7 +208,7 @@ async def obter_pem(
         return data["cert_pem"], data["key_pem"]
 
     session = session if session is not None else _get_session_factory()
-    async with session as db:
+    async with _session_ctx(session) as db:
         empresa = await db.get(Empresa, empresa_id)
         if empresa is None or not empresa.cert_pem or not empresa.key_pem:
             return None
