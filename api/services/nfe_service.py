@@ -25,6 +25,7 @@ from uuid import UUID
 import signxml
 from lxml import etree
 
+from api.core.exceptions import CertificadoError
 from api.integrations.pynfe_adapter import converter_nota_fiscal
 from api.schemas.nfe import NFeEmitirResponse
 from api.schemas.nota_item import NotaFiscalSchema
@@ -139,7 +140,7 @@ async def emitir_nfe(
     get_pem = get_pem or obter_pem
     pems = await get_pem(empresa_id, redis=redis, session=session)
     if pems is None:
-        raise ValueError("Empresa sem certificado digital cadastrado")
+        raise CertificadoError("Empresa sem certificado digital cadastrado")
     cert_pem, key_pem = pems
 
     # 4. Assina o XML (zero I/O disco)
