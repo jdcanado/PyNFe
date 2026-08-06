@@ -9,6 +9,7 @@ from api.schemas.nfe import (
     CancelarRequest,
     InutilizarRequest,
     NFeEmitirRequest,
+    NFeEmitirResponse,
     NFeResponse,
 )
 from api.schemas.nota_item import (
@@ -41,6 +42,7 @@ __all__ = [
     "NFCeEmitirRequest",
     "NFCeResponse",
     "NFeEmitirRequest",
+    "NFeEmitirResponse",
     "NFeResponse",
     "NotaFiscalSchema",
     "PagamentoSchema",

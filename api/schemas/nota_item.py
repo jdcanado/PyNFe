@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from decimal import Decimal
+from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -203,6 +204,7 @@ class PagamentoSchema(BaseModel):
 class NotaFiscalSchema(BaseModel):
     """Payload completo de emissão de NF-e/NFC-e."""
 
+    empresa_id: UUID
     uf: str
     municipio: str
     natureza_operacao: str
@@ -211,6 +213,7 @@ class NotaFiscalSchema(BaseModel):
     modelo: int = 55  # 55=NF-e; 65=NFC-e
     serie: str = "1"
     numero: str
+    forma_emissao: str = "1"  # 1=Emissão normal (não em contingência)
     finalidade_emissao: str = "1"  # 1=NF-e normal
 
     emitente: EmitenteSchema

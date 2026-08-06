@@ -9,6 +9,7 @@ Suporta CSTs ICMS, CSOSN Simples Nacional, PIS/COFINS, IPI e II.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
@@ -151,7 +152,7 @@ def _pis_kwargs(pis: PisSchema | None) -> dict[str, Any]:
         return {}
     return _sem_vazios(
         {
-            "pis_situacao_tributaria": pis.situacao_tributaria,
+            "pis_modalidade": pis.situacao_tributaria,
             "pis_tipo_calculo": pis.tipo_calculo,
             "pis_valor_base_calculo": _dec(pis.valor_base_calculo),
             "pis_aliquota_percentual": _dec(pis.aliquota_percentual),
@@ -168,7 +169,7 @@ def _cofins_kwargs(cofins: CofinsSchema | None) -> dict[str, Any]:
         return {}
     return _sem_vazios(
         {
-            "cofins_situacao_tributaria": cofins.situacao_tributaria,
+            "cofins_modalidade": cofins.situacao_tributaria,
             "cofins_tipo_calculo": cofins.tipo_calculo,
             "cofins_valor_base_calculo": _dec(cofins.valor_base_calculo),
             "cofins_aliquota_percentual": _dec(cofins.aliquota_percentual),
@@ -249,6 +250,8 @@ def converter_produto_kwargs(schema: ProdutoItemSchema) -> dict[str, Any]:
             "ind_total": schema.ind_total,
         }
     )
+    # Atributo acessado pelo serializador; sempre presente (mesmo vazio)
+    kwargs["valor_tributos_aprox"] = ""
     kwargs.update(_icms_kwargs(schema.icms))
     kwargs.update(_pis_kwargs(schema.pis))
     kwargs.update(_cofins_kwargs(schema.cofins))
@@ -296,10 +299,11 @@ def converter_nota_fiscal(schema: NotaFiscalSchema) -> NotaFiscal:
         municipio=schema.municipio,
         natureza_operacao=schema.natureza_operacao,
         tipo_documento=schema.tipo_documento,
-        data_emissao=schema.data_emissao,
+        data_emissao=schema.data_emissao or datetime.now(timezone.utc),
         modelo=schema.modelo,
         serie=str(schema.serie),
         numero_nf=str(schema.numero),
+        forma_emissao=str(schema.forma_emissao),
         finalidade_emissao=str(schema.finalidade_emissao),
     )
 
