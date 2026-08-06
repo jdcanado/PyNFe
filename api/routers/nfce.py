@@ -18,6 +18,7 @@ from api.schemas.common import PaginatedResponse
 from api.schemas.nfce import NFCeEmitirRequest, NFCeResponse
 from api.schemas.nfe import NotaFiscalResumo
 from api.services.nfce_service import emitir_nfce
+from api.utils.crypto import hash_documento
 
 router = APIRouter(prefix="/nfce", tags=["nfce"])
 
@@ -117,7 +118,8 @@ async def listar(
     if data_fim:
         query = query.where(NotaFiscal.emitida_em < data_fim + timedelta(days=1))
     if destinatario:
-        query = query.where(NotaFiscal.destinatario == destinatario)
+        # LGPD: o banco guarda apenas o hash do documento
+        query = query.where(NotaFiscal.destinatario == hash_documento(destinatario))
 
     query = query.order_by(NotaFiscal.emitida_em.desc())
 

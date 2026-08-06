@@ -31,6 +31,7 @@ from api.integrations.pynfe_adapter import converter_nota_fiscal
 from api.schemas.nfe import NFeEmitirResponse
 from api.schemas.nota_item import NotaFiscalSchema
 from api.services.certificado_service import _session_ctx, _upload_blob, obter_pem
+from api.utils.crypto import encrypt_senha, hash_documento
 from pynfe.entidades import fonte_dados
 from pynfe.processamento.serializacao import SerializacaoXML
 from pynfe.utils import CustomXMLSigner, remover_acentos
@@ -193,6 +194,12 @@ async def emitir_nfe(
     emitida_em = schema.data_emissao or datetime.now(timezone.utc)
     autorizada_em = datetime.now(timezone.utc) if status == STATUS_AUTORIZADA else None
 
+    # LGPD: documento do destinatário criptografado (Fernet); só o hash SHA-256
+    # é persistido em texto (irreversível)
+    destinatario_doc = schema.cliente.numero_documento if schema.cliente is not None else None
+    destinatario_hash = hash_documento(destinatario_doc) if destinatario_doc else None
+    destinatario_enc = encrypt_senha(destinatario_doc) if destinatario_doc else None
+
     id_nota = None
     async with _session_ctx(session) as db:
         from api.models import NotaFiscal as NotaFiscalModel
@@ -211,7 +218,8 @@ async def emitir_nfe(
             emitida_em=emitida_em,
             autorizada_em=autorizada_em,
             natureza_operacao=schema.natureza_operacao,
-            destinatario=(schema.cliente.numero_documento if schema.cliente is not None else None),
+            destinatario=destinatario_hash,
+            destinatario_cpf_encrypted=destinatario_enc,
         )
         db.add(registro)
         await db.commit()

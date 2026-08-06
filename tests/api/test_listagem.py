@@ -136,9 +136,11 @@ def test_listar_filtro_periodo(client, db, empresa, api_client, auth_token):
 
 
 def test_listar_filtro_destinatario(client, db, empresa, api_client, auth_token):
-    """?destinatario filtra pelo CNPJ/CPF do destinatário."""
+    """?destinatario filtra pelo CNPJ/CPF do destinatário (hash no banco — LGPD)."""
+    from api.utils.crypto import hash_documento
+
     run(_inserir_notas(db, empresa.id, 5))
-    # adiciona uma nota com destinatário diferente
+    # adiciona uma nota com destinatário diferente (banco guarda apenas o hash)
     run(
         _adicionar_nota(
             db,
@@ -148,7 +150,7 @@ def test_listar_filtro_destinatario(client, db, empresa, api_client, auth_token)
                 99,
                 "AUTORIZADA",
                 datetime(2026, 2, 1, 12, 0, tzinfo=timezone.utc),
-                destinatario="98765432100",
+                destinatario=hash_documento("98765432100"),
             ),
         )
     )
@@ -163,7 +165,8 @@ def test_listar_filtro_destinatario(client, db, empresa, api_client, auth_token)
 
     data = resp.json()
     assert data["total"] == 1
-    assert data["items"][0]["destinatario"] == "98765432100"
+    # o resumo expõe o hash (não o dado pessoal)
+    assert data["items"][0]["destinatario"] == hash_documento("98765432100")
 
 
 def test_listar_nfce(client, db, empresa, api_client, auth_token):

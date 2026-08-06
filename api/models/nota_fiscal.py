@@ -29,7 +29,10 @@ class NotaFiscal(UUIDMixin, TimestampMixin, Base):
     modelo: Mapped[str] = mapped_column(String(2), nullable=False, default="55")
     status: Mapped[str] = mapped_column(String(20), nullable=False, index=True)
     natureza_operacao: Mapped[Optional[str]] = mapped_column(String(60))
-    destinatario: Mapped[Optional[str]] = mapped_column(String(14))
+    # LGPD: hash SHA-256 do documento do destinatário (não é dado pessoal reversível)
+    destinatario: Mapped[Optional[str]] = mapped_column(String(64))
+    # LGPD: documento do destinatário criptografado com Fernet (dado pessoal em repouso)
+    destinatario_cpf_encrypted: Mapped[Optional[str]] = mapped_column(Text)
 
     protocolo: Mapped[Optional[str]] = mapped_column(String(15))
     xml_assinado: Mapped[Optional[str]] = mapped_column(Text)
