@@ -6,7 +6,8 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -34,6 +35,10 @@ class NotaFiscal(UUIDMixin, TimestampMixin, Base):
     protocolo: Mapped[Optional[str]] = mapped_column(String(15))
     xml_assinado: Mapped[Optional[str]] = mapped_column(Text)
     xml_protocolado: Mapped[Optional[str]] = mapped_column(Text)
+    # JSONB no Postgres; JSON no SQLite (testes)
+    eventos: Mapped[Optional[list]] = mapped_column(
+        JSONB().with_variant(JSON, "sqlite"), default=list
+    )
     valor_total: Mapped[Optional[float]] = mapped_column()
 
     emitida_em: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))

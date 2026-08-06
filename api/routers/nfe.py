@@ -12,14 +12,49 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.core.database import get_db
 from api.core.dependencies import get_current_client, get_redis_dep
-from api.core.exceptions import DomainError, EmpresaNaoEncontrada, SefazError
+from api.core.exceptions import (
+    ConflitoEstadoError,
+    DomainError,
+    EmpresaNaoEncontrada,
+    NotaNaoEncontrada,
+    SefazError,
+)
 from api.models import APIClient, NotaFiscal
 from api.schemas.common import PaginatedResponse
-from api.schemas.nfe import NFeEmitirResponse, NotaFiscalResumo
+from api.schemas.nfe import (
+    CancelarRequest,
+    CartaCorrecaoRequest,
+    EventoResponse,
+    InutilizarRequest,
+    InutilizarResponse,
+    NFeEmitirResponse,
+    NotaFiscalResumo,
+)
 from api.schemas.nota_item import NotaFiscalSchema
-from api.services.nfe_service import emitir_nfe
+from api.services.nfe_service import (
+    cancelar_nota,
+    carta_correcao_nota,
+    emitir_nfe,
+    inutilizar_nota,
+)
 
 router = APIRouter(prefix="/nfe", tags=["nfe"])
+
+
+async def _executar_evento(coro) -> EventoResponse | InutilizarResponse:
+    """Executa a coroutine do service mapeando exceções de domínio para HTTP."""
+    try:
+        return await coro
+    except NotaNaoEncontrada as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except ConflitoEstadoError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+    except EmpresaNaoEncontrada as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except SefazError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
+    except DomainError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
 
 @router.post("/emitir", response_model=NFeEmitirResponse)
@@ -85,4 +120,69 @@ async def listar(
         page=page,
         size=size,
         pages=ceil(total / size) if total else 0,
+    )
+
+
+@router.post("/cancelar", response_model=EventoResponse)
+async def cancelar(
+    payload: CancelarRequest,
+    client: APIClient = Depends(get_current_client),  # noqa: B008
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    redis: redis_async.Redis = Depends(get_redis_dep),  # noqa: B008
+) -> EventoResponse:
+    """Cancela uma NF-e (evento 110111) e atualiza o status para CANCELADA."""
+    return await _executar_evento(
+        cancelar_nota(
+            db,
+            redis,
+            client.empresa_id,
+            payload.chave_acesso,
+            payload.justificativa,
+            protocolo=payload.protocolo,
+            modelo="55",
+        )
+    )
+
+
+@router.post("/carta-correcao", response_model=EventoResponse)
+async def carta_correcao(
+    payload: CartaCorrecaoRequest,
+    client: APIClient = Depends(get_current_client),  # noqa: B008
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    redis: redis_async.Redis = Depends(get_redis_dep),  # noqa: B008
+) -> EventoResponse:
+    """Envia carta de correção (evento 110110) para uma NF-e autorizada."""
+    return await _executar_evento(
+        carta_correcao_nota(
+            db,
+            redis,
+            client.empresa_id,
+            payload.chave_acesso,
+            payload.correcao,
+            modelo="55",
+        )
+    )
+
+
+@router.post("/inutilizar", response_model=InutilizarResponse)
+async def inutilizar(
+    payload: InutilizarRequest,
+    client: APIClient = Depends(get_current_client),  # noqa: B008
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    redis: redis_async.Redis = Depends(get_redis_dep),  # noqa: B008
+) -> InutilizarResponse:
+    """Inutiliza uma faixa de numeração de NF-e junto à SEFAZ."""
+    return await _executar_evento(
+        inutilizar_nota(
+            db,
+            redis,
+            client.empresa_id,
+            cnpj=payload.cnpj,
+            serie=payload.serie,
+            numero_inicial=payload.numero_inicial,
+            numero_final=payload.numero_final,
+            justificativa=payload.justificativa,
+            ano=payload.ano,
+            modelo="55",
+        )
     )

@@ -2,9 +2,10 @@ import datetime
 import re
 
 import requests
+import signxml
 
 from pynfe.entidades.certificado import CertificadoA1
-from pynfe.utils import etree, so_numeros
+from pynfe.utils import CustomXMLSigner, etree, remover_acentos, so_numeros
 from pynfe.utils.flags import (
     CODIGOS_ESTADOS,
     MODELO_MDFE,
@@ -414,14 +415,50 @@ class ComunicacaoSefaz(Comunicacao):
         etree.SubElement(inf_inut, "nNFFin").text = str(numero_final)
         etree.SubElement(inf_inut, "xJust").text = justificativa
 
-        # assinatura
-        a1 = AssinaturaA1(self.certificado, self.certificado_senha)
-        xml = a1.assinar(raiz)
+        # assinatura — atalho PEM em memória quando disponível (mesma lógica do `_post`)
+        if self._cert_pem is not None and self._key_pem is not None:
+            xml = self._assinar_com_pem(raiz)
+        else:
+            a1 = AssinaturaA1(self.certificado, self.certificado_senha)
+            xml = a1.assinar(raiz)
 
         # Monta XML para envio da requisição
         xml = self._construir_xml_soap("NFeInutilizacao4", xml)
         # Faz request no Servidor da Sefaz e retorna resposta
         return self._post(url, xml)
+
+    def _assinar_com_pem(self, xml):
+        """Assina o XML (enveloped) usando key_pem/cert_pem em memória.
+
+        Mesma lógica de `AssinaturaA1.assinar`, porém sem depender do PFX:
+        útil quando a comunicação é feita com certificado já em memória
+        (PEM), como no atalho do `_post`.
+        """
+        reference = xml.find(".//*[@Id]").attrib["Id"]
+
+        xml_str = remover_acentos(etree.tostring(xml, encoding="unicode", pretty_print=False))
+        xml = etree.fromstring(xml_str)
+
+        signer = CustomXMLSigner(
+            method=signxml.methods.enveloped,
+            signature_algorithm="rsa-sha1",
+            digest_algorithm="sha1",
+            c14n_algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315",
+        )
+        signer.excise_empty_xmlns_declarations = True
+        signer.namespaces = {None: signer.namespaces["ds"]}
+
+        ref_uri = f"#{reference}" if reference else None
+        signed_root = signer.sign(
+            xml,
+            key=self._key_pem.encode(),
+            cert=self._cert_pem,
+            reference_uri=ref_uri,
+        )
+
+        # Reparse para garantir associação correta de namespaces (lxml 6.x)
+        signed_str = etree.tostring(signed_root, encoding="unicode", pretty_print=False)
+        return etree.fromstring(signed_str)
 
     def _get_url_an(self, consulta):
         # producao

@@ -11,11 +11,27 @@ from api.schemas.common import validar_chave_acesso, validar_cnpj
 
 
 class CancelarRequest(BaseModel):
-    """Requisição de cancelamento de NF-e."""
+    """Requisição de cancelamento de NF-e.
+
+    `protocolo` é opcional: quando ausente, a API usa o protocolo de
+    autorização persistido na nota.
+    """
 
     chave_acesso: str
-    protocolo: str = Field(min_length=15, max_length=15)
+    protocolo: str | None = Field(default=None, min_length=15, max_length=15)
     justificativa: str = Field(min_length=15, max_length=255)
+
+    @field_validator("chave_acesso")
+    @classmethod
+    def _validar_chave_acesso(cls, v: str) -> str:
+        return validar_chave_acesso(v)
+
+
+class CartaCorrecaoRequest(BaseModel):
+    """Requisição de carta de correção (evento 110110)."""
+
+    chave_acesso: str
+    correcao: str = Field(min_length=15, max_length=1000)
 
     @field_validator("chave_acesso")
     @classmethod
@@ -27,7 +43,7 @@ class InutilizarRequest(BaseModel):
     """Requisição de inutilização de numeração de NF-e."""
 
     cnpj: str
-    ano: int = Field(ge=2000, le=2100)
+    ano: int | None = Field(default=None, ge=2000, le=2100)
     serie: int = Field(ge=0, le=999)
     numero_inicial: int = Field(ge=1)
     numero_final: int = Field(ge=1)
@@ -44,6 +60,35 @@ class InutilizarRequest(BaseModel):
         if "numero_inicial" in info.data and v < info.data["numero_inicial"]:
             raise ValueError("numero_final deve ser >= numero_inicial")
         return v
+
+
+class EventoResponse(BaseModel):
+    """Resposta do envio de um evento de NF-e/NFC-e (cancelamento, carta de correção)."""
+
+    chave_acesso: str = Field(min_length=44, max_length=44)
+    modelo: str = "55"
+    tp_evento: str
+    status: str
+    cstat: str
+    xmotivo: str
+    nprot: str | None = None
+    registrado_em: datetime | None = None
+    xml_evento: str | None = None
+
+
+class InutilizarResponse(BaseModel):
+    """Resposta da inutilização de numeração."""
+
+    empresa_id: UUID
+    cnpj: str = Field(min_length=14, max_length=14)
+    modelo: str = "55"
+    serie: int
+    numero_inicial: int
+    numero_final: int
+    status: str
+    cstat: str
+    xmotivo: str
+    nprot: str | None = None
 
 
 class NotaFiscalResumo(BaseModel):

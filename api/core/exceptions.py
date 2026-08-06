@@ -25,3 +25,11 @@ class SefazError(DomainError):
 
 class ValidacaoNegocioError(DomainError):
     """Violação de regra de negócio (ex.: empresa sem certificado cadastrado)."""
+
+
+class NotaNaoEncontrada(DomainError):
+    """Nota fiscal não encontrada no banco de dados."""
+
+
+class ConflitoEstadoError(DomainError):
+    """Conflito de estado da nota (ex.: tentativa de cancelar nota já cancelada)."""
