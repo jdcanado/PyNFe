@@ -17,6 +17,7 @@ from api.routers.nfce import router as nfce_router
 from api.routers.nfe import router as nfe_router
 from api.routers.sefaz import router as sefaz_router
 from api.routers.tasks import router as tasks_router
+from api.routers.webhooks import router as webhooks_router
 
 settings = get_settings()
 
@@ -70,6 +71,7 @@ def create_app() -> FastAPI:
     api_router.include_router(nfce_router)
     api_router.include_router(sefaz_router)
     api_router.include_router(tasks_router)
+    api_router.include_router(webhooks_router)
     app.include_router(api_router)
 
     return app

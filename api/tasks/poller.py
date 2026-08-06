@@ -130,7 +130,7 @@ async def processar_pendentes(db: Any) -> dict:
         if resultado.get("final"):
             from api.services.webhook_service import disparar_webhook
 
-            await disparar_webhook(nota, resultado)
+            await disparar_webhook(nota, resultado, db)
         else:
             logger.info(
                 "Nota %s ainda em processamento (cStat lote %s)",
