@@ -87,6 +87,7 @@ def produto_schema(**icms_kwargs) -> ProdutoItemSchema:
 def nota_schema(**overrides) -> NotaFiscalSchema:
     """Monta um `NotaFiscalSchema` completo."""
     data = {
+        "empresa_id": "00000000-0000-0000-0000-000000000001",
         "uf": "PR",
         "municipio": "4118402",
         "natureza_operacao": "VENDA",
@@ -224,11 +225,11 @@ def test_converter_produto_icms_st():
 
 def test_converter_produto_pis_cofins():
     produto = converter_produto(produto_schema())
-    assert produto.pis_situacao_tributaria == "01"
+    assert produto.pis_modalidade == "01"
     assert produto.pis_valor_base_calculo == Decimal("117.00")
     assert produto.pis_aliquota_percentual == Decimal("0.65")
     assert produto.pis_valor == Decimal("0.76")
-    assert produto.cofins_situacao_tributaria == "01"
+    assert produto.cofins_modalidade == "01"
     assert produto.cofins_valor_base_calculo == Decimal("117.00")
     assert produto.cofins_aliquota_percentual == Decimal("3.00")
     assert produto.cofins_valor == Decimal("3.51")

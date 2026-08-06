@@ -2,6 +2,7 @@
 
 from api.schemas.auth import TokenRequest, TokenResponse
 from api.schemas.empresa import CertificadoUploadResponse
+from api.schemas.nfe import NFeEmitirResponse
 from api.schemas.nota_item import (
     ClienteSchema,
     CofinsSchema,
@@ -23,6 +24,7 @@ __all__ = [
     "IcmsSchema",
     "ImpostoImportacaoSchema",
     "IpiSchema",
+    "NFeEmitirResponse",
     "NotaFiscalSchema",
     "PagamentoSchema",
     "PisSchema",
