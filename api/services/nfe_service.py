@@ -26,7 +26,7 @@ from lxml import etree
 from api.integrations.pynfe_adapter import converter_nota_fiscal
 from api.schemas.nfe import NFeEmitirResponse
 from api.schemas.nota_item import NotaFiscalSchema
-from api.services.certificado_service import _upload_blob, obter_pem
+from api.services.certificado_service import _session_ctx, _upload_blob, obter_pem
 from pynfe.entidades.fonte_dados import _fonte_dados
 from pynfe.processamento.serializacao import SerializacaoXML
 from pynfe.utils import CustomXMLSigner, remover_acentos
@@ -144,7 +144,8 @@ async def emitir_nfe(
         key_pem=key_pem,
     )
     # autorizacao() é síncrono no PyNFe (requests); roda direto no loop.
-    resultado = comunicacao.autorizacao(modelo=schema.modelo, nota_fiscal=xml_assinado)
+    modelo_comunicacao = "nfe" if schema.modelo == 55 else "nfce"
+    resultado = comunicacao.autorizacao(modelo=modelo_comunicacao, nota_fiscal=xml_assinado)
 
     # 6. Processa a resposta
     status_code = resultado[0]
@@ -174,7 +175,7 @@ async def emitir_nfe(
 
     id_nota = None
     session_obj = session if session is not None else _get_session_factory()
-    async with session_obj as db:
+    async with _session_ctx(session_obj) as db:
         from api.models import NotaFiscal as NotaFiscalModel
 
         registro = NotaFiscalModel(
