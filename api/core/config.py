@@ -53,6 +53,8 @@ class Settings(BaseSettings):
 
     # Webhook (notificações de finalização de notas — vazio desativa)
     webhook_url: str = ""
+    # Segredo global para assinatura HMAC (fallback quando a empresa não define)
+    webhook_secret: str = ""
 
     # Logging
     log_level: str = "INFO"

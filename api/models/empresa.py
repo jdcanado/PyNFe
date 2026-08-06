@@ -31,6 +31,10 @@ class Empresa(UUIDMixin, TimestampMixin, Base):
     csc: Mapped[Optional[str]] = mapped_column(String(36))
     csc_id: Mapped[Optional[str]] = mapped_column(String(6))
 
+    # Webhooks (URL de entrega e segredo HMAC da assinatura)
+    webhook_url: Mapped[Optional[str]] = mapped_column(String(500))
+    webhook_secret: Mapped[Optional[str]] = mapped_column(String(128))
+
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
     api_clients: Mapped[list[APIClient]] = relationship(  # noqa: F821

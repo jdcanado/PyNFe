@@ -99,7 +99,7 @@ def test_poller_processa_nota_processando_antiga(
 
     webhooks = []
 
-    async def _fake_webhook(n, r):
+    async def _fake_webhook(n, r, db):
         webhooks.append((n, r))
 
     monkeypatch.setattr("api.services.webhook_service.disparar_webhook", _fake_webhook)
@@ -162,7 +162,7 @@ def test_poller_mantem_processando_quando_lote_105(
     run(_atualizar_updated_at(db, nota.id, datetime.now(timezone.utc) - timedelta(seconds=60)))
     sefaz_mock.xml_resposta = XML_RECIBO_PROCESSANDO
 
-    async def _fake_webhook(n, r):
+    async def _fake_webhook(n, r, db):
         raise AssertionError("webhook não deve disparar sem status final")
 
     monkeypatch.setattr("api.services.webhook_service.disparar_webhook", _fake_webhook)
@@ -191,13 +191,23 @@ def test_poller_mantem_processando_quando_lote_105(
 # ---------------------------------------------------------------------------
 
 
-def test_disparar_webhook_post_para_url(monkeypatch):
+def test_disparar_webhook_post_para_url(db, empresa, monkeypatch):
     """disparar_webhook envia POST JSON para a URL configurada."""
+    # URL da empresa (fallback global não é usado)
+    from api.models import Empresa
+
+    async def _configurar():
+        async with db() as session:
+            empresa_db = await session.get(Empresa, empresa.id)
+            empresa_db.webhook_url = "https://hook.example/notify"
+            await session.commit()
+
+    run(_configurar())
+
     chamadas = []
 
     class _FakeResp:
-        def raise_for_status(self):
-            return None
+        status_code = 200
 
     class _FakeAsyncClient:
         def __init__(self, *args, **kwargs):
@@ -209,30 +219,33 @@ def test_disparar_webhook_post_para_url(monkeypatch):
         async def __aexit__(self, *args):
             return False
 
-        async def post(self, url, json=None, timeout=None):
-            chamadas.append((url, json, timeout))
+        async def post(self, url, json=None, headers=None, timeout=None):
+            chamadas.append((url, json, headers, timeout))
             return _FakeResp()
 
     monkeypatch.setattr("api.services.webhook_service.httpx.AsyncClient", _FakeAsyncClient)
 
-    class _FakeSettings:
-        webhook_url = "https://hook.example/notify"
-
-    monkeypatch.setattr("api.services.webhook_service.get_settings", lambda: _FakeSettings())
-
     from api.services.webhook_service import disparar_webhook
 
     class _Nota:
-        id = "nota-123"
+        id = None
+        empresa_id = empresa.id
         chave_acesso = CHAVE
         status = "AUTORIZADA"
+        modelo = "55"
 
-    ok = run(disparar_webhook(_Nota(), {"status": "AUTORIZADA", "final": True}))
+    async def _exec():
+        async with db() as session:
+            return await disparar_webhook(
+                _Nota(), {"status": "AUTORIZADA", "final": True}, session, delays=(0,)
+            )
+
+    ok = run(_exec())
 
     assert ok is True
     assert len(chamadas) == 1
-    url, payload, _timeout = chamadas[0]
+    url, payload, _headers, _timeout = chamadas[0]
     assert url == "https://hook.example/notify"
-    assert payload["nota_id"] == "nota-123"
+    assert payload["event"] == "nfe.autorizada"
     assert payload["status"] == "AUTORIZADA"
     assert payload["chave_acesso"] == CHAVE
