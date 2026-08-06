@@ -18,6 +18,7 @@ from uuid import UUID
 import httpx
 from cryptography import x509
 
+from api.core.exceptions import EmpresaNaoEncontrada
 from api.models import Empresa
 from api.schemas.empresa import CertificadoUploadResponse
 from api.utils.crypto import encrypt_bytes, encrypt_senha
@@ -163,7 +164,7 @@ async def upload_certificado(
     async with _session_ctx(session) as db:
         empresa = await db.get(Empresa, empresa_id)
         if empresa is None:
-            raise ValueError(f"Empresa {empresa_id} não encontrada")
+            raise EmpresaNaoEncontrada(f"Empresa {empresa_id} não encontrada")
         empresa.cert_pem = cert_pem
         empresa.key_pem = key_pem
         empresa.certificado_senha = encrypt_senha(senha)

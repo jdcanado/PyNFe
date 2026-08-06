@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 
 from api.core.dependencies import get_current_client
+from api.core.exceptions import DomainError, EmpresaNaoEncontrada, SefazError
 from api.models import APIClient
 from api.schemas.empresa import CertificadoUploadResponse
 from api.services.certificado_service import upload_certificado
@@ -38,13 +39,18 @@ async def enviar_certificado(
 
     try:
         return await upload_certificado(client.empresa_id, pfx_bytes, senha)
-    except ValueError as exc:
+    except EmpresaNaoEncontrada as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(exc),
         ) from exc
-    except Exception as exc:
+    except SefazError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
+    except DomainError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Falha ao processar o certificado: {exc}",
+            detail=str(exc),
         ) from exc

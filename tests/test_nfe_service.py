@@ -29,6 +29,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 from lxml import etree
 
+from api.core.exceptions import CertificadoError
 from api.schemas.nota_item import (
     ClienteSchema,
     CofinsSchema,
@@ -350,7 +351,7 @@ def test_emitir_nfe_sem_certificado_levanta_erro():
 
     try:
         run(emitir_nfe(schema_nfe(), get_pem=get_pem))
-    except ValueError as exc:
+    except CertificadoError as exc:
         assert "certificado" in str(exc)
     else:
         raise AssertionError("deveria levantar ValueError sem certificado")

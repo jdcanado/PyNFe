@@ -30,6 +30,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
+from api.core.exceptions import EmpresaNaoEncontrada
 from api.models import Empresa
 from api.schemas.empresa import CertificadoUploadResponse
 from api.services.certificado_service import (
@@ -292,7 +293,7 @@ def test_upload_certificado_empresa_nao_encontrada():
                 http_client=http,
             )
         )
-    except ValueError as exc:
+    except EmpresaNaoEncontrada as exc:
         assert "não encontrada" in str(exc)
     else:
         raise AssertionError("empresa ausente deveria levantar ValueError")

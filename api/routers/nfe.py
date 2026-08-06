@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from api.core.dependencies import get_current_client
+from api.core.exceptions import DomainError, EmpresaNaoEncontrada, SefazError
 from api.models import APIClient
 from api.schemas.nfe import NFeEmitirResponse
 from api.schemas.nota_item import NotaFiscalSchema
@@ -23,7 +24,17 @@ async def emitir(
     payload.empresa_id = client.empresa_id
     try:
         return await emitir_nfe(payload, homologacao=True)
-    except ValueError as exc:
+    except EmpresaNaoEncontrada as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
+    except SefazError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
+    except DomainError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
