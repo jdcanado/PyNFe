@@ -23,4 +23,6 @@ class CertificadoUploadResponse(BaseModel):
     @field_validator("cnpj")
     @classmethod
     def _validar_cnpj(cls, v: str) -> str:
+        if not v.isdigit() or len(v) != 14:
+            raise ValueError("CNPJ deve ter exatamente 14 dígitos numéricos")
         return validar_cnpj(v)

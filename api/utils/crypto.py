@@ -26,3 +26,13 @@ def encrypt_senha(senha: str) -> str:
 def decrypt_senha(token: str) -> str:
     """Descriptografa uma senha Fernet. Levanta InvalidToken se inválida."""
     return _get_fernet().decrypt(token.encode()).decode()
+
+
+def encrypt_bytes(dados: bytes) -> str:
+    """Criptografa bytes (ex.: PFX) com Fernet. Retorna string base64."""
+    return _get_fernet().encrypt(dados).decode()
+
+
+def decrypt_bytes(token: str) -> bytes:
+    """Descriptografa dados Fernet (base64) de volta para bytes."""
+    return _get_fernet().decrypt(token.encode())
