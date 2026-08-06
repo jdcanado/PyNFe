@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import redis.asyncio as redis_async
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from api.core.dependencies import get_current_client
+from api.core.database import get_db
+from api.core.dependencies import get_current_client, get_redis_dep
 from api.core.exceptions import DomainError, EmpresaNaoEncontrada, SefazError
 from api.models import APIClient
 from api.schemas.empresa import CertificadoUploadResponse
@@ -18,6 +21,8 @@ async def enviar_certificado(
     senha: str = Form(...),
     arquivo: UploadFile = File(...),  # noqa: B008
     client: APIClient = Depends(get_current_client),  # noqa: B008
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    redis: redis_async.Redis = Depends(get_redis_dep),  # noqa: B008
 ) -> CertificadoUploadResponse:
     """Recebe o PFX, criptografa e distribui nas 3 camadas (Blob/KV/Postgres).
 
@@ -38,7 +43,9 @@ async def enviar_certificado(
         )
 
     try:
-        return await upload_certificado(client.empresa_id, pfx_bytes, senha)
+        return await upload_certificado(
+            client.empresa_id, pfx_bytes, senha, redis=redis, session=db
+        )
     except EmpresaNaoEncontrada as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

@@ -59,13 +59,6 @@ def _fonte_dados_isolada():
         fonte_dados._fonte_dados = original
 
 
-def _get_session_factory():
-    """Import lazy do factory de sessão async."""
-    from api.core.database import SessionFactory
-
-    return SessionFactory
-
-
 # ---------------------------------------------------------------------------
 # Assinatura em memória (PEMs, sem arquivos temporários)
 # ---------------------------------------------------------------------------
@@ -123,8 +116,8 @@ async def emitir_nfe(
     schema: NotaFiscalSchema,
     *,
     homologacao: bool = True,
-    redis: Any | None = None,
-    session: Any | None = None,
+    redis: Any,
+    session: Any,
     http_client: Any | None = None,
     comunicacao_factory: Callable[..., Any] | None = None,
     get_pem: Callable[..., Any] | None = None,
@@ -201,8 +194,7 @@ async def emitir_nfe(
     autorizada_em = datetime.now(timezone.utc) if status == STATUS_AUTORIZADA else None
 
     id_nota = None
-    session_obj = session if session is not None else _get_session_factory()
-    async with _session_ctx(session_obj) as db:
+    async with _session_ctx(session) as db:
         from api.models import NotaFiscal as NotaFiscalModel
 
         registro = NotaFiscalModel(

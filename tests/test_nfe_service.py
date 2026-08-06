@@ -350,7 +350,7 @@ def test_emitir_nfe_sem_certificado_levanta_erro():
         return None
 
     try:
-        run(emitir_nfe(schema_nfe(), get_pem=get_pem))
+        run(emitir_nfe(schema_nfe(), redis=FakeRedis(), session=FakeSession(), get_pem=get_pem))
     except CertificadoError as exc:
         assert "certificado" in str(exc)
     else:
@@ -370,6 +370,7 @@ def test_emitir_nfe_falha_sefaz_retorna_status_erro():
     resp = run(
         emitir_nfe(
             schema_nfe(),
+            redis=FakeRedis(),
             session=session,
             comunicacao_factory=comunicacao_factory,
             get_pem=get_pem,

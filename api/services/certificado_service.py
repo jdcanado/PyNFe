@@ -18,6 +18,7 @@ from uuid import UUID
 import httpx
 from cryptography import x509
 
+from api.core.config import get_settings
 from api.core.exceptions import EmpresaNaoEncontrada
 from api.models import Empresa
 from api.schemas.empresa import CertificadoUploadResponse
@@ -34,42 +35,11 @@ PEM_CACHE_KEY = "cert:pem:{empresa_id}"
 logger = get_logger("api.certificado_service")
 
 
-def _get_settings():
-    """Import lazy de settings (evita exigir env vars no import do módulo)."""
-    from api.core.config import get_settings
-
-    return get_settings()
-
-
-def _get_redis():
-    """Import lazy do cliente Redis singleton."""
-    from api.core.dependencies import get_redis
-
-    return get_redis()
-
-
-def _get_session_factory():
-    """Import lazy do factory de sessão async."""
-    from api.core.database import SessionFactory
-
-    return SessionFactory
-
-
 @asynccontextmanager
-async def _session_ctx(session: Any | None):
-    """Abre uma sessão a partir de uma AsyncSession ou async_sessionmaker.
-
-    Aceita tanto uma instância de sessão (testes) quanto o factory padrão
-    (`async_sessionmaker`), que precisa ser chamado para criar a sessão.
-    """
-    if session is None:
-        session = _get_session_factory()
-    if hasattr(session, "__aenter__"):
-        async with session as db:
-            yield db
-    else:
-        async with session() as db:
-            yield db
+async def _session_ctx(session: Any):
+    """Abre uma AsyncSession (ou sessão fake de teste) como contexto."""
+    async with session as db:
+        yield db
 
 
 # ---------------------------------------------------------------------------
@@ -114,7 +84,7 @@ async def _upload_blob(
     token: str | None = None,
 ) -> str:
     """Envia `dados` ao Vercel Blob via PUT e retorna a URL pública."""
-    token = token if token is not None else _get_settings().blob_read_write_token
+    token = token if token is not None else get_settings().blob_read_write_token
     url = f"{BLOB_BASE_URL}/{nome_arquivo}"
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -145,8 +115,8 @@ async def upload_certificado(
     pfx_bytes: bytes,
     senha: str,
     *,
-    redis: Any | None = None,
-    session: Any | None = None,
+    redis: Any,
+    session: Any,
     http_client: httpx.AsyncClient | None = None,
 ) -> CertificadoUploadResponse:
     """Processa o upload do PFX nas 3 camadas e retorna a resposta.
@@ -162,9 +132,6 @@ async def upload_certificado(
     nome_arquivo = f"certificados/{empresa_id}.pfx"
     pfx_cifrado = encrypt_bytes(pfx_bytes).encode()
     blob_url = await _upload_blob(pfx_cifrado, nome_arquivo, http_client=http_client)
-
-    redis = redis or _get_redis()
-    session = session if session is not None else _get_session_factory()
 
     async with _session_ctx(session) as db:
         empresa = await db.get(Empresa, empresa_id)
@@ -197,15 +164,14 @@ async def upload_certificado(
 async def obter_pem(
     empresa_id: UUID,
     *,
-    redis: Any | None = None,
-    session: Any | None = None,
+    redis: Any,
+    session: Any,
 ) -> tuple[str, str] | None:
     """Retorna (cert_pem, key_pem) da empresa.
 
     Busca primeiro no cache KV (TTL 1h); se ausente, lê do Postgres e
     repopula o cache. Retorna None se a empresa não tem certificado.
     """
-    redis = redis or _get_redis()
     key = PEM_CACHE_KEY.format(empresa_id=empresa_id)
 
     cached = await redis.get(key)
@@ -213,7 +179,6 @@ async def obter_pem(
         data = json.loads(cached)
         return data["cert_pem"], data["key_pem"]
 
-    session = session if session is not None else _get_session_factory()
     async with _session_ctx(session) as db:
         empresa = await db.get(Empresa, empresa_id)
         if empresa is None or not empresa.cert_pem or not empresa.key_pem:
