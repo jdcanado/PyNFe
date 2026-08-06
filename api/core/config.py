@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     # SEFAZ
     sefaz_timeout: int = 28
 
+    # Webhook (notificações de finalização de notas — vazio desativa)
+    webhook_url: str = ""
+
     # Logging
     log_level: str = "INFO"
 

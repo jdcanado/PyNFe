@@ -16,16 +16,22 @@ settings = get_settings()
 # - pool_pre_ping: valida conexões ociosas antes de usar
 # - pool_recycle: recicla conexões antes do idle timeout do Neon
 # - statement_cache_size=0: compatível com o PgBouncer (transaction mode)
+#
+# Em dev local (SQLite) os connect_args do asyncpg não se aplicam.
+_connect_args: dict = {}
+if settings.database_url.startswith("postgresql"):
+    _connect_args = {
+        "statement_cache_size": 0,
+        "prepared_statement_cache_size": 0,
+    }
+
 engine = create_async_engine(
     settings.database_url,
     pool_size=settings.database_pool_size,
     max_overflow=2,
     pool_pre_ping=True,
     pool_recycle=300,
-    connect_args={
-        "statement_cache_size": 0,
-        "prepared_statement_cache_size": 0,
-    },
+    connect_args=_connect_args,
     echo=settings.debug,
 )
 

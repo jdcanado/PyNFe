@@ -1,8 +1,16 @@
-"""Cron job: warmer para manter a função serverless aquecida."""
+"""Vercel Cron: mantém a função quente (a cada 5 min, ver `vercel.json`)."""
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+from typing import Any
 
-def warmer() -> dict:
-    """Task de warm-up para evitar cold starts."""
-    return {"status": "ok", "task": "warmer"}
+
+def warm() -> dict:
+    """Resposta simples do warmer — evita cold start das funções."""
+    return {"warm": True, "timestamp": datetime.now(timezone.utc).isoformat()}
+
+
+async def handler(request: Any = None) -> dict:
+    """Handler do cron da Vercel."""
+    return warm()

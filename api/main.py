@@ -16,6 +16,7 @@ from api.routers.gtin import router as gtin_router
 from api.routers.nfce import router as nfce_router
 from api.routers.nfe import router as nfe_router
 from api.routers.sefaz import router as sefaz_router
+from api.routers.tasks import router as tasks_router
 
 settings = get_settings()
 
@@ -68,6 +69,7 @@ def create_app() -> FastAPI:
     api_router.include_router(nfe_router)
     api_router.include_router(nfce_router)
     api_router.include_router(sefaz_router)
+    api_router.include_router(tasks_router)
     app.include_router(api_router)
 
     return app

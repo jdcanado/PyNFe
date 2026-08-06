@@ -82,3 +82,4 @@ TODO*
 
 venv
 .venv/*
+api/.env
