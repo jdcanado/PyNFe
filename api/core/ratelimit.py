@@ -34,6 +34,9 @@ PLAN_LIMITS: dict[str, dict[str, int]] = {
 
 DEFAULT_PLAN = "free"
 
+# TTL do cache do plano do client no KV (evita SELECT por request)
+PLANO_CACHE_TTL = 300
+
 RATE_LIMIT_HEADERS = ("X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset")
 
 
@@ -121,30 +124,29 @@ def extract_client_id(authorization: str | None) -> str | None:
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
-    """Middleware HTTP que aplica rate limit por client autenticado."""
+    """Middleware HTTP que aplica rate limit por client (JWT) ou por IP."""
 
     async def dispatch(self, request: Request, call_next):
         from api.core.config import get_settings
         from api.core.database import SessionFactory
         from api.core.dependencies import get_redis
-        from api.models import APIClient
 
         settings = get_settings()
         if not settings.ratelimit_enabled:
             return await call_next(request)
 
+        redis = get_redis()
         client_id = extract_client_id(request.headers.get("authorization"))
-        if client_id is None:
-            return await call_next(request)
 
-        # Resolve o plano do client (default free se não encontrado).
-        plan = DEFAULT_PLAN
-        async with SessionFactory() as session:
-            client = await session.get(APIClient, UUID(client_id))
-            if client is not None:
-                plan = client.plano
+        if client_id is not None:
+            plan = await self._plano_do_client(redis, SessionFactory, client_id)
+            chave = client_id
+        else:
+            # Sem JWT: limita por IP (plano free)
+            plan = DEFAULT_PLAN
+            chave = request.client.host if request.client else "unknown"
 
-        result = await check_and_increment(get_redis(), client_id, plan)
+        result = await check_and_increment(redis, chave, plan)
         headers = {
             "X-RateLimit-Limit": str(result.limit),
             "X-RateLimit-Remaining": str(result.remaining),
@@ -165,3 +167,25 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         for header, value in headers.items():
             response.headers[header] = value
         return response
+
+    @staticmethod
+    async def _plano_do_client(redis: Any, session_factory: Any, client_id: str) -> str:
+        """Retorna o plano do client, com cache no KV (TTL curto).
+
+        Evita um SELECT do APIClient a cada request autenticado.
+        """
+        from api.models import APIClient
+
+        cache_key = f"ratelimit:plano:{client_id}"
+        cached = await redis.get(cache_key)
+        if cached:
+            return cached
+
+        plan = DEFAULT_PLAN
+        async with session_factory() as session:
+            client = await session.get(APIClient, UUID(client_id))
+            if client is not None:
+                plan = client.plano
+
+        await redis.set(cache_key, plan, ex=PLANO_CACHE_TTL)
+        return plan
