@@ -158,6 +158,18 @@ API REST (FastAPI)
 A API REST fica no diretório `api/` e é servida pelo FastAPI. Para subir em desenvolvimento:
 
 ```sh
+cp api/.env.example api/.env
+```
+
+Variáveis obrigatórias: `DATABASE_URL`, `KV_URL`, `KV_TOKEN`, `BLOB_READ_WRITE_TOKEN`, `JWT_SECRET` e `FERNET_KEY` (chave Fernet de 32 bytes em base64). Para gerar a chave Fernet:
+
+```sh
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+Depois, suba a API:
+
+```sh
 uvicorn api.main:app --reload
 ```
 
