@@ -84,3 +84,19 @@ async def refresh(
         expires_in=settings.jwt_expire_minutes * 60,
         api_key_prefix=settings.api_key_prefix,
     )
+
+
+@router.get("/dbinfo")
+async def dbinfo(db: AsyncSession = Depends(get_db)):  # noqa: B008
+    """Diagnóstico: banco conectado e contagem de API clients."""
+    from sqlalchemy import func, select, text
+
+    from api.models import APIClient
+
+    current_db = (await db.execute(text("SELECT current_database()"))).scalar()
+    total = (await db.execute(select(func.count()).select_from(APIClient))).scalar()
+    return {
+        "database": current_db,
+        "api_clients": total,
+        "prefixes": [r[0] for r in (await db.execute(select(APIClient.api_key_prefix))).all()],
+    }
