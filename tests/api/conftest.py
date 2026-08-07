@@ -21,6 +21,7 @@ from typing import Any
 from cryptography.fernet import Fernet
 
 os.environ["DATABASE_URL"] = "postgresql+asyncpg://u:p@localhost:5432/db"
+os.environ["RATELIMIT_ENABLED"] = "true"
 os.environ["KV_URL"] = "redis://localhost:6379"
 os.environ["KV_TOKEN"] = "test"
 os.environ["BLOB_READ_WRITE_TOKEN"] = "test-blob-token"
