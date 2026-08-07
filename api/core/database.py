@@ -33,6 +33,7 @@ if settings.database_url:
     if "sslmode=require" in url and "?ssl=" not in url:
         url = url.replace("sslmode=require", "ssl=require")
     url = re.sub(r"(&|\?)channel_binding=\w+", "", url)
+    url = url.replace("?&", "?").removesuffix("?")  # limpa duplicados e ? vazio
 
     _connect_args: dict = {}
     if url.startswith("postgresql"):
