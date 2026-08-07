@@ -8,8 +8,6 @@ devolve uma lista de zeros.
 
 from __future__ import annotations
 
-import asyncio
-
 
 class _NoopPipeline:
     """Pipeline que aceita qualquer chamada encadeada e retorna lista de zeros."""
@@ -48,10 +46,10 @@ class _NoopPipeline:
 class NoopRedis:
     """Redis falso — get sempre cache-miss, set é descartado, pipeline é no-op."""
 
-    async def get(self, key: str) -> None:  # noqa: ARG002
+    async def get(self, key: str) -> None:
         return None
 
-    async def set(self, key: str, value: str, ex: int | None = None) -> bool:  # noqa: ARG002
+    async def set(self, key: str, value: str, ex: int | None = None) -> bool:
         return True
 
     def pipeline(self) -> _NoopPipeline:
