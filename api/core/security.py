@@ -4,24 +4,22 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
+import bcrypt
 from jose import jwt
-from passlib.context import CryptContext
 
 from api.core.config import get_settings
 
 settings = get_settings()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def verify_api_key(plain_api_key: str, api_key_hash: str) -> bool:
     """Verifica uma API key em texto plano contra o hash armazenado."""
-    return pwd_context.verify(plain_api_key, api_key_hash)
+    return bcrypt.checkpw(plain_api_key.encode(), api_key_hash.encode())
 
 
 def hash_api_key(api_key: str) -> str:
     """Gera o hash bcrypt de uma API key."""
-    return pwd_context.hash(api_key)
+    return bcrypt.hashpw(api_key.encode(), bcrypt.gensalt()).decode()
 
 
 def create_jwt_token(subject: str, extra_claims: dict | None = None) -> str:
