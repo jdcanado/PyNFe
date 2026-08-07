@@ -1,9 +1,8 @@
-# Dependencias basicas
+# Dependências da API (FastAPI, SQLAlchemy, etc.)
+-r api/requirements-api.txt
+
+# Dependências do pynfe (biblioteca local de comunicação SEFAZ)
 requests>=2.32.4
-lxml>=5.4.0
 signxml>=4.1.0
-cryptography>=43.0.3
-# Opcional para NFS-e
-#-r requirements-nfse.txt
-# Opcional para Desenvolvimento (Pytest, Ruff, MyPy, etc)
-#-r requirements-dev.txt
+lxml>=5.4.0
+pyopenssl>=24.0
