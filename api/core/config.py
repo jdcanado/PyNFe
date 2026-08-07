@@ -29,25 +29,22 @@ class Settings(BaseSettings):
     ratelimit_enabled: bool = True
 
     # Database
-    database_url: str
+    database_url: str = ""
     database_pool_size: int = 5
 
     # KV (Upstash Redis)
-    kv_url: str
-    kv_token: str
-
+    kv_url: str = ""
+    kv_token: str = ""
     # Vercel Blob
-    blob_read_write_token: str
-
+    blob_read_write_token: str = ""
     # JWT
-    jwt_secret: str
+    jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60
     api_key_prefix: str = "pnf_"
 
     # Cryptografia
-    fernet_key: str
-
+    fernet_key: str = ""
     # SEFAZ
     sefaz_timeout: int = 28
 
