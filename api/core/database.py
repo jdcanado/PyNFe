@@ -26,14 +26,12 @@ if settings.database_url:
     # - postgresql://... → postgresql+asyncpg://...
     # - sslmode=require → ssl=require (asyncpg não aceita sslmode)
     # - remove channel_binding=... (não suportado pelo asyncpg)
-    import re
-
     if url.startswith("postgresql://"):
         url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
     if "sslmode=require" in url and "?ssl=" not in url:
         url = url.replace("sslmode=require", "ssl=require")
-    url = re.sub(r"(&|\?)channel_binding=\w+", "", url)
-    url = url.replace("?&", "?").removesuffix("?")  # limpa duplicados e ? vazio
+    # Remove channel_binding sem corromper o formato da URL
+    url = url.replace("channel_binding=require&", "").replace("?channel_binding=require", "?")
 
     _connect_args: dict = {}
     if url.startswith("postgresql"):
