@@ -3,8 +3,7 @@
     "api/index.py": {
       "excludeFiles": "{pynfe/utils/nfse/**,pynfe/data/IBPT/**,pynfe/data/MunIBGE/**,pynfe/data/ISSQN/**,pynfe/data/XSDs/CT-e/**,pynfe/data/XSDs/MDF-e/**,pynfe/data/XSDs/NFS-e/**,tests/**,docs/**,.git/**}",
       "memory": 1024,
-      "maxDuration": 30,
-      "runtime": "python3.11"
+      "maxDuration": 30
     }
   },
   "rewrites": [
