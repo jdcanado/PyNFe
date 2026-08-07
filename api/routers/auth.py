@@ -100,6 +100,7 @@ async def dbinfo(db: AsyncSession = Depends(get_db)):  # noqa: B008
     host = (await db.execute(text("SELECT inet_server_addr()::text"))).scalar()
     port = (await db.execute(text("SELECT inet_server_port()"))).scalar()
     from api.core.config import get_settings
+
     _s = get_settings()
     _url = _s.database_url
     _masked = re.sub(r"(//[^:]+:)[^@]+@", r"\1***@", _url) if _url else ""
