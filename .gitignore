@@ -83,3 +83,5 @@ TODO*
 venv
 .venv/*
 api/.env
+.vercel
+.env*.local
