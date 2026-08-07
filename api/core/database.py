@@ -25,10 +25,14 @@ if settings.database_url:
     # Adaptação automática da URL do Neon para asyncpg:
     # - postgresql://... → postgresql+asyncpg://...
     # - sslmode=require → ssl=require (asyncpg não aceita sslmode)
+    # - remove channel_binding=... (não suportado pelo asyncpg)
+    import re
+
     if url.startswith("postgresql://"):
         url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
     if "sslmode=require" in url and "?ssl=" not in url:
         url = url.replace("sslmode=require", "ssl=require")
+    url = re.sub(r"(&|\?)channel_binding=\w+", "", url)
 
     _connect_args: dict = {}
     if url.startswith("postgresql"):
