@@ -21,15 +21,24 @@ settings = get_settings()
 # Engine criado apenas se DATABASE_URL estiver configurada (evita
 # ArgumentError no import do app na Vercel sem env vars).
 if settings.database_url:
+    url = settings.database_url
+    # Adaptação automática da URL do Neon para asyncpg:
+    # - postgresql://... → postgresql+asyncpg://...
+    # - sslmode=require → ssl=require (asyncpg não aceita sslmode)
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    if "sslmode=require" in url and "?ssl=" not in url:
+        url = url.replace("sslmode=require", "ssl=require")
+
     _connect_args: dict = {}
-    if settings.database_url.startswith("postgresql"):
+    if url.startswith("postgresql"):
         _connect_args = {
             "statement_cache_size": 0,
             "prepared_statement_cache_size": 0,
         }
 
     engine = create_async_engine(
-        settings.database_url,
+        url,
         pool_size=settings.database_pool_size,
         max_overflow=2,
         pool_pre_ping=True,
