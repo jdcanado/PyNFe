@@ -28,12 +28,23 @@ API_V1_PREFIX = "/api/v1"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Inicializa recursos (DB engine, Redis) ao subir."""
+    """Inicializa recursos (DB engine, Redis) ao subir.
+
+    Cria as tabelas automaticamente (idempotente — não recria as que já existem).
+    """
     from api.core.database import engine
+
+    if engine is not None:
+        import api.models  # noqa: F401  (registra todos os modelos)
+        from api.models.base import Base
+
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
     yield
 
-    await engine.dispose()
+    if engine is not None:
+        await engine.dispose()
 
 
 TAGS_PT_BR = [
