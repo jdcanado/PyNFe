@@ -134,6 +134,7 @@ class FakeHttpClient:
 class _FakeResponse:
     def __init__(self, data: dict) -> None:
         self._data = data
+        self.status_code = 200
 
     def raise_for_status(self) -> None:
         return None

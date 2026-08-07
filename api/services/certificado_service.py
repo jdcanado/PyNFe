@@ -84,13 +84,23 @@ async def _upload_blob(
     token: str | None = None,
 ) -> str:
     """Envia `dados` ao Vercel Blob via PUT e retorna a URL pública."""
-    token = token if token is not None else get_settings().blob_read_write_token
+    settings = get_settings()
+    token = token if token is not None else settings.blob_read_write_token
+    store_id = settings.blob_store_id
     url = f"{BLOB_BASE_URL}/{nome_arquivo}"
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/octet-stream"}
+    if store_id:
+        headers["x-store-id"] = store_id
+    headers["x-vercel-blob-access"] = "private"
 
     client = http_client or httpx.AsyncClient()
     try:
         resp = await client.put(url, content=dados, headers=headers)
+        if resp.status_code >= 400:
+            logger.error(
+                "Blob upload falhou: status=%s body=%s headers_sent=%s",
+                resp.status_code, resp.text, {k: v for k, v in headers.items()},
+            )
         resp.raise_for_status()
         data = resp.json()
         return data["url"]

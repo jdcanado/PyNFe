@@ -85,3 +85,4 @@ venv
 api/.env
 .vercel
 .env*.local
+.env.vercel

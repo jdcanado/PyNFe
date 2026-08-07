@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     kv_token: str = ""
     # Vercel Blob
     blob_read_write_token: str = ""
+    blob_store_id: str = ""
     # JWT
     jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
