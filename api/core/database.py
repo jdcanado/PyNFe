@@ -18,27 +18,35 @@ settings = get_settings()
 # - statement_cache_size=0: compatível com o PgBouncer (transaction mode)
 #
 # Em dev local (SQLite) os connect_args do asyncpg não se aplicam.
-_connect_args: dict = {}
-if settings.database_url.startswith("postgresql"):
-    _connect_args = {
-        "statement_cache_size": 0,
-        "prepared_statement_cache_size": 0,
-    }
+# Engine criado apenas se DATABASE_URL estiver configurada (evita
+# ArgumentError no import do app na Vercel sem env vars).
+if settings.database_url:
+    _connect_args: dict = {}
+    if settings.database_url.startswith("postgresql"):
+        _connect_args = {
+            "statement_cache_size": 0,
+            "prepared_statement_cache_size": 0,
+        }
 
-engine = create_async_engine(
-    settings.database_url,
-    pool_size=settings.database_pool_size,
-    max_overflow=2,
-    pool_pre_ping=True,
-    pool_recycle=300,
-    connect_args=_connect_args,
-    echo=settings.debug,
-)
+    engine = create_async_engine(
+        settings.database_url,
+        pool_size=settings.database_pool_size,
+        max_overflow=2,
+        pool_pre_ping=True,
+        pool_recycle=300,
+        connect_args=_connect_args,
+        echo=settings.debug,
+    )
 
-SessionFactory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+    SessionFactory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+else:
+    engine = None
+    SessionFactory = None
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency do FastAPI que fornece uma sessão async."""
+    if SessionFactory is None:
+        raise RuntimeError("DATABASE_URL não configurada no ambiente")
     async with SessionFactory() as session:
         yield session
