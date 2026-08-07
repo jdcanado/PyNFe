@@ -1,38 +1,9 @@
 {
-  "functions": {
-    "api/index.py": {
-      "excludeFiles": "{pynfe/utils/nfse/**,pynfe/data/IBPT/**,pynfe/data/MunIBGE/**,pynfe/data/ISSQN/**,pynfe/data/XSDs/CT-e/**,pynfe/data/XSDs/MDF-e/**,pynfe/data/XSDs/NFS-e/**,tests/**,docs/**,.git/**}",
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
-    },
-    {
-      "source": "/docs",
-      "destination": "/api/index.py"
-    },
-    {
-      "source": "/openapi.json",
-      "destination": "/api/index.py"
-    }
+  "version": 2,
+  "builds": [
+    { "src": "api/index.py", "use": "@vercel/python" }
   ],
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "Strict-Transport-Security",
-          "value": "max-age=63072000; includeSubDomains; preload"
-        }
-      ]
-    }
+  "routes": [
+    { "src": "/(.*)", "dest": "api/index.py" }
   ]
 }

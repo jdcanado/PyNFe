@@ -1,0 +1,6 @@
+# Arquivos grandes/desnecessários no bundle da Vercel
+pynfe/data/
+pynfe/utils/nfse/
+tests/
+docs/
+.git/
