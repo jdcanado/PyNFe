@@ -22,9 +22,13 @@ async def warmer() -> dict:
     return warm()
 
 
-@router.post("/poller")
+@router.api_route("/poller", methods=["GET", "POST"])
 async def poller(
     db: AsyncSession = Depends(get_db),  # noqa: B008
 ) -> dict:
-    """Cron do poller (a cada 2 min) — processa notas em processamento."""
+    """Cron do poller (a cada 2 min) — processa notas em processamento.
+
+    GET é o método usado pelos cron jobs da Vercel; POST mantido para uso
+    manual/testes.
+    """
     return await processar_pendentes(db)

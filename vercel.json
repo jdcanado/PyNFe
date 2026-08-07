@@ -16,20 +16,12 @@
       "memory": 1024,
       "maxDuration": 30,
       "runtime": "python3.11"
-    },
-    "api/tasks/poller.py": {
-      "schedule": "*/2 * * * *",
-      "memory": 1024,
-      "maxDuration": 30,
-      "runtime": "python3.11"
-    },
-    "api/tasks/warmer.py": {
-      "schedule": "*/5 * * * *",
-      "memory": 1024,
-      "maxDuration": 30,
-      "runtime": "python3.11"
     }
   },
+  "crons": [
+    { "path": "/api/v1/tasks/poller", "schedule": "*/2 * * * *" },
+    { "path": "/api/v1/tasks/warmer", "schedule": "*/5 * * * *" }
+  ],
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index.py" },
     { "source": "/docs", "destination": "/api/index.py" },
