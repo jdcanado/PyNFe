@@ -1,37 +1,44 @@
 {
   "functions": {
     "api/index.py": {
-      "excludeFiles": [
-        "pynfe/utils/nfse/**",
-        "pynfe/data/IBPT/**",
-        "pynfe/data/MunIBGE/**",
-        "pynfe/data/ISSQN/**",
-        "pynfe/data/XSDs/CT-e/**",
-        "pynfe/data/XSDs/MDF-e/**",
-        "pynfe/data/XSDs/NFS-e/**",
-        "tests/**",
-        "docs/**",
-        ".git/**"
-      ],
+      "excludeFiles": "{pynfe/utils/nfse/**,pynfe/data/IBPT/**,pynfe/data/MunIBGE/**,pynfe/data/ISSQN/**,pynfe/data/XSDs/CT-e/**,pynfe/data/XSDs/MDF-e/**,pynfe/data/XSDs/NFS-e/**,tests/**,docs/**,.git/**}",
       "memory": 1024,
       "maxDuration": 30,
       "runtime": "python3.11"
     }
   },
   "crons": [
-    { "path": "/api/v1/tasks/poller", "schedule": "*/2 * * * *" },
-    { "path": "/api/v1/tasks/warmer", "schedule": "*/5 * * * *" }
+    {
+      "path": "/api/v1/tasks/poller",
+      "schedule": "*/2 * * * *"
+    },
+    {
+      "path": "/api/v1/tasks/warmer",
+      "schedule": "*/5 * * * *"
+    }
   ],
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.py" },
-    { "source": "/docs", "destination": "/api/index.py" },
-    { "source": "/openapi.json", "destination": "/api/index.py" }
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/docs",
+      "destination": "/api/index.py"
+    },
+    {
+      "source": "/openapi.json",
+      "destination": "/api/index.py"
+    }
   ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
         {
           "key": "Strict-Transport-Security",
           "value": "max-age=63072000; includeSubDomains; preload"
