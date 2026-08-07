@@ -13,21 +13,33 @@ from api.core.config import get_settings
 from api.core.database import get_db
 from api.core.security import decode_jwt_token
 from api.models import APIClient
+from api.utils.noop_redis import NoopRedis
 
 settings = get_settings()
 
-_redis_client: redis_async.Redis | None = None
+_redis_client: redis_async.Redis | NoopRedis | None = None
 
 
-def get_redis() -> redis_async.Redis:
-    """Retorna o cliente Redis (Upstash) singleton."""
+def get_redis() -> redis_async.Redis | NoopRedis:
+    """Retorna o cliente Redis (Upstash) singleton.
+
+    Quando KV_URL não está configurado, retorna um NoopRedis que simula
+    cache-miss em todas as operações, permitindo que a API funcione sem Redis.
+    """
     global _redis_client
-    if _redis_client is None:
-        _redis_client = redis_async.from_url(
-            settings.kv_url,
-            password=settings.kv_token,
-            decode_responses=True,
-        )
+    if _redis_client is not None:
+        return _redis_client
+
+    kv_url = settings.kv_url
+    if not kv_url or not kv_url.startswith(("redis://", "rediss://", "unix://")):
+        _redis_client = NoopRedis()
+        return _redis_client
+
+    _redis_client = redis_async.from_url(
+        kv_url,
+        password=settings.kv_token,
+        decode_responses=True,
+    )
     return _redis_client
 
 
@@ -75,6 +87,6 @@ async def get_current_client(
     return client
 
 
-async def get_redis_dep() -> AsyncGenerator[redis_async.Redis, None]:
+async def get_redis_dep() -> AsyncGenerator[redis_async.Redis | NoopRedis, None]:
     """Dependency que fornece o cliente Redis (para uso como Depends)."""
     yield get_redis()
