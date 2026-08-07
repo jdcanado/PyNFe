@@ -99,7 +99,9 @@ async def _upload_blob(
         if resp.status_code >= 400:
             logger.error(
                 "Blob upload falhou: status=%s body=%s headers_sent=%s",
-                resp.status_code, resp.text, {k: v for k, v in headers.items()},
+                resp.status_code,
+                resp.text,
+                {k: v for k, v in headers.items()},
             )
         resp.raise_for_status()
         data = resp.json()
