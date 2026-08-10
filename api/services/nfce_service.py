@@ -35,6 +35,7 @@ from api.services.nfe_service import (
     _assinar_xml,
     _extrair_da_resposta,
     _extrair_erro_sefaz,
+    _extrair_prot_nfe_do_retorno,
     _extrair_recibo_do_erro,
     _fonte_dados_isolada,
     _polling_recibo,
@@ -152,18 +153,31 @@ async def emitir_nfce(
     recibo = None
     nfe_proc = None
     if status_code != 0:
-        recibo = _extrair_recibo_do_erro(resultado, xml_com_qrcode)
-        if recibo:
-            prot = await _polling_recibo(comunicacao, "nfce", recibo)
-            if prot is not None:
-                nfe_proc = etree.Element(
-                    "nfeProc",
-                    xmlns="http://www.portalfiscal.inf.br/nfe",
-                    versao="4.00",
-                )
-                nfe_proc.append(xml_com_qrcode)
-                nfe_proc.append(prot)
-                status_code = 0
+        # Lote processado (cStat 104) já traz o protNFe com o resultado da
+        # NFC-e (100/150 = autorizada; 5xx = rejeição) — usa-o diretamente.
+        prot_nfe = _extrair_prot_nfe_do_retorno(resultado)
+        if prot_nfe is not None:
+            nfe_proc = etree.Element(
+                "nfeProc",
+                xmlns="http://www.portalfiscal.inf.br/nfe",
+                versao="4.00",
+            )
+            nfe_proc.append(xml_com_qrcode)
+            nfe_proc.append(prot_nfe)
+            status_code = 0
+        else:
+            recibo = _extrair_recibo_do_erro(resultado, xml_com_qrcode)
+            if recibo:
+                prot = await _polling_recibo(comunicacao, "nfce", recibo)
+                if prot is not None:
+                    nfe_proc = etree.Element(
+                        "nfeProc",
+                        xmlns="http://www.portalfiscal.inf.br/nfe",
+                        versao="4.00",
+                    )
+                    nfe_proc.append(xml_com_qrcode)
+                    nfe_proc.append(prot)
+                    status_code = 0
 
     if status_code != 0:
         if recibo:

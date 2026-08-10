@@ -44,8 +44,10 @@ from api.schemas.nota_item import (
 from api.services.nfe_service import (
     STATUS_AUTORIZADA,
     STATUS_ERRO,
+    STATUS_REJEITADA,
     _assinar_xml,
     _extrair_da_resposta,
+    _extrair_erro_sefaz,
     emitir_nfe,
 )
 from pynfe.entidades.fonte_dados import _fonte_dados
@@ -419,3 +421,94 @@ def test_emitir_nfe_rejeicao_sefaz_extrai_motivo_legivel():
     assert "550" in resp.mensagem
     assert "idDest invalido" in resp.mensagem
     assert "<Response" not in resp.mensagem
+
+
+def resposta_lote_processado(cstat_nota: str, xmotivo_nota: str) -> SimpleNamespace:
+    """Monta uma resposta SEFAZ de lote processado (cStat 104) com protNFe."""
+    xml = (
+        '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">'
+        '<soap:Body><nfeResultMsg xmlns="http://www.portalfiscal.inf.br/nfe/wsdl/NFeAutorizacao4">'
+        '<retEnviNFe versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe">'
+        "<tpAmb>2</tpAmb><verAplic>SP_NFE_PL009_V4</verAplic>"
+        "<cStat>104</cStat><xMotivo>Lote processado</xMotivo><cUF>35</cUF>"
+        '<protNFe versao="4.00"><infProt><tpAmb>2</tpAmb><verAplic>SP_NFE_PL009_V4</verAplic>'
+        "<chNFe>35260846392118000103550010000010011996348490</chNFe>"
+        "<dhRecbto>2026-08-10T09:00:01-03:00</dhRecbto>"
+        "<nProt>135260000000001</nProt><digVal>dGVzdGU=</digVal>"
+        f"<cStat>{cstat_nota}</cStat><xMotivo>{xmotivo_nota}</xMotivo>"
+        "</infProt></protNFe></retEnviNFe></nfeResultMsg></soap:Body></soap:Envelope>"
+    )
+    return SimpleNamespace(text=xml, content=xml.encode())
+
+
+def test_extrair_erro_sefaz_prioriza_protnfe():
+    """O cStat/xMotivo do protNFe (nota) vence o do lote (104)."""
+    cstat, xmotivo = _extrair_erro_sefaz(
+        resposta_lote_processado("550", "NF-e rejeitada: CFOP invalido")
+    )
+    assert cstat == "550"
+    assert xmotivo == "NF-e rejeitada: CFOP invalido"
+
+
+def test_emitir_nfe_lote_processado_prot_autorizada():
+    """cStat 104 com protNFe 100 deve resultar em AUTORIZADA (não ERRO)."""
+    _fonte_dados.limpar_dados()
+    session = FakeSession()
+
+    async def get_pem(empresa_id, *, redis=None, session=None):
+        return CERT_PEM, KEY_PEM
+
+    def comunicacao_factory(**kwargs):
+        return FakeComunicacao(
+            (1, resposta_lote_processado("100", "Autorizado o uso da NF-e"), None)
+        )
+
+    resp = run(
+        emitir_nfe(
+            schema_nfe(),
+            redis=FakeRedis(),
+            session=session,
+            http_client=FakeHttpClient(),
+            comunicacao_factory=comunicacao_factory,
+            get_pem=get_pem,
+        )
+    )
+
+    assert resp.status == STATUS_AUTORIZADA
+    assert resp.cstat == "100"
+    assert resp.xmotivo == "Autorizado o uso da NF-e"
+    assert resp.protocolo == "135260000000001"
+    assert session.commit_called is True
+    assert len(session.adicionados) == 1
+    assert session.adicionados[0].status == STATUS_AUTORIZADA
+
+
+def test_emitir_nfe_lote_processado_prot_rejeitada():
+    """cStat 104 com protNFe 550 deve resultar em REJEITADA com o motivo real."""
+    _fonte_dados.limpar_dados()
+    session = FakeSession()
+
+    async def get_pem(empresa_id, *, redis=None, session=None):
+        return CERT_PEM, KEY_PEM
+
+    def comunicacao_factory(**kwargs):
+        return FakeComunicacao(
+            (1, resposta_lote_processado("550", "NF-e rejeitada: CFOP invalido"), None)
+        )
+
+    resp = run(
+        emitir_nfe(
+            schema_nfe(),
+            redis=FakeRedis(),
+            session=session,
+            http_client=FakeHttpClient(),
+            comunicacao_factory=comunicacao_factory,
+            get_pem=get_pem,
+        )
+    )
+
+    assert resp.status == STATUS_REJEITADA
+    assert resp.cstat == "550"
+    assert resp.xmotivo == "NF-e rejeitada: CFOP invalido"
+    assert "CFOP invalido" in resp.mensagem
+    assert session.commit_called is True  # rejeição é persistida (diferente de ERRO)

@@ -250,18 +250,31 @@ async def emitir_nfe(
     recibo = None
     nfe_proc = None
     if status_code != 0:
-        recibo = _extrair_recibo_do_erro(resultado, xml_assinado)
-        if recibo:
-            prot = await _polling_recibo(comunicacao, modelo_comunicacao, recibo)
-            if prot is not None:
-                nfe_proc = etree.Element(
-                    "nfeProc",
-                    xmlns="http://www.portalfiscal.inf.br/nfe",
-                    versao="4.00",
-                )
-                nfe_proc.append(xml_assinado)
-                nfe_proc.append(prot)
-                status_code = 0
+        # Lote processado (cStat 104) já traz o protNFe com o resultado da
+        # NF-e (100/150 = autorizada; 5xx = rejeição) — usa-o diretamente.
+        prot_nfe = _extrair_prot_nfe_do_retorno(resultado)
+        if prot_nfe is not None:
+            nfe_proc = etree.Element(
+                "nfeProc",
+                xmlns="http://www.portalfiscal.inf.br/nfe",
+                versao="4.00",
+            )
+            nfe_proc.append(xml_assinado)
+            nfe_proc.append(prot_nfe)
+            status_code = 0
+        else:
+            recibo = _extrair_recibo_do_erro(resultado, xml_assinado)
+            if recibo:
+                prot = await _polling_recibo(comunicacao, modelo_comunicacao, recibo)
+                if prot is not None:
+                    nfe_proc = etree.Element(
+                        "nfeProc",
+                        xmlns="http://www.portalfiscal.inf.br/nfe",
+                        versao="4.00",
+                    )
+                    nfe_proc.append(xml_assinado)
+                    nfe_proc.append(prot)
+                    status_code = 0
 
     if status_code != 0:
         if recibo:
@@ -357,9 +370,9 @@ def _extrair_erro_sefaz(retorno: Any) -> tuple[str | None, str | None]:
     """Extrai (cStat, xMotivo) do XML de resposta da SEFAZ.
 
     O PyNFe retorna o objeto `requests.Response` inteiro quando o lote é
-    rejeitado; aqui extraímos o motivo legível do XML (retEnviNFe,
-    retConsReciNFe, infProt ou infRec), evitando mensagens inúteis como
-    "<Response [200]>".
+    rejeitado; aqui extraímos o motivo legível do XML. O resultado da NF-e
+    fica no `protNFe` (ex.: lote cStat 104 + nota cStat 100/550) — por isso
+    priorizamos `protNFe/infProt` sobre o status do lote.
     """
     if retorno is None:
         return None, None
@@ -375,9 +388,41 @@ def _extrair_erro_sefaz(retorno: Any) -> tuple[str | None, str | None]:
     except Exception:  # noqa: BLE001
         return None, None
 
+    # Resultado da NF-e (protNFe) tem precedência sobre o status do lote
+    inf_prot = xml_doc.xpath(".//*[local-name()='protNFe']/*[local-name()='infProt']")
+    if inf_prot:
+        cstat = inf_prot[0].xpath("string(.//*[local-name()='cStat'])") or None
+        xmotivo = inf_prot[0].xpath("string(.//*[local-name()='xMotivo'])") or None
+        if cstat:
+            return cstat, xmotivo
+
+    # Fallback: primeiro cStat/xMotivo do documento (retEnviNFe, retConsReciNFe, etc.)
     cstat = xml_doc.xpath("string(.//*[local-name()='cStat'])") or None
     xmotivo = xml_doc.xpath("string(.//*[local-name()='xMotivo'])") or None
     return cstat, xmotivo
+
+
+def _extrair_prot_nfe_do_retorno(resultado: tuple) -> etree._Element | None:
+    """Extrai o elemento `protNFe` do XML de resposta da SEFAZ.
+
+    Quando o lote é processado (cStat 104) o resultado da NF-e vem em
+    `<protNFe>`. Retorna o elemento lxml, ou None se não houver.
+    """
+    if len(resultado) < 2:
+        return None
+    retorno = resultado[1]
+    try:
+        if hasattr(retorno, "content"):
+            xml_bytes = retorno.content or getattr(retorno, "text", "").encode()
+        elif isinstance(retorno, (str, bytes)):
+            xml_bytes = retorno.encode() if isinstance(retorno, str) else retorno
+        else:
+            return None
+        xml_doc = etree.fromstring(xml_bytes)
+    except Exception:  # noqa: BLE001
+        return None
+    prot_nfe = xml_doc.xpath(".//*[local-name()='protNFe']")
+    return prot_nfe[0] if prot_nfe else None
 
 
 def _resposta_erro(
