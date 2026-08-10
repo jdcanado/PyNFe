@@ -31,9 +31,13 @@ def validar_uf(v: str) -> str:
 
 
 def validar_csc(v: str) -> str:
-    """Valida o CSC (Código de Segurança do Contribuinte) — 36 caracteres."""
-    if len(v) != 36 or not v.isalnum():
-        raise ValueError("CSC deve ter exatamente 36 caracteres alfanuméricos")
+    """Valida o CSC (Código de Segurança do Contribuinte) — 36 caracteres.
+
+    Aceita alfanuméricos e hífens: algumas SEFAZ emitem o CSC de homologação
+    no formato UUID (ex.: `a3ce282f-2bf1-4b64-a55b-b4f1faa39683`).
+    """
+    if len(v) != 36 or not all(c.isalnum() or c == "-" for c in v):
+        raise ValueError("CSC deve ter exatamente 36 caracteres (alfanuméricos ou com hífens)")
     return v
 
 

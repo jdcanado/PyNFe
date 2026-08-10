@@ -1,0 +1,11 @@
+# Token ADM de DESENVOLVIMENTO (banco local pynfe_local.db)
+# Gerado em: 2026-08-10T23:10:29.177426+00:00
+# Expira em: 60 minutos a partir da geração
+
+API_KEY: pk_31d6
+API_SECRET: 27oR8VNUA_6IkNkmYqEOgTfzlG85D0o3sKJrmzUnmsU
+ACCESS_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlNTE1ZTM1Yi0yZjBiLTQ5ZjQtYjk2Yy1hMmU3YjIzYzk5YmUiLCJleHAiOjE3ODY0MDcwMjksImlhdCI6MTc4NjQwMzQyOX0.K7hieCKAltLGp1pipwcFxKVygpKKi9exn0bxecClEzQ
+
+# Para renovar o token (POST /api/v1/auth/token):
+#   {"api_key": "<API_KEY>", "api_secret": "<API_SECRET>"}
+# Delete este arquivo após o uso.

@@ -137,3 +137,19 @@ def test_criar_empresa_csc_invalido_422(client, admin_token):
         )
     )
     assert resp.status_code == 422
+
+
+def test_criar_empresa_csc_uuid_homologacao(client, admin_token):
+    """CSC de homologação SEFAZ em formato UUID (com hífens) é aceito."""
+    csc_uuid = "a3ce282f-2bf1-4b64-a55b-b4f1faa39683"
+    resp = run(
+        client.post(
+            "/api/v1/admin/empresa",
+            json=_payload(cnpj="44444444000144", csc=csc_uuid, csc_id="000003"),
+            headers=authorization_headers(admin_token),
+        )
+    )
+    assert resp.status_code == 201
+    data = resp.json()
+    assert data["csc_id"] == "000003"
+    assert data["csc_mascarado"] == csc_uuid[:4] + "*" * 32
