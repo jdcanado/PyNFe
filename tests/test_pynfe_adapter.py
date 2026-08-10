@@ -353,3 +353,39 @@ def test_converter_nota_fiscal_com_icms_e_ipi_ii():
     # totais_icms_total acumula II + IPI no vNF
     assert nota.totais_icms_total_ii == Decimal("20.00")
     assert nota.totais_icms_total_ipi == Decimal("5.85")
+
+
+# ---------------------------------------------------------------------------
+# Indicadores do grupo ide (idDest/tpImp/indPres/indFinal)
+# ---------------------------------------------------------------------------
+
+
+def test_nota_schema_indicadores_defaults_validos():
+    schema = nota_schema()
+    assert schema.indicador_destino == 1  # operação interna
+    assert schema.tipo_impressao_danfe == 1  # DANFE normal
+    assert schema.indicador_presencial == 0  # não se aplica
+    assert schema.cliente_final == 0  # não consumidor final
+
+
+def test_nota_schema_indicadores_invalidos_rejeitados():
+    with pytest.raises(ValidationError):
+        nota_schema(indicador_destino=0)  # idDest só aceita 1-3
+    with pytest.raises(ValidationError):
+        nota_schema(tipo_impressao_danfe=0)  # tpImp só aceita 1-5
+    with pytest.raises(ValidationError):
+        nota_schema(cliente_final=2)  # indFinal só aceita 0-1
+
+
+def test_converter_nota_fiscal_propaga_indicadores():
+    schema = nota_schema(
+        indicador_destino=2,
+        tipo_impressao_danfe=1,
+        indicador_presencial=2,
+        cliente_final=1,
+    )
+    nota = converter_nota_fiscal(schema)
+    assert nota.indicador_destino == 2
+    assert nota.tipo_impressao_danfe == 1
+    assert nota.indicador_presencial == 2
+    assert nota.cliente_final == 1

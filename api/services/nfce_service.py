@@ -34,6 +34,7 @@ from api.services.nfe_service import (
     STATUS_REJEITADA,
     _assinar_xml,
     _extrair_da_resposta,
+    _extrair_erro_sefaz,
     _extrair_recibo_do_erro,
     _fonte_dados_isolada,
     _polling_recibo,
@@ -179,6 +180,7 @@ async def emitir_nfce(
     nfe_proc = resultado[1] if nfe_proc is None else nfe_proc
     chave, protocolo, cstat = _extrair_da_resposta(nfe_proc)
     status = STATUS_AUTORIZADA if cstat in ("100", "150") else STATUS_REJEITADA
+    xmotivo = nfe_proc.xpath("string(.//*[local-name()='xMotivo'])") or None
     xml_protocolado_str = etree.tostring(nfe_proc, encoding="unicode", pretty_print=False)
 
     # 8. Salva o XML protocolado no Blob
@@ -243,7 +245,13 @@ async def emitir_nfce(
         autorizada_em=autorizada_em,
         xml_assinado=xml_assinado_str,
         xml_protocolado=xml_protocolado_str,
-        mensagem=None if status == STATUS_AUTORIZADA else "Nota rejeitada pela SEFAZ",
+        mensagem=None
+        if status == STATUS_AUTORIZADA
+        else (
+            f"Rejeicao da SEFAZ: {cstat} - {xmotivo}" if xmotivo else "Nota rejeitada pela SEFAZ"
+        ),
+        cstat=cstat,
+        xmotivo=xmotivo,
     )
 
 
@@ -257,6 +265,17 @@ def _resposta_erro_nfce(
     """Monta a resposta quando a SEFAZ não autoriza (status_code != 0)."""
     identificador = nota.identificador_unico or ""
     chave = identificador.removeprefix("NFe")
+    retorno = resultado[1] if len(resultado) > 1 else None
+
+    cstat, xmotivo = _extrair_erro_sefaz(retorno)
+    if cstat and xmotivo:
+        mensagem = f"Rejeicao da SEFAZ: {cstat} - {xmotivo}"
+    elif hasattr(retorno, "content"):
+        # Response HTTP sem XML de rejeição interpretável
+        mensagem = "Falha na comunicacao com a SEFAZ (resposta sem motivo interpretavel)"
+    else:
+        mensagem = str(retorno) if retorno else "Falha na comunicacao com a SEFAZ"
+
     return NFCeResponse(
         empresa_id=empresa_id,
         chave_acesso=chave,
@@ -266,7 +285,9 @@ def _resposta_erro_nfce(
         status=STATUS_ERRO,
         valor_total=float(nota.totais_icms_total_nota),
         xml_assinado=xml_assinado_str,
-        mensagem=str(resultado[1]) if len(resultado) > 1 else "Falha na comunicação com a SEFAZ",
+        mensagem=mensagem,
+        cstat=cstat,
+        xmotivo=xmotivo,
     )
 
 

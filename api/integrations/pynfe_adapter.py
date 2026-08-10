@@ -300,11 +300,17 @@ def converter_nota_fiscal(schema: NotaFiscalSchema) -> NotaFiscal:
         natureza_operacao=schema.natureza_operacao,
         tipo_documento=schema.tipo_documento,
         data_emissao=schema.data_emissao or datetime.now(timezone.utc),
+        data_saida_entrada=schema.data_saida_entrada,
         modelo=schema.modelo,
         serie=str(schema.serie),
         numero_nf=str(schema.numero),
         forma_emissao=str(schema.forma_emissao),
         finalidade_emissao=str(schema.finalidade_emissao),
+        # Indicadores obrigatórios do grupo ide (defaults válidos no schema)
+        indicador_destino=schema.indicador_destino,
+        tipo_impressao_danfe=schema.tipo_impressao_danfe,
+        indicador_presencial=schema.indicador_presencial,
+        cliente_final=schema.cliente_final,
     )
 
     for produto in schema.produtos:

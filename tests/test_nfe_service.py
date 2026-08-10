@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import os
 from datetime import datetime, timedelta, timezone
+from types import SimpleNamespace
 from uuid import uuid4
 
 # --- env vars ANTES dos imports da API -------------------------------------
@@ -380,3 +381,41 @@ def test_emitir_nfe_falha_sefaz_retorna_status_erro():
     assert resp.status == STATUS_ERRO
     assert "erro de comunicação" in resp.mensagem
     assert session.commit_called is False  # não persiste em erro
+
+
+def test_emitir_nfe_rejeicao_sefaz_extrai_motivo_legivel():
+    """Rejeição SEFAZ deve expor cStat/xMotivo, não '<Response [200]>'."""
+    _fonte_dados.limpar_dados()
+    session = FakeSession()
+
+    async def get_pem(empresa_id, *, redis=None, session=None):
+        return CERT_PEM, KEY_PEM
+
+    xml_rejeicao = (
+        '<soap:Envelope xmlns:soap="http://www.w3.org/2003/05/soap-envelope">'
+        '<soap:Body><nfeResultMsg xmlns="http://www.portalfiscal.inf.br/nfe/wsdl/NFeAutorizacao4">'
+        '<retEnviNFe versao="4.00" xmlns="http://www.portalfiscal.inf.br/nfe">'
+        "<cStat>550</cStat><xMotivo>NF-e rejeitada: idDest invalido</xMotivo>"
+        "</retEnviNFe></nfeResultMsg></soap:Body></soap:Envelope>"
+    )
+    resposta = SimpleNamespace(text=xml_rejeicao, content=xml_rejeicao.encode())
+
+    def comunicacao_factory(**kwargs):
+        return FakeComunicacao((1, resposta, None))
+
+    resp = run(
+        emitir_nfe(
+            schema_nfe(),
+            redis=FakeRedis(),
+            session=session,
+            comunicacao_factory=comunicacao_factory,
+            get_pem=get_pem,
+        )
+    )
+
+    assert resp.status == STATUS_ERRO
+    assert resp.cstat == "550"
+    assert resp.xmotivo == "NF-e rejeitada: idDest invalido"
+    assert "550" in resp.mensagem
+    assert "idDest invalido" in resp.mensagem
+    assert "<Response" not in resp.mensagem

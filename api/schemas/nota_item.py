@@ -210,11 +210,31 @@ class NotaFiscalSchema(BaseModel):
     natureza_operacao: str
     tipo_documento: int = 1  # 0=entrada; 1=saida
     data_emissao: datetime | None = None
+    data_saida_entrada: datetime | None = None
     modelo: int = 55  # 55=NF-e; 65=NFC-e
     serie: str = "1"
     numero: str
     forma_emissao: str = "1"  # 1=Emissão normal (não em contingência)
     finalidade_emissao: str = "1"  # 1=NF-e normal
+    # -- Indicadores obrigatórios no XML (defaults válidos p/ operação interna) --
+    indicador_destino: int = Field(
+        default=1, ge=1, le=3, description="idDest: 1=interna; 2=interestadual; 3=exterior"
+    )
+    tipo_impressao_danfe: int = Field(
+        default=1,
+        ge=1,
+        le=5,
+        description="tpImp: 1=DANFE normal; 4=NFC-e; 5=DANFE NFC-e mensagem eletrônica",
+    )
+    indicador_presencial: int = Field(
+        default=0,
+        ge=0,
+        le=5,
+        description="indPres: 0=não se aplica; 1=presencial; 2=internet; 3=teleatendimento",
+    )
+    cliente_final: int = Field(
+        default=0, ge=0, le=1, description="indFinal: 0=normal; 1=consumidor final"
+    )
 
     emitente: EmitenteSchema
     cliente: ClienteSchema

@@ -278,6 +278,7 @@ async def emitir_nfe(
     nfe_proc = resultado[1] if nfe_proc is None else nfe_proc
     chave, protocolo, cstat = _extrair_da_resposta(nfe_proc)
     status = STATUS_AUTORIZADA if cstat in ("100", "150") else STATUS_REJEITADA
+    xmotivo = nfe_proc.xpath("string(.//*[local-name()='xMotivo'])") or None
     xml_protocolado_str = etree.tostring(nfe_proc, encoding="unicode", pretty_print=False)
 
     # 7. Salva o XML protocolado no Blob
@@ -342,8 +343,41 @@ async def emitir_nfe(
         autorizada_em=autorizada_em,
         xml_assinado=xml_assinado_str,
         xml_protocolado=xml_protocolado_str,
-        mensagem=None if status == STATUS_AUTORIZADA else "Nota rejeitada pela SEFAZ",
+        mensagem=None
+        if status == STATUS_AUTORIZADA
+        else (
+            f"Rejeicao da SEFAZ: {cstat} - {xmotivo}" if xmotivo else "Nota rejeitada pela SEFAZ"
+        ),
+        cstat=cstat,
+        xmotivo=xmotivo,
     )
+
+
+def _extrair_erro_sefaz(retorno: Any) -> tuple[str | None, str | None]:
+    """Extrai (cStat, xMotivo) do XML de resposta da SEFAZ.
+
+    O PyNFe retorna o objeto `requests.Response` inteiro quando o lote é
+    rejeitado; aqui extraímos o motivo legível do XML (retEnviNFe,
+    retConsReciNFe, infProt ou infRec), evitando mensagens inúteis como
+    "<Response [200]>".
+    """
+    if retorno is None:
+        return None, None
+    try:
+        if hasattr(retorno, "content"):
+            # requests.Response: bytes evita erro de lxml com encoding decl.
+            xml_bytes = retorno.content or getattr(retorno, "text", "").encode()
+        elif isinstance(retorno, (str, bytes)):
+            xml_bytes = retorno.encode() if isinstance(retorno, str) else retorno
+        else:
+            return None, None
+        xml_doc = etree.fromstring(xml_bytes)
+    except Exception:  # noqa: BLE001
+        return None, None
+
+    cstat = xml_doc.xpath("string(.//*[local-name()='cStat'])") or None
+    xmotivo = xml_doc.xpath("string(.//*[local-name()='xMotivo'])") or None
+    return cstat, xmotivo
 
 
 def _resposta_erro(
@@ -353,9 +387,24 @@ def _resposta_erro(
     xml_assinado_str: str,
     resultado: tuple,
 ) -> NFeEmitirResponse:
-    """Monta a resposta quando a SEFAZ não autoriza (status_code != 0)."""
+    """Monta a resposta quando a SEFAZ não autoriza (status_code != 0).
+
+    `resultado` é a tupla do `ComunicacaoSefaz.autorizacao()`:
+    `(0, xml)` em sucesso ou `(1, resposta_http_ou_erro, nota)` em falha.
+    """
     identificador = nota.identificador_unico or ""
     chave = identificador.removeprefix("NFe")
+    retorno = resultado[1] if len(resultado) > 1 else None
+
+    cstat, xmotivo = _extrair_erro_sefaz(retorno)
+    if cstat and xmotivo:
+        mensagem = f"Rejeicao da SEFAZ: {cstat} - {xmotivo}"
+    elif hasattr(retorno, "content"):
+        # Response HTTP sem XML de rejeição interpretável
+        mensagem = "Falha na comunicacao com a SEFAZ (resposta sem motivo interpretavel)"
+    else:
+        mensagem = str(retorno) if retorno else "Falha na comunicacao com a SEFAZ"
+
     return NFeEmitirResponse(
         empresa_id=empresa_id,
         chave_acesso=chave,
@@ -365,7 +414,9 @@ def _resposta_erro(
         status=STATUS_ERRO,
         valor_total=float(nota.totais_icms_total_nota),
         xml_assinado=xml_assinado_str,
-        mensagem=str(resultado[1]) if len(resultado) > 1 else "Falha na comunicação com a SEFAZ",
+        mensagem=mensagem,
+        cstat=cstat,
+        xmotivo=xmotivo,
     )
 
 

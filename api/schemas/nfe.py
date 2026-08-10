@@ -122,6 +122,8 @@ class NFeEmitirResponse(BaseModel):
     xml_protocolado: str | None = None
     mensagem: str | None = None
     recibo: str | None = None
+    cstat: str | None = None
+    xmotivo: str | None = None
 
 
 class ConsultarNotaRequest(BaseModel):
