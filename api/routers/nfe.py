@@ -22,20 +22,30 @@ from api.core.exceptions import (
 from api.models import APIClient, NotaFiscal
 from api.schemas.common import PaginatedResponse
 from api.schemas.nfe import (
+    CadastroResponse,
     CancelarRequest,
     CartaCorrecaoRequest,
+    ConsultarNotaRequest,
+    ConsultarNotaResponse,
+    DistribuicaoRequest,
+    DistribuicaoResponse,
     EventoResponse,
     InutilizarRequest,
     InutilizarResponse,
     NFeEmitirResponse,
     NotaFiscalResumo,
+    OperacaoNaoRealizadaRequest,
 )
 from api.schemas.nota_item import NotaFiscalSchema
 from api.services.nfe_service import (
     cancelar_nota,
     carta_correcao_nota,
+    consultar_cadastro,
+    consultar_distribuicao,
+    consultar_nota_sefaz,
     emitir_nfe,
     inutilizar_nota,
+    operacao_nao_realizada,
 )
 from api.utils.crypto import hash_documento
 
@@ -185,6 +195,83 @@ async def inutilizar(
             numero_final=payload.numero_final,
             justificativa=payload.justificativa,
             ano=payload.ano,
+            modelo="55",
+        )
+    )
+
+
+@router.post("/consultar", response_model=ConsultarNotaResponse)
+async def consultar_sefaz(
+    payload: ConsultarNotaRequest,
+    client: APIClient = Depends(get_current_client),  # noqa: B008
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    redis: redis_async.Redis = Depends(get_redis_dep),  # noqa: B008
+) -> ConsultarNotaResponse:
+    """Consulta a situação de uma NF-e na SEFAZ pela chave de acesso."""
+    return await _executar_evento(
+        consultar_nota_sefaz(db, redis, client.empresa_id, payload.chave_acesso, modelo="55")
+    )
+
+
+@router.post("/distribuicao", response_model=DistribuicaoResponse)
+async def distribuicao(
+    payload: DistribuicaoRequest,
+    client: APIClient = Depends(get_current_client),  # noqa: B008
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    redis: redis_async.Redis = Depends(get_redis_dep),  # noqa: B008
+) -> DistribuicaoResponse:
+    """Consulta a distribuição de DF-e no ambiente nacional (NFeDistribuicaoDFe)."""
+    return await _executar_evento(
+        consultar_distribuicao(
+            db,
+            redis,
+            client.empresa_id,
+            cnpj=payload.cnpj,
+            cpf=payload.cpf,
+            chave=payload.chave,
+            nsu=payload.nsu,
+            consulta_nsu_especifico=payload.consulta_nsu_especifico,
+        )
+    )
+
+
+@router.get("/cadastro", response_model=CadastroResponse)
+async def cadastro(
+    uf: str = Query(..., min_length=2, max_length=2),
+    documento: str = Query(...),
+    tipo: str = Query(default="CNPJ", pattern="^(CNPJ|CPF|IE)$"),
+    client: APIClient = Depends(get_current_client),  # noqa: B008
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    redis: redis_async.Redis = Depends(get_redis_dep),  # noqa: B008
+) -> CadastroResponse:
+    """Consulta o cadastro de contribuintes na SEFAZ (CadConsultaCadastro4)."""
+    return await _executar_evento(
+        consultar_cadastro(
+            db,
+            redis,
+            client.empresa_id,
+            uf=uf.upper(),
+            documento=documento,
+            tipo=tipo,
+        )
+    )
+
+
+@router.post("/operacao-nao-realizada", response_model=EventoResponse)
+async def operacao_nao_realizada_evento(
+    payload: OperacaoNaoRealizadaRequest,
+    client: APIClient = Depends(get_current_client),  # noqa: B008
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+    redis: redis_async.Redis = Depends(get_redis_dep),  # noqa: B008
+) -> EventoResponse:
+    """Registra o evento de operação não realizada (110112) para uma NF-e autorizada."""
+    return await _executar_evento(
+        operacao_nao_realizada(
+            db,
+            redis,
+            client.empresa_id,
+            payload.chave_acesso,
+            payload.justificativa,
             modelo="55",
         )
     )

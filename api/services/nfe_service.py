@@ -36,14 +36,22 @@ from api.core.exceptions import (
 )
 from api.core.logging import get_logger
 from api.integrations.pynfe_adapter import converter_nota_fiscal
-from api.schemas.nfe import EventoResponse, InutilizarResponse, NFeEmitirResponse
+from api.schemas.nfe import (
+    CadastroResponse,
+    ConsultarNotaResponse,
+    DistribuicaoResponse,
+    EventoResponse,
+    InutilizarResponse,
+    NFeEmitirResponse,
+)
 from api.schemas.nota_item import NotaFiscalSchema
 from api.services.certificado_service import _session_ctx, _upload_blob, obter_pem
 from api.utils.crypto import encrypt_senha, hash_documento
 from pynfe.entidades import fonte_dados
-from pynfe.entidades.evento import EventoCancelarNota, EventoCartaCorrecao
+from pynfe.entidades.evento import Evento, EventoCancelarNota, EventoCartaCorrecao
 from pynfe.processamento.serializacao import SerializacaoXML
 from pynfe.utils import CustomXMLSigner, remover_acentos
+from pynfe.utils.flags import CODIGOS_ESTADOS
 
 STATUS_AUTORIZADA = "AUTORIZADA"
 STATUS_CANCELADA = "CANCELADA"
@@ -789,4 +797,412 @@ async def inutilizar_nota(
         cstat=informacoes["cstat"],
         xmotivo=informacoes["xmotivo"],
         nprot=informacoes["nprot"],
+    )
+
+
+# ---------------------------------------------------------------------------
+# Consultas: situação da nota (consulta_nota), distribuição de DF-e e cadastro
+# ---------------------------------------------------------------------------
+
+# cStat do NFeConsultaProtocolo4
+_CSTAT_CONSULTA_STATUS = {
+    "100": "autorizada",
+    "101": "cancelada",
+    "135": "autorizada_fora_prazo",
+    "151": "cancelada_fora_prazo",
+    "155": "cancelada_fora_prazo",
+    "217": "nao_encontrada",
+}
+
+
+def _codigo_uf_para_sigla(codigo: str) -> str:
+    """Converte código IBGE da UF (2 dígitos) em sigla, ex.: '35' -> 'SP'."""
+    inverso = {v: k for k, v in CODIGOS_ESTADOS.items()}
+    return inverso.get(codigo.zfill(2), "")
+
+
+def _parse_retorno_consulta(xml_bytes: bytes) -> dict:
+    """Extrai cStat/xMotivo/protocolo do `retConsSitNFe` da resposta SOAP."""
+    raiz = etree.fromstring(xml_bytes)
+    ret = raiz.xpath(".//*[local-name()='retConsSitNFe']")
+    if not ret:
+        return {"cstat": "", "xmotivo": "Resposta sem retConsSitNFe"}
+
+    node = ret[0]
+    cstat = node.xpath("string(.//*[local-name()='cStat'])")
+    xmotivo = node.xpath("string(.//*[local-name()='xMotivo'])")
+    tpamb = node.xpath("string(.//*[local-name()='tpAmb'])") or None
+    dh_recbto = node.xpath("string(.//*[local-name()='dhRecbto'])") or None
+    nprot = (
+        node.xpath(
+            "string(.//*[local-name()='protNFe']/*[local-name()='infProt']/*[local-name()='nProt'])"
+        )
+        or None
+    )
+
+    # Cancelamento registrado como evento (procEventoNFe com tpEvento 110111)
+    tp_eventos = node.xpath(".//*[local-name()='procEventoNFe']//*[local-name()='tpEvento']/text()")
+    if nprot is None:
+        nprot = node.xpath("string(.//*[local-name()='nProt'])") or None
+
+    status = _CSTAT_CONSULTA_STATUS.get(cstat, "consulta")
+    if "110111" in tp_eventos:
+        status = "cancelada"
+    if cstat == "101":
+        status = "cancelada"
+
+    return {
+        "status": status,
+        "cstat": cstat,
+        "xmotivo": xmotivo,
+        "ambiente": tpamb,
+        "protocolo": nprot,
+        "dh_recbto": dh_recbto,
+    }
+
+
+def _parse_retorno_distribuicao(xml_bytes: bytes) -> dict:
+    """Extrai cStat/ultNSU/maxNSU/docZip do `retDistDFeInt` da resposta SOAP."""
+    raiz = etree.fromstring(xml_bytes)
+    ret = raiz.xpath(".//*[local-name()='retDistDFeInt']")
+    if not ret:
+        return {"cstat": "", "xmotivo": "Resposta sem retDistDFeInt"}
+
+    node = ret[0]
+    cstat = node.xpath("string(.//*[local-name()='cStat'])")
+    xmotivo = node.xpath("string(.//*[local-name()='xMotivo'])")
+    ult_nsu = node.xpath("string(.//*[local-name()='ultNSU'])") or None
+    max_nsu = node.xpath("string(.//*[local-name()='maxNSU'])") or None
+
+    documentos = []
+    for doc in node.xpath(".//*[local-name()='docZip']"):
+        documentos.append(
+            {
+                "nsu": doc.get("NSU"),
+                "schema": doc.get("schema"),
+                "conteudo_base64": doc.text or "",
+            }
+        )
+
+    return {
+        "cstat": cstat,
+        "xmotivo": xmotivo,
+        "ult_nsu": ult_nsu,
+        "max_nsu": max_nsu,
+        "documentos": documentos or None,
+    }
+
+
+def _parse_retorno_cadastro(xml_bytes: bytes) -> dict:
+    """Extrai cStat/xMotivo e lista de contribuintes do `retConsCad`."""
+    raiz = etree.fromstring(xml_bytes)
+    ret = raiz.xpath(".//*[local-name()='retConsCad']")
+    if not ret:
+        return {"cstat": "", "xmotivo": "Resposta sem retConsCad"}
+
+    node = ret[0]
+    inf = node.xpath(".//*[local-name()='infCons']")
+    if inf:
+        inf = inf[0]
+        cstat = inf.xpath("string(.//*[local-name()='cStat'])")
+        xmotivo = inf.xpath("string(.//*[local-name()='xMotivo'])")
+    else:
+        cstat = ""
+        xmotivo = ""
+
+    contribuintes = []
+    for cad in node.xpath(".//*[local-name()='infCad']"):
+        endereco = (
+            cad.xpath(".//*[local-name()='ender']")[0]
+            if cad.xpath(".//*[local-name()='ender']")
+            else None
+        )
+        contribuintes.append(
+            {
+                "razao_social": cad.xpath("string(.//*[local-name()='xNome'])") or None,
+                "cnpj": cad.xpath("string(.//*[local-name()='CNPJ'])") or None,
+                "cpf": cad.xpath("string(.//*[local-name()='CPF'])") or None,
+                "ie": cad.xpath("string(.//*[local-name()='IE'])") or None,
+                "situacao": cad.xpath("string(.//*[local-name()='cSit'])") or None,
+                "indicador_nfe": cad.xpath("string(.//*[local-name()='indCredNFe'])") or None,
+                "indicador_cte": cad.xpath("string(.//*[local-name()='indCredCTe'])") or None,
+                "logradouro": endereco.xpath("string(.//*[local-name()='xLgr'])")
+                if endereco is not None
+                else None,
+                "numero": endereco.xpath("string(.//*[local-name()='nro'])")
+                if endereco is not None
+                else None,
+                "bairro": endereco.xpath("string(.//*[local-name()='xBairro'])")
+                if endereco is not None
+                else None,
+                "municipio": endereco.xpath("string(.//*[local-name()='xMun'])")
+                if endereco is not None
+                else None,
+                "uf": cad.xpath("string(*[local-name()='UF'])") or None,
+                "cep": endereco.xpath("string(.//*[local-name()='CEP'])")
+                if endereco is not None
+                else None,
+            }
+        )
+
+    return {
+        "cstat": cstat,
+        "xmotivo": xmotivo,
+        "contribuintes": contribuintes or None,
+    }
+
+
+async def consultar_nota_sefaz(
+    db: Any,
+    redis: Any,
+    empresa_id: UUID,
+    chave_acesso: str,
+    *,
+    modelo: str = "55",
+    homologacao: bool = True,
+    comunicacao_factory: Callable[..., Any] | None = None,
+    get_pem: Callable[..., Any] | None = None,
+) -> ConsultarNotaResponse:
+    """Consulta a situação de uma NF-e/NFC-e na SEFAZ pela chave de acesso.
+
+    A UF é extraída dos 2 primeiros dígitos da chave (código IBGE).
+    """
+    get_pem = get_pem or obter_pem
+    pems = await get_pem(empresa_id, redis=redis, session=db)
+    if pems is None:
+        raise CertificadoError("Empresa sem certificado digital cadastrado")
+    cert_pem, key_pem = pems
+
+    uf = _codigo_uf_para_sigla(chave_acesso[:2])
+    if not uf:
+        raise ValidacaoNegocioError(f"Chave com UF desconhecida: {chave_acesso[:2]}")
+
+    comunicacao = _criar_comunicacao(
+        uf,
+        cert_pem,
+        key_pem,
+        homologacao=homologacao,
+        comunicacao_factory=comunicacao_factory,
+    )
+    resposta = await asyncio.to_thread(
+        comunicacao.consulta_nota,
+        _modelo_comunicacao(modelo),
+        chave_acesso,
+    )
+    if resposta.status_code != 200:
+        raise SefazError(f"Falha na comunicação com a SEFAZ (HTTP {resposta.status_code})")
+    try:
+        dados = _parse_retorno_consulta(resposta.content)
+    except Exception as exc:
+        raise SefazError("Resposta inválida da SEFAZ para consulta de situação") from exc
+
+    return ConsultarNotaResponse(
+        chave_acesso=chave_acesso,
+        modelo=modelo,
+        status=dados["status"],
+        cstat=dados["cstat"],
+        xmotivo=dados["xmotivo"],
+        ambiente=dados["ambiente"],
+        protocolo=dados["protocolo"],
+        dh_recbto=datetime.fromisoformat(dados["dh_recbto"]) if dados.get("dh_recbto") else None,
+        xml_raw=resposta.text,
+    )
+
+
+async def consultar_distribuicao(
+    db: Any,
+    redis: Any,
+    empresa_id: UUID,
+    *,
+    cnpj: str | None = None,
+    cpf: str | None = None,
+    chave: str | None = None,
+    nsu: int = 0,
+    consulta_nsu_especifico: bool = False,
+    homologacao: bool = True,
+    comunicacao_factory: Callable[..., Any] | None = None,
+    get_pem: Callable[..., Any] | None = None,
+) -> DistribuicaoResponse:
+    """Consulta a distribuição de DF-e no ambiente nacional (NFeDistribuicaoDFe).
+
+    Tipos de consulta: `consChNFe` (chave), `consNSU` (NSU específico) ou
+    `distNSU` (a partir do último NSU).
+    """
+    get_pem = get_pem or obter_pem
+    pems = await get_pem(empresa_id, redis=redis, session=db)
+    if pems is None:
+        raise CertificadoError("Empresa sem certificado digital cadastrado")
+    cert_pem, key_pem = pems
+
+    # UF do interessado para o cUFAutor (ambiente nacional)
+    empresa = await _obter_empresa(db, empresa_id)
+    comunicacao = _criar_comunicacao(
+        empresa.uf,
+        cert_pem,
+        key_pem,
+        homologacao=homologacao,
+        comunicacao_factory=comunicacao_factory,
+    )
+    resposta = await asyncio.to_thread(
+        comunicacao.consulta_distribuicao,
+        cnpj=cnpj,
+        cpf=cpf,
+        chave=chave,
+        nsu=nsu,
+        consulta_nsu_especifico=consulta_nsu_especifico,
+    )
+    if resposta.status_code != 200:
+        raise SefazError(f"Falha na comunicação com a SEFAZ (HTTP {resposta.status_code})")
+    try:
+        dados = _parse_retorno_distribuicao(resposta.content)
+    except Exception as exc:
+        raise SefazError("Resposta inválida da SEFAZ para distribuição de DF-e") from exc
+
+    if chave:
+        tipo = "consChNFe"
+    elif consulta_nsu_especifico:
+        tipo = "consNSU"
+    else:
+        tipo = "distNSU"
+
+    return DistribuicaoResponse(
+        tipo=tipo,
+        cstat=dados["cstat"],
+        xmotivo=dados["xmotivo"],
+        ult_nsu=dados["ult_nsu"],
+        max_nsu=dados["max_nsu"],
+        documentos=dados["documentos"],
+        xml_raw=resposta.text,
+    )
+
+
+async def consultar_cadastro(
+    db: Any,
+    redis: Any,
+    empresa_id: UUID,
+    *,
+    uf: str,
+    documento: str,
+    tipo: str = "CNPJ",
+    homologacao: bool = True,
+    comunicacao_factory: Callable[..., Any] | None = None,
+    get_pem: Callable[..., Any] | None = None,
+) -> CadastroResponse:
+    """Consulta o cadastro de contribuintes na SEFAZ (CadConsultaCadastro4).
+
+    `tipo` pode ser CNPJ (padrão), CPF ou IE.
+    """
+    get_pem = get_pem or obter_pem
+    pems = await get_pem(empresa_id, redis=redis, session=db)
+    if pems is None:
+        raise CertificadoError("Empresa sem certificado digital cadastrado")
+    cert_pem, key_pem = pems
+
+    comunicacao = _criar_comunicacao(
+        uf,
+        cert_pem,
+        key_pem,
+        homologacao=homologacao,
+        comunicacao_factory=comunicacao_factory,
+    )
+    resposta = await asyncio.to_thread(
+        comunicacao.consulta_cadastro,
+        "nfe",
+        documento,
+        tipo.upper(),
+        uf,
+    )
+    if resposta.status_code != 200:
+        raise SefazError(f"Falha na comunicação com a SEFAZ (HTTP {resposta.status_code})")
+    try:
+        dados = _parse_retorno_cadastro(resposta.content)
+    except Exception as exc:
+        raise SefazError("Resposta inválida da SEFAZ para consulta de cadastro") from exc
+
+    return CadastroResponse(
+        uf=uf.upper(),
+        documento=documento,
+        tipo_documento=tipo.upper(),
+        cstat=dados["cstat"],
+        xmotivo=dados["xmotivo"],
+        contribuintes=dados["contribuintes"],
+        xml_raw=resposta.text,
+    )
+
+
+async def operacao_nao_realizada(
+    db: Any,
+    redis: Any,
+    empresa_id: UUID,
+    chave_acesso: str,
+    justificativa: str,
+    *,
+    modelo: str = "55",
+    homologacao: bool = True,
+    comunicacao_factory: Callable[..., Any] | None = None,
+    get_pem: Callable[..., Any] | None = None,
+) -> EventoResponse:
+    """Registra o evento de operação não realizada (110112) para uma nota autorizada.
+
+    Não altera o status da nota (diferente do cancelamento); apenas registra o
+    evento no JSONB `eventos`.
+    """
+    get_pem = get_pem or obter_pem
+    pems = await get_pem(empresa_id, redis=redis, session=db)
+    if pems is None:
+        raise CertificadoError("Empresa sem certificado digital cadastrado")
+    cert_pem, key_pem = pems
+
+    async with _session_ctx(db) as session:
+        nota = await _buscar_nota(session, empresa_id, chave_acesso, modelo)
+        if nota.status != STATUS_AUTORIZADA:
+            raise ConflitoEstadoError("Operação não realizada exige nota autorizada")
+
+        empresa = await _obter_empresa(session, empresa_id)
+
+        evento = Evento(
+            cnpj=empresa.cnpj,
+            chave=chave_acesso,
+            uf=empresa.uf,
+            data_emissao=datetime.now(timezone.utc),
+            n_seq_evento=1,
+            tp_evento="110112",
+            descricao="Operacao nao Realizada",
+            justificativa=justificativa,
+        )
+        informacoes, xml_evento_str = await _enviar_evento_sefaz(
+            uf=empresa.uf,
+            evento=evento,
+            modelo=modelo,
+            cert_pem=cert_pem,
+            key_pem=key_pem,
+            homologacao=homologacao,
+            comunicacao_factory=comunicacao_factory,
+        )
+
+        nota.eventos = (nota.eventos or []) + [
+            {
+                "tipo": "operacao_nao_realizada",
+                "tp_evento": "110112",
+                "chave_acesso": chave_acesso,
+                "data_evento": datetime.now(timezone.utc).isoformat(),
+                "cstat": informacoes["cstat"],
+                "xmotivo": informacoes["xmotivo"],
+                "nprot": informacoes["nprot"],
+                "justificativa": justificativa,
+                "xml_evento": xml_evento_str,
+            }
+        ]
+        await session.commit()
+
+    return EventoResponse(
+        chave_acesso=chave_acesso,
+        modelo=modelo,
+        tp_evento="110112",
+        status="REGISTRADO",
+        cstat=informacoes["cstat"],
+        xmotivo=informacoes["xmotivo"],
+        nprot=informacoes["nprot"],
+        registrado_em=informacoes["registrado_em"],
+        xml_evento=xml_evento_str,
     )

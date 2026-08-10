@@ -176,6 +176,73 @@
       }
     },
     {
+      "name": "NFe - Consultar SEFAZ",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/nfe/consultar",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"chave_acesso\": \"35260808849348000174550010000001111000000011\"\n}"
+        }
+      }
+    },
+    {
+      "name": "NFe - Distribuicao DF-e",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/nfe/distribuicao",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cnpj\": \"99999999000199\",\n  \"nsu\": 0,\n  \"consulta_nsu_especifico\": false\n}"
+        }
+      }
+    },
+    {
+      "name": "NFe - Consulta Cadastro",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/nfe/cadastro?uf=PR&documento=99999999000199&tipo=CNPJ",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "NFe - Operacao Nao Realizada",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/nfe/operacao-nao-realizada",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"chave_acesso\": \"35260808849348000174550010000001111000000011\",\n  \"justificativa\": \"Operacao nao realizada pelo destinatario\"\n}"
+        }
+      }
+    },
+    {
       "name": "NFCe - Emitir",
       "request": {
         "method": "POST",

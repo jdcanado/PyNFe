@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from api.schemas.common import validar_chave_acesso, validar_cnpj
 
@@ -122,3 +122,109 @@ class NFeEmitirResponse(BaseModel):
     xml_protocolado: str | None = None
     mensagem: str | None = None
     recibo: str | None = None
+
+
+class ConsultarNotaRequest(BaseModel):
+    """Requisição de consulta da situação de NF-e/NFC-e na SEFAZ (NFeConsultaProtocolo4)."""
+
+    chave_acesso: str
+
+    @field_validator("chave_acesso")
+    @classmethod
+    def _validar_chave_acesso(cls, v: str) -> str:
+        return validar_chave_acesso(v)
+
+
+class ConsultarNotaResponse(BaseModel):
+    """Resposta da consulta de situação da nota na SEFAZ."""
+
+    chave_acesso: str = Field(min_length=44, max_length=44)
+    modelo: str = "55"
+    status: str
+    cstat: str
+    xmotivo: str
+    ambiente: str | None = None
+    protocolo: str | None = None
+    dh_recbto: datetime | None = None
+    xml_raw: str | None = None
+
+
+class DistribuicaoRequest(BaseModel):
+    """Requisição de distribuição de DF-e (NFeDistribuicaoDFe).
+
+    O tipo de consulta é definido pela combinação de campos:
+    - `chave` presente -> consChNFe
+    - `consulta_nsu_especifico=True` -> consNSU
+    - ambos ausentes -> distNSU
+    """
+
+    cnpj: str | None = None
+    cpf: str | None = None
+    chave: str | None = None
+    nsu: int = Field(default=0, ge=0, le=999999999999999)
+    consulta_nsu_especifico: bool = False
+
+    @field_validator("cnpj")
+    @classmethod
+    def _validar_cnpj(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        return validar_cnpj(v)
+
+    @field_validator("cpf")
+    @classmethod
+    def _validar_cpf(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        if not v.isdigit() or len(v) != 11:
+            raise ValueError("CPF deve ter exatamente 11 dígitos numéricos")
+        return v
+
+    @field_validator("chave")
+    @classmethod
+    def _validar_chave(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        return validar_chave_acesso(v)
+
+    @model_validator(mode="after")
+    def _validar_documento(self) -> DistribuicaoRequest:
+        if bool(self.cnpj) == bool(self.cpf):
+            raise ValueError("informe exatamente um entre cnpj e cpf")
+        return self
+
+
+class DistribuicaoResponse(BaseModel):
+    """Resposta da distribuição de DF-e."""
+
+    tipo: str
+    cstat: str
+    xmotivo: str
+    ult_nsu: str | None = None
+    max_nsu: str | None = None
+    documentos: list[dict] | None = None
+    xml_raw: str | None = None
+
+
+class CadastroResponse(BaseModel):
+    """Resposta da consulta de cadastro de contribuinte (CadConsultaCadastro4)."""
+
+    uf: str = Field(min_length=2, max_length=2)
+    documento: str
+    tipo_documento: str
+    cstat: str
+    xmotivo: str
+    contribuintes: list[dict] | None = None
+    xml_raw: str | None = None
+
+
+class OperacaoNaoRealizadaRequest(BaseModel):
+    """Requisição do evento de operação não realizada (110112)."""
+
+    chave_acesso: str
+    justificativa: str = Field(min_length=15, max_length=255)
+
+    @field_validator("chave_acesso")
+    @classmethod
+    def _validar_chave_acesso(cls, v: str) -> str:
+        return validar_chave_acesso(v)
