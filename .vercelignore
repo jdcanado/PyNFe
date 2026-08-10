@@ -1,6 +1,11 @@
 # Arquivos grandes/desnecessários no bundle da Vercel
-pynfe/data/
-pynfe/utils/nfse/
+# pynfe/data/MunIBGE/ e pynfe/utils/nfse/ são NECESSÁRIOS em runtime:
+#   - data/MunIBGE: códigos IBGE de municípios/paises (serialização de endereços)
+#   - utils/nfse: bindings PyXB gerados para NFS-e (código Python, não dado)
+pynfe/data/IBPT/
+pynfe/data/ISSQN/
+# Re-incluir (remover esta linha) se a validação XSD for usada no deploy
+pynfe/data/XSDs/
 tests/
 docs/
 .git/

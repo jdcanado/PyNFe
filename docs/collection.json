@@ -9,7 +9,7 @@
       "name": "Health Check",
       "request": {
         "method": "GET",
-        "url": "http://localhost:8000/api/v1/health",
+        "url": "{{baseUrl}}/health",
         "header": [],
         "body": {
           "mode": "none"
@@ -20,15 +20,11 @@
       "name": "Auth - Token",
       "request": {
         "method": "POST",
-        "url": "http://localhost:8000/api/v1/auth/token",
+        "url": "{{baseUrl}}/auth/token",
         "header": [
           {
-            "key": "api-key",
-            "value": "<hash-da-api-key>"
-          },
-          {
-            "key": "api-secret",
-            "value": "<segredo-da-api-key>"
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
           }
         ],
         "body": {
@@ -40,11 +36,27 @@
       "name": "Auth - Refresh",
       "request": {
         "method": "POST",
-        "url": "http://localhost:8000/api/v1/auth/refresh",
+        "url": "{{baseUrl}}/auth/refresh",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer <jwt>"
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "Auth - Dbinfo",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/auth/dbinfo",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
           }
         ],
         "body": {
@@ -56,11 +68,11 @@
       "name": "Empresa - Certificado",
       "request": {
         "method": "POST",
-        "url": "http://localhost:8000/api/v1/empresa/certificado",
+        "url": "{{baseUrl}}/empresa/certificado",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer <jwt>"
+            "value": "Bearer {{access_token}}"
           }
         ],
         "body": {
@@ -83,11 +95,11 @@
       "name": "NFe - Emitir",
       "request": {
         "method": "POST",
-        "url": "http://localhost:8000/api/v1/nfe/emitir",
+        "url": "{{baseUrl}}/nfe/emitir",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer <jwt>"
+            "value": "Bearer {{access_token}}"
           }
         ],
         "body": {
@@ -100,11 +112,11 @@
       "name": "NFe - Listar",
       "request": {
         "method": "GET",
-        "url": "http://localhost:8000/api/v1/nfe/listar?page=1&size=20",
+        "url": "{{baseUrl}}/nfe/listar?page=1&size=20",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer <jwt>"
+            "value": "Bearer {{access_token}}"
           }
         ],
         "body": {
@@ -113,14 +125,65 @@
       }
     },
     {
-      "name": "NFCe - Emitir",
+      "name": "NFe - Cancelar",
       "request": {
         "method": "POST",
-        "url": "http://localhost:8000/api/v1/nfce/emitir",
+        "url": "{{baseUrl}}/nfe/cancelar",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer <jwt>"
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"chave_acesso\": \"35260808849348000174550010000001111000000011\",\n  \"protocolo\": \"135260000000000\",\n  \"justificativa\": \"Cancelamento por erro de digitacao\"\n}"
+        }
+      }
+    },
+    {
+      "name": "NFe - Carta Correcao",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/nfe/carta-correcao",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"chave_acesso\": \"35260808849348000174550010000001111000000011\",\n  \"correcao\": \"Correcao do CFOP do item 1 para 5102\"\n}"
+        }
+      }
+    },
+    {
+      "name": "NFe - Inutilizar",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/nfe/inutilizar",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cnpj\": \"99999999000199\",\n  \"ano\": 2026,\n  \"serie\": 1,\n  \"numero_inicial\": 112,\n  \"numero_final\": 112,\n  \"justificativa\": \"Inutilizacao por erro de numeracao\"\n}"
+        }
+      }
+    },
+    {
+      "name": "NFCe - Emitir",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/nfce/emitir",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
           }
         ],
         "body": {
@@ -133,11 +196,11 @@
       "name": "NFCe - Consultar",
       "request": {
         "method": "GET",
-        "url": "http://localhost:8000/api/v1/nfce/consultar/{chave}",
+        "url": "{{baseUrl}}/nfce/consultar/{chave}",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer <jwt>"
+            "value": "Bearer {{access_token}}"
           }
         ],
         "body": {
@@ -149,11 +212,11 @@
       "name": "NFCe - Listar",
       "request": {
         "method": "GET",
-        "url": "http://localhost:8000/api/v1/nfce/listar?page=1&size=20",
+        "url": "{{baseUrl}}/nfce/listar?page=1&size=20",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer <jwt>"
+            "value": "Bearer {{access_token}}"
           }
         ],
         "body": {
@@ -162,14 +225,65 @@
       }
     },
     {
-      "name": "GTIN - Consultar",
+      "name": "NFCe - Cancelar",
       "request": {
-        "method": "GET",
-        "url": "http://localhost:8000/api/v1/gtin/consultar/{codigo}",
+        "method": "POST",
+        "url": "{{baseUrl}}/nfce/cancelar",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer <jwt>"
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"chave_acesso\": \"35260808849348000174650010000001111000000011\",\n  \"protocolo\": \"135260000000000\",\n  \"justificativa\": \"Cancelamento por erro de digitacao\"\n}"
+        }
+      }
+    },
+    {
+      "name": "NFCe - Carta Correcao",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/nfce/carta-correcao",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"chave_acesso\": \"35260808849348000174650010000001111000000011\",\n  \"correcao\": \"Correcao da descricao do item 1\"\n}"
+        }
+      }
+    },
+    {
+      "name": "NFCe - Inutilizar",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/nfce/inutilizar",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"cnpj\": \"99999999000199\",\n  \"ano\": 2026,\n  \"serie\": 1,\n  \"numero_inicial\": 223,\n  \"numero_final\": 223,\n  \"justificativa\": \"Inutilizacao por erro de numeracao\"\n}"
+        }
+      }
+    },
+    {
+      "name": "GTIN - Consultar",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/gtin/consultar/{codigo}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
           }
         ],
         "body": {
@@ -181,11 +295,11 @@
       "name": "GTIN - Consultar Lote",
       "request": {
         "method": "POST",
-        "url": "http://localhost:8000/api/v1/gtin/consultar/lote",
+        "url": "{{baseUrl}}/gtin/consultar/lote",
         "header": [
           {
             "key": "Authorization",
-            "value": "Bearer <jwt>"
+            "value": "Bearer {{access_token}}"
           }
         ],
         "body": {
@@ -193,6 +307,193 @@
           "raw": "{\n  \"codigos\": [\n    \"7891234567890\",\n    \"7891234567891\"\n  ]\n}"
         }
       }
+    },
+    {
+      "name": "SEFAZ - Status UF",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/sefaz/status/{uf}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "SEFAZ - Status Todos",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/sefaz/status",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "Tasks - Warmer",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/tasks/warmer",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "Tasks - Poller",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/tasks/poller",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "Webhooks - Config",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/webhooks/config",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"webhook_url\": \"https://exemplo.com/webhook\",\n  \"webhook_secret\": \"<segredo-hmac>\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Webhooks - Logs",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/webhooks/logs?page=1&size=20",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "Webhooks - Test",
+      "request": {
+        "method": "POST",
+        "url": "{{baseUrl}}/webhooks/test",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "Admin - Estatisticas",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/admin/estatisticas",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "Admin - API Clients",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/admin/api-clients",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "GDPR - Anonimizar Solicitante",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/gdpr/solicitante/{documento}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    },
+    {
+      "name": "GDPR - Status Solicitacao",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/gdpr/solicitacao/{solicitacao_id}",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "mode": "none"
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/v1"
+    },
+    {
+      "key": "access_token",
+      "value": ""
     }
   ]
 }
