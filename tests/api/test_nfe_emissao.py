@@ -70,7 +70,7 @@ def test_emitir_nfe_sem_certificado_retorna_400(
 def test_emitir_nfe_sefaz_rejeita(
     client, empresa, api_client, auth_token, sefaz_mock, redis_fake, payload_nfe
 ):
-    """Cenário de erro: SEFAZ rejeita a nota (cStat 110)."""
+    """Cenário de erro: SEFAZ rejeita a nota (cStat 110) e ela é persistida como REJEITADA."""
     sefaz_mock.xml_resposta = XML_SEFAZ_REJEITADA
 
     resp = run(
@@ -82,7 +82,11 @@ def test_emitir_nfe_sefaz_rejeita(
     )
 
     assert resp.status_code == 200
-    assert resp.json()["status"] == "ERRO"
+    data = resp.json()
+    assert data["status"] == "REJEITADA"
+    assert data["cstat"] == "110"
+    assert data["xmotivo"]  # motivo exposto pela SEFAZ (não mais "<Response [200]>")
+    assert data["xml_protocolado"] and "nfeProc" in data["xml_protocolado"]
 
 
 def test_emitir_nfe_payload_invalido(client, empresa, api_client, auth_token):

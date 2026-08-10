@@ -95,6 +95,7 @@ def converter_cliente(schema: ClienteSchema) -> Cliente:
         endereco_municipio=schema.endereco_municipio,
         endereco_cod_municipio=schema.endereco_cod_municipio or "",
         endereco_telefone=schema.endereco_telefone or "",
+        endereco_pais=schema.endereco_pais,
     )
 
 

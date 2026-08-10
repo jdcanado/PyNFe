@@ -159,6 +159,22 @@ def test_converter_cliente():
     assert cliente.numero_documento == "12345678900"
     assert cliente.indicador_ie == 9
     assert cliente.endereco_uf == "DF"
+    # default do schema evita <cPais/> vazio (cStat 225 na SEFAZ)
+    assert cliente.endereco_pais == "1058"
+
+
+def test_converter_cliente_endereco_pais_customizado():
+    schema = ClienteSchema(
+        razao_social="X",
+        numero_documento="123",
+        endereco_logradouro="R",
+        endereco_numero="1",
+        endereco_bairro="B",
+        endereco_uf="PR",
+        endereco_municipio="M",
+        endereco_pais="076",  # Paraguai
+    )
+    assert converter_cliente(schema).endereco_pais == "076"
 
 
 # ---------------------------------------------------------------------------

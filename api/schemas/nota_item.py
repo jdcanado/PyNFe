@@ -77,6 +77,7 @@ class ClienteSchema(BaseModel):
     endereco_municipio: str
     endereco_cod_municipio: str | None = None
     endereco_telefone: str | None = None
+    endereco_pais: str = Field(default="1058", description="cPais do destinatário (1058 = Brasil)")
 
     @field_validator("endereco_uf")
     @classmethod
