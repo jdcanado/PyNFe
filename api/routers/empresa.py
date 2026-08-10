@@ -10,8 +10,13 @@ from api.core.database import get_db
 from api.core.dependencies import get_current_client, get_redis_dep
 from api.core.exceptions import DomainError, EmpresaNaoEncontrada, SefazError
 from api.models import APIClient
-from api.schemas.empresa import CertificadoUploadResponse
+from api.schemas.empresa import (
+    CertificadoUploadResponse,
+    EmpresaUpdateRequest,
+    EmpresaUpdateResponse,
+)
 from api.services.certificado_service import upload_certificado
+from api.services.empresa_service import atualizar_empresa
 
 router = APIRouter(prefix="/empresa", tags=["empresa"])
 
@@ -54,6 +59,31 @@ async def enviar_certificado(
     except SefazError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=str(exc),
+        ) from exc
+    except DomainError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+
+
+@router.put("", response_model=EmpresaUpdateResponse)
+async def atualizar_dados(
+    payload: EmpresaUpdateRequest,
+    client: APIClient = Depends(get_current_client),  # noqa: B008
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+) -> EmpresaUpdateResponse:
+    """Atualiza dados da empresa do token autenticado (ex.: CSC da NFC-e).
+
+    Campos parciais: apenas os enviados são alterados. O CSC completo nunca
+    é retornado — apenas a versão mascarada.
+    """
+    try:
+        return await atualizar_empresa(client.empresa_id, payload, session=db)
+    except EmpresaNaoEncontrada as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=str(exc),
         ) from exc
     except DomainError as exc:

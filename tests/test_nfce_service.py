@@ -42,7 +42,7 @@ from pynfe.processamento.serializacao import SerializacaoQrcode
 
 SENHA_PFX = "1234"
 EMPRESA_ID = uuid4()
-CSC = "0123456789abcdef0123456789abcdef01234567"
+CSC = "0123456789abcdef0123456789abcdef0123"
 CSC_ID = "000001"
 
 

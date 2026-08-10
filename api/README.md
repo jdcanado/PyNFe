@@ -102,6 +102,79 @@ curl -X POST https://api.pynfe.com.br/api/v1/nfce/emitir \
   }'
 ```
 
+### Criar empresa (somente admin)
+
+Cria a empresa + API client (plano free) e retorna as credenciais **uma única
+vez**. O CSC/CSC ID da NFC-e podem ser informados já na criação (opcionais).
+
+```bash
+curl -X POST https://api.pynfe.com.br/api/v1/admin/empresa \
+  -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{
+    "cnpj": "99999999000199",
+    "razao_social": "Empresa Teste LTDA",
+    "nome_fantasia": "Teste",
+    "inscricao_estadual": "9999999999",
+    "uf": "PR",
+    "csc": "0123456789abcdef0123456789abcdef0123",
+    "csc_id": "000001",
+    "client_name": "Client da Empresa"
+  }'
+```
+
+Resposta (guarde `api_key` e `api_secret`, não serão exibidos de novo):
+
+```json
+{
+  "empresa_id": "uuid-da-empresa",
+  "cnpj": "99999999000199",
+  "razao_social": "Empresa Teste LTDA",
+  "api_key": "pnf_ab12",
+  "api_secret": "...",
+  "api_key_prefix": "pnf_ab12",
+  "csc_id": "000001",
+  "csc_mascarado": "0123****",
+  "mensagem": "Empresa criada com sucesso. Guarde api_key e api_secret: não serão exibidos novamente."
+}
+```
+
+Use o par (`api_key`, `api_secret`) no `POST /api/v1/auth/token` para gerar o
+JWT da nova empresa. Exige um token de um API client com plano `admin`
+(403 caso contrário; 409 se o CNPJ já existir).
+
+### Atualizar empresa (PUT)
+
+Atualiza dados da própria empresa (a do token autenticado). Campos parciais:
+apenas os enviados são alterados. Útil para cadastrar o CSC da NFC-e
+posteriormente à criação.
+
+```bash
+curl -X PUT https://api.pynfe.com.br/api/v1/empresa \
+  -H "$AUTH" -H "Content-Type: application/json" \
+  -d '{
+    "nome_fantasia": "Fantasia Nova",
+    "uf": "PR",
+    "csc": "0123456789abcdef0123456789abcdef0123",
+    "csc_id": "000001"
+  }'
+```
+
+Resposta (o CSC completo nunca é retornado — apenas mascarado):
+
+```json
+{
+  "empresa_id": "uuid-da-empresa",
+  "cnpj": "99999999000199",
+  "razao_social": "Empresa Teste LTDA",
+  "nome_fantasia": "Fantasia Nova",
+  "inscricao_estadual": "9999999999",
+  "uf": "PR",
+  "csc_id": "000001",
+  "csc_mascarado": "0123****",
+  "mensagem": "Empresa atualizada com sucesso"
+}
+```
+
 ### Consultar GTIN
 
 ```bash

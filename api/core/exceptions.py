@@ -19,6 +19,10 @@ class EmpresaNaoEncontrada(DomainError):
     """Empresa não encontrada no banco de dados."""
 
 
+class EmpresaJaExiste(DomainError):
+    """Já existe empresa cadastrada com o mesmo CNPJ."""
+
+
 class SefazError(DomainError):
     """Falha na comunicação com a SEFAZ."""
 

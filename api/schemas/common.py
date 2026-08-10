@@ -30,6 +30,20 @@ def validar_uf(v: str) -> str:
     return v.upper()
 
 
+def validar_csc(v: str) -> str:
+    """Valida o CSC (Código de Segurança do Contribuinte) — 36 caracteres."""
+    if len(v) != 36 or not v.isalnum():
+        raise ValueError("CSC deve ter exatamente 36 caracteres alfanuméricos")
+    return v
+
+
+def validar_csc_id(v: str) -> str:
+    """Valida o CSC ID (identificador do CSC na SEFAZ) — 6 dígitos numéricos."""
+    if not v.isdigit() or len(v) != 6:
+        raise ValueError("CSC ID deve ter exatamente 6 dígitos numéricos")
+    return v
+
+
 class PaginatedResponse(BaseModel, Generic[T]):
     """Resposta paginada genérica para listagens da API."""
 

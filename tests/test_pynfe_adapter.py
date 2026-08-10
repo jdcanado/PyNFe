@@ -303,8 +303,17 @@ def test_converter_pagamento():
     )
     assert pagamento.t_pag == "03"
     assert pagamento.v_pag == Decimal("117.00")
-    assert pagamento.x_pag == "Credito"
+    # xPag só é permitido com tPag=99 (cStat 442) — descrição é ignorada
+    assert pagamento.x_pag == ""
     assert pagamento.ind_pag == 0
+
+
+def test_converter_pagamento_xpag_so_com_tpag_99():
+    pagamento = converter_pagamento(
+        PagamentoSchema(forma_pagamento="99", valor=Decimal("117.00"), descricao="Outro meio")
+    )
+    assert pagamento.t_pag == "99"
+    assert pagamento.x_pag == "Outro meio"
 
 
 # ---------------------------------------------------------------------------

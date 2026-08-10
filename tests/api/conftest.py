@@ -279,7 +279,7 @@ def empresa(db) -> Empresa:
                 uf="PR",
                 cert_pem=cert_pem,
                 key_pem=key_pem,
-                csc="0123456789abcdef0123456789abcdef01234567",
+                csc="0123456789abcdef0123456789abcdef0123",
                 csc_id="000001",
             )
             session.add(empresa)

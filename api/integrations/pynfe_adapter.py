@@ -267,10 +267,15 @@ def converter_produto(schema: ProdutoItemSchema) -> NotaFiscalProduto:
 
 
 def converter_pagamento_kwargs(schema: PagamentoSchema) -> dict[str, Any]:
-    """Gera os kwargs do pagamento para `NotaFiscalPagamentos`."""
+    """Gera os kwargs do pagamento para `NotaFiscalPagamentos`.
+
+    A SEFAZ rejeita `xPag` (descrição do pagamento) para tPag != 99
+    (validação cStat 442); a descrição só é enviada quando tPag=99.
+    """
+    x_pag = schema.descricao if schema.forma_pagamento == "99" else ""
     return {
         "t_pag": schema.forma_pagamento,
-        "x_pag": schema.descricao or "",
+        "x_pag": x_pag or "",
         "v_pag": _dec(schema.valor),
         "tp_integra": schema.tipo_integracao or "",
         "ind_pag": schema.indicador_forma_pagamento,

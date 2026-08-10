@@ -14,7 +14,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.core.config import get_settings
 from api.core.database import get_db
 from api.core.dependencies import get_current_client
+from api.core.exceptions import DomainError, EmpresaJaExiste
 from api.models import APIClient, NotaFiscal
+from api.schemas.empresa import EmpresaCreateRequest, EmpresaCreateResponse
+from api.services.empresa_service import criar_empresa
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
@@ -109,3 +112,28 @@ async def listar_api_clients(
         }
         for c in result.scalars().all()
     ]
+
+
+@router.post("/empresa", response_model=EmpresaCreateResponse, status_code=status.HTTP_201_CREATED)
+async def criar_empresa_endpoint(
+    payload: EmpresaCreateRequest,
+    client: APIClient = Depends(_get_current_admin),  # noqa: B008
+    db: AsyncSession = Depends(get_db),  # noqa: B008
+) -> EmpresaCreateResponse:
+    """Cria uma empresa + API client (plano free) e retorna as credenciais.
+
+    Apenas administradores (plano `admin`) podem criar empresas. O CSC/CSC ID
+    da NFC-e podem ser informados já na criação (opcionais).
+    """
+    try:
+        return await criar_empresa(payload, session=db)
+    except EmpresaJaExiste as exc:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(exc),
+        ) from exc
+    except DomainError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
