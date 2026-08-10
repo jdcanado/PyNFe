@@ -1,5 +1,7 @@
 import datetime
+import os
 import re
+import tempfile
 
 import requests
 import signxml
@@ -638,9 +640,22 @@ class ComunicacaoSefaz(Comunicacao):
 
     def _post(self, url, xml, timeout=None, soap_action=None):
         certificado_a1 = None
+        _temp_cert_key: list[str] = []
+
         if self._cert_pem is not None and self._key_pem is not None:
-            # Atalho: certificado já em memória (PEM), sem arquivos temporários
-            chave_cert = (self._cert_pem, self._key_pem)
+            _cert = self._cert_pem
+            _key = self._key_pem
+            if isinstance(_cert, str) and _cert.startswith("-----BEGIN"):
+                with tempfile.NamedTemporaryFile(mode="w", suffix=".pem", delete=False) as f:
+                    f.write(_cert)
+                    _cert = f.name
+                _temp_cert_key.append(_cert)
+            if isinstance(_key, str) and _key.startswith("-----BEGIN"):
+                with tempfile.NamedTemporaryFile(mode="w", suffix=".pem", delete=False) as f:
+                    f.write(_key)
+                    _key = f.name
+                _temp_cert_key.append(_key)
+            chave_cert = (_cert, _key) if (_cert and _key) else None
         else:
             if isinstance(self.certificado, bytes):
                 certificado_a1 = CertificadoA1(pfx_bytes=self.certificado)
@@ -651,7 +666,6 @@ class ComunicacaoSefaz(Comunicacao):
         # Abre a conexão HTTPS
         try:
             xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>'
-
             # limpa xml com caracteres bugados para infNFeSupl em NFC-e
             xml = re.sub(
                 "<qrCode>(.*?)</qrCode>",
@@ -681,6 +695,11 @@ class ComunicacaoSefaz(Comunicacao):
         finally:
             if certificado_a1:
                 certificado_a1.excluir()
+            for p in _temp_cert_key:
+                try:
+                    os.unlink(p)
+                except OSError:
+                    pass
 
 
 class ComunicacaoNfse(Comunicacao):
