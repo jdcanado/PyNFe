@@ -48,11 +48,23 @@ def _parse_retorno_gtin(xml_str: str, codigo_gtin: str) -> dict:
 
     ret = raiz.xpath(".//*[local-name()='retConsGTIN']")
     if not ret:
-        logger.warning(
-            "Sem retConsGTIN na resposta da SEFAZ para GTIN %s: %.300s",
-            codigo_gtin,
-            xml_str[:300].replace("\n", " "),
-        )
+        # Se houver soap:Fault, extrai os campos para o log
+        fault = raiz.xpath(".//*[local-name()='Fault']")
+        if fault:
+            reason = fault[0].xpath("string(.//*[local-name()='Reason']/*[local-name()='Text'])")
+            detail = fault[0].xpath("string(.//*[local-name()='Detail'])")
+            logger.warning(
+                "SOAP Fault do SVRS para GTIN %s: reason=%s detail=%s",
+                codigo_gtin,
+                reason.strip() if reason else "(sem reason)",
+                detail.strip()[:500] if detail else "(sem detail)",
+            )
+        else:
+            logger.warning(
+                "Sem retConsGTIN na resposta da SEFAZ para GTIN %s: %.2000s",
+                codigo_gtin,
+                xml_str[:2000].replace("\n", " "),
+            )
         return {"codigo_gtin": codigo_gtin, "encontrado": False}
 
     node = ret[0]
@@ -104,10 +116,10 @@ async def _consultar_sefaz(
     resultado = _parse_retorno_gtin(retorno.text, codigo_gtin)
     if not resultado["encontrado"]:
         logger.warning(
-            "GTIN %s nao localizado | HTTP %s | %.300s",
+            "GTIN %s nao localizado | HTTP %s | %.2000s",
             codigo_gtin,
             getattr(retorno, "status_code", "?"),
-            retorno.text[:300].replace("\n", " "),
+            retorno.text[:2000].replace("\n", " "),
         )
     return resultado
 

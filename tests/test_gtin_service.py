@@ -206,8 +206,8 @@ def test_xml_soap_ccg_cons_gtin_usa_namespace_oficial():
     xml = etree.tostring(envelope, encoding="unicode")
     # O lxml guarda `xmlns=` como atributo; o que o servidor ve e o XML
     # serializado, com o namespace default declarado no elemento do metodo.
-    assert 'xmlns="http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGTIN"' in xml
-    assert '<ccgConsGTIN xmlns="http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGTIN">' in xml
+    assert 'xmlns="http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGtin"' in xml
+    assert '<ccgConsGTIN xmlns="http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGtin">' in xml
     # Estrutura: ccgConsGTIN > nfeDadosMsg > consGTIN > GTIN
     assert "<nfeDadosMsg>" in xml
     assert '<consGTIN versao="1.00" xmlns="http://www.portalfiscal.inf.br/nfe">' in xml

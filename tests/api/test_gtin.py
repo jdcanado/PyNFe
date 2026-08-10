@@ -84,6 +84,6 @@ def test_consultar_gtin_envia_soapaction_do_svrs(
     assert resp.status_code == 200
     assert len(sefaz_mock.chamadas) == 1
     _url, _data, headers = sefaz_mock.chamadas[0]
-    soap_action = "http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGTIN/ccgConsGTIN"
+    soap_action = "http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGtin/ccgConsGTIN"
     assert headers["SOAPAction"] == soap_action
     assert f'action="{soap_action}"' in headers["content-type"]

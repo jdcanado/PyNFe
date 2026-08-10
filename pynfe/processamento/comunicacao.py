@@ -299,7 +299,7 @@ class ComunicacaoSefaz(Comunicacao):
 
     def consulta_gtin(self, gtin, timeout=None):
         url = NFE["SP"]["GTIN"]  # self._get_url("nfe", consulta="GTIN")
-        soap_action = NAMESPACE_METODO + "ccgConsGTIN/ccgConsGTIN"
+        soap_action = NAMESPACE_METODO + "ccgConsGtin/ccgConsGTIN"
 
         raiz = etree.Element("consGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
         etree.SubElement(raiz, "GTIN").text = gtin
@@ -620,7 +620,7 @@ class ComunicacaoSefaz(Comunicacao):
             x = etree.SubElement(body, "consultaCadastro", xmlns=NAMESPACE_METODO + metodo)
             a = etree.SubElement(x, "nfeDadosMsg")
         elif metodo == "ccgConsGTIN":
-            x = etree.SubElement(body, "ccgConsGTIN", xmlns=NAMESPACE_METODO + "ccgConsGTIN")
+            x = etree.SubElement(body, "ccgConsGTIN", xmlns=NAMESPACE_METODO + "ccgConsGtin")
             a = etree.SubElement(x, "nfeDadosMsg")
         else:
             a = etree.SubElement(body, "nfeDadosMsg", xmlns=NAMESPACE_METODO + metodo)
