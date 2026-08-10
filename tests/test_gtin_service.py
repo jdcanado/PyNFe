@@ -22,6 +22,9 @@ from api.services.gtin_service import (
     consultar_individual,
     consultar_lote,
 )
+from pynfe.processamento.comunicacao import ComunicacaoSefaz
+from pynfe.utils import etree
+from pynfe.utils.flags import NAMESPACE_NFE
 
 XML_GTIN_ENCONTRADO = """<?xml version="1.0" encoding="UTF-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
@@ -180,3 +183,32 @@ def test_gtin_nao_encontrado(monkeypatch):
 
     assert resultado["encontrado"] is False
     assert resultado["descricao"] is None
+
+
+def test_xml_soap_ccg_cons_gtin_usa_namespace_oficial():
+    """O body SOAP do ccgConsGTIN usa o namespace oficial do SVRS.
+
+    Namespace XML e case-sensitive: o servico e `ccgConsGTIN` (nao
+    `ccgConsGtin`); namespace errado faz o asmx responder SOAP Fault.
+    """
+    com = ComunicacaoSefaz(
+        uf="SP",
+        certificado=None,
+        certificado_senha="",
+        homologacao=True,
+        cert_pem="",
+        key_pem="",
+    )
+    raiz = etree.Element("consGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
+    etree.SubElement(raiz, "GTIN").text = "7891234567890"
+    envelope = com._construir_xml_soap("ccgConsGTIN", raiz)
+
+    xml = etree.tostring(envelope, encoding="unicode")
+    # O lxml guarda `xmlns=` como atributo; o que o servidor ve e o XML
+    # serializado, com o namespace default declarado no elemento do metodo.
+    assert 'xmlns="http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGTIN"' in xml
+    assert '<ccgConsGTIN xmlns="http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGTIN">' in xml
+    # Estrutura: ccgConsGTIN > nfeDadosMsg > consGTIN > GTIN
+    assert "<nfeDadosMsg>" in xml
+    assert '<consGTIN versao="1.00" xmlns="http://www.portalfiscal.inf.br/nfe">' in xml
+    assert "<GTIN>7891234567890</GTIN>" in xml

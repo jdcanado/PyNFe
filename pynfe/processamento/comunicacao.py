@@ -297,6 +297,7 @@ class ComunicacaoSefaz(Comunicacao):
 
     def consulta_gtin(self, gtin, timeout=None):
         url = NFE["SP"]["GTIN"]  # self._get_url("nfe", consulta="GTIN")
+        soap_action = NAMESPACE_METODO + "ccgConsGTIN/ccgConsGTIN"
 
         raiz = etree.Element("consGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
         etree.SubElement(raiz, "GTIN").text = gtin
@@ -304,7 +305,7 @@ class ComunicacaoSefaz(Comunicacao):
         # Monta XML para envio da requisição
         xml = self._construir_xml_soap("ccgConsGTIN", raiz)
         # Chama método que efetua a requisição POST no servidor SOAP
-        return self._post(url, xml, timeout=timeout)
+        return self._post(url, xml, timeout=timeout, soap_action=soap_action)
 
     def evento(self, modelo, evento, id_lote=1):
         """
@@ -617,7 +618,7 @@ class ComunicacaoSefaz(Comunicacao):
             x = etree.SubElement(body, "consultaCadastro", xmlns=NAMESPACE_METODO + metodo)
             a = etree.SubElement(x, "nfeDadosMsg")
         elif metodo == "ccgConsGTIN":
-            x = etree.SubElement(body, "ccgConsGTIN", xmlns=NAMESPACE_METODO + "ccgConsGtin")
+            x = etree.SubElement(body, "ccgConsGTIN", xmlns=NAMESPACE_METODO + "ccgConsGTIN")
             a = etree.SubElement(x, "nfeDadosMsg")
         else:
             a = etree.SubElement(body, "nfeDadosMsg", xmlns=NAMESPACE_METODO + metodo)
@@ -635,7 +636,7 @@ class ComunicacaoSefaz(Comunicacao):
             response["SOAPAction"] = ""
         return response
 
-    def _post(self, url, xml, timeout=None):
+    def _post(self, url, xml, timeout=None, soap_action=None):
         certificado_a1 = None
         if self._cert_pem is not None and self._key_pem is not None:
             # Atalho: certificado já em memória (PEM), sem arquivos temporários
@@ -658,11 +659,19 @@ class ComunicacaoSefaz(Comunicacao):
                 etree.tostring(xml, encoding="unicode").replace("\n", ""),
             )
             xml = xml_declaration + xml
+            headers = self._post_header()
+            if soap_action:
+                # SOAP 1.2: a action também vai no Content-Type; o header
+                # SOAPAction é aceito pelo asmx do SVRS e cobre SOAP 1.1.
+                headers["SOAPAction"] = soap_action
+                headers["content-type"] = (
+                    f'application/soap+xml; charset=utf-8; action="{soap_action}"'
+                )
             # Faz o request com o servidor
             result = requests.post(
                 url,
                 xml,
-                headers=self._post_header(),
+                headers=headers,
                 cert=chave_cert,
                 verify=False,
                 timeout=timeout,

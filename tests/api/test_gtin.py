@@ -66,3 +66,24 @@ def test_consultar_gtin_sem_token_retorna_401(client):
     """Rota protegida sem token retorna 401."""
     resp = run(client.get("/api/v1/gtin/consultar/7891234567890"))
     assert resp.status_code == 401
+
+
+def test_consultar_gtin_envia_soapaction_do_svrs(
+    client, empresa, api_client, auth_token, sefaz_mock, redis_fake
+):
+    """A requisicao ao SVRS leva SOAPAction e Content-Type com action."""
+    sefaz_mock.xml_resposta = XML_GTIN_ENCONTRADO
+
+    resp = run(
+        client.get(
+            "/api/v1/gtin/consultar/7891234567890",
+            headers=authorization_headers(auth_token),
+        )
+    )
+
+    assert resp.status_code == 200
+    assert len(sefaz_mock.chamadas) == 1
+    _url, _data, headers = sefaz_mock.chamadas[0]
+    soap_action = "http://www.portalfiscal.inf.br/nfe/wsdl/ccgConsGTIN/ccgConsGTIN"
+    assert headers["SOAPAction"] == soap_action
+    assert f'action="{soap_action}"' in headers["content-type"]

@@ -36,9 +36,23 @@ def _parse_retorno_gtin(xml_str: str, codigo_gtin: str) -> dict:
       verAplic, cStat, xMotivo, dhResp, GTIN, tpGTIN, xProd, NCM, CEST
     «marca» e «gpc» **não** são fornecidos por este leiaute — retornam None.
     """
-    raiz = etree.fromstring(xml_str.encode("utf-8"))
+    try:
+        raiz = etree.fromstring(xml_str.encode("utf-8"))
+    except etree.XMLSyntaxError:
+        logger.warning(
+            "Resposta da SEFAZ nao e XML valido para GTIN %s: %.300s",
+            codigo_gtin,
+            xml_str[:300].replace("\n", " "),
+        )
+        return {"codigo_gtin": codigo_gtin, "encontrado": False}
+
     ret = raiz.xpath(".//*[local-name()='retConsGTIN']")
     if not ret:
+        logger.warning(
+            "Sem retConsGTIN na resposta da SEFAZ para GTIN %s: %.300s",
+            codigo_gtin,
+            xml_str[:300].replace("\n", " "),
+        )
         return {"codigo_gtin": codigo_gtin, "encontrado": False}
 
     node = ret[0]
@@ -81,7 +95,15 @@ async def _consultar_sefaz(codigo_gtin: str) -> dict:
         codigo_gtin,
         settings.sefaz_timeout,
     )
-    return _parse_retorno_gtin(retorno.text, codigo_gtin)
+    resultado = _parse_retorno_gtin(retorno.text, codigo_gtin)
+    if not resultado["encontrado"]:
+        logger.warning(
+            "GTIN %s nao localizado | HTTP %s | %.300s",
+            codigo_gtin,
+            getattr(retorno, "status_code", "?"),
+            retorno.text[:300].replace("\n", " "),
+        )
+    return resultado
 
 
 async def _registrar_consulta(db: Any, codigo_gtin: str, resultado: dict) -> None:
