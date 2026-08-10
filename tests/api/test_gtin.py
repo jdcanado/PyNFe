@@ -8,16 +8,15 @@ XML_GTIN_ENCONTRADO = """<?xml version="1.0" encoding="UTF-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <retConsGTIN xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.00">
+      <verAplic>SVRS20250801</verAplic>
       <cStat>138</cStat>
       <xMotivo>GTIN consultado com sucesso</xMotivo>
+      <dhResp>2026-08-10T12:00:00-03:00</dhResp>
       <GTIN>7891234567890</GTIN>
-      <prod>
-        <descricao>Produto Teste</descricao>
-        <marca>Marca Teste</marca>
-        <gpc>01000000</gpc>
-        <ncm>22030000</ncm>
-        <cest>0300100</cest>
-      </prod>
+      <tpGTIN>GTIN-13</tpGTIN>
+      <xProd>Produto Teste</xProd>
+      <NCM>22030000</NCM>
+      <CEST>0300100</CEST>
     </retConsGTIN>
   </soap:Body>
 </soap:Envelope>

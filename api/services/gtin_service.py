@@ -30,7 +30,12 @@ CSTAT_GTIN_ENCONTRADO = ("138",)
 
 
 def _parse_retorno_gtin(xml_str: str, codigo_gtin: str) -> dict:
-    """Extrai os dados do `retConsGTIN` do XML SOAP de resposta da SEFAZ."""
+    """Extrai os dados do `retConsGTIN` do XML SOAP de resposta da SEFAZ.
+
+    Leiaute oficial v1.00:
+      verAplic, cStat, xMotivo, dhResp, GTIN, tpGTIN, xProd, NCM, CEST
+    «marca» e «gpc» **não** são fornecidos por este leiaute — retornam None.
+    """
     raiz = etree.fromstring(xml_str.encode("utf-8"))
     ret = raiz.xpath(".//*[local-name()='retConsGTIN']")
     if not ret:
@@ -47,17 +52,20 @@ def _parse_retorno_gtin(xml_str: str, codigo_gtin: str) -> dict:
     return {
         "codigo_gtin": codigo_gtin,
         "encontrado": encontrado,
-        "descricao": _texto("descricao"),
-        "marca": _texto("marca"),
-        "ncm": _texto("ncm"),
-        "cest": _texto("cest"),
-        "gpc": _texto("gpc"),
+        "descricao": _texto("xProd"),
+        "marca": None,  # leiaute v1.00 nao fornece marca
+        "ncm": _texto("NCM"),
+        "cest": _texto("CEST"),
+        "gpc": None,  # leiaute v1.00 nao fornece GPC
     }
 
 
 async def _consultar_sefaz(codigo_gtin: str) -> dict:
-    """Consulta a SEFAZ SP (síncrona) em thread e devolve o resultado parseado."""
+    """Consulta o SVRS (síncrona) em thread e devolve o resultado parseado."""
+    from api.core.config import get_settings
     from pynfe.processamento.comunicacao import ComunicacaoSefaz
+
+    settings = get_settings()
 
     # Consulta GTIN não assina: cert_pem/key_pem dummy evitam criar CertificadoA1
     comunicacao = ComunicacaoSefaz(
@@ -68,7 +76,11 @@ async def _consultar_sefaz(codigo_gtin: str) -> dict:
         cert_pem="",
         key_pem="",
     )
-    retorno = await asyncio.to_thread(comunicacao.consulta_gtin, codigo_gtin)
+    retorno = await asyncio.to_thread(
+        comunicacao.consulta_gtin,
+        codigo_gtin,
+        settings.sefaz_timeout,
+    )
     return _parse_retorno_gtin(retorno.text, codigo_gtin)
 
 

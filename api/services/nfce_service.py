@@ -30,10 +30,13 @@ from api.services.certificado_service import _session_ctx, _upload_blob, obter_p
 from api.services.nfe_service import (
     STATUS_AUTORIZADA,
     STATUS_ERRO,
+    STATUS_PROCESSANDO_NFE,
     STATUS_REJEITADA,
     _assinar_xml,
     _extrair_da_resposta,
+    _extrair_recibo_do_erro,
     _fonte_dados_isolada,
+    _polling_recibo,
 )
 from api.utils.crypto import encrypt_senha, hash_documento
 from pynfe.entidades.notafiscal import NotaFiscal
@@ -143,12 +146,37 @@ async def emitir_nfce(
         nota_fiscal=xml_com_qrcode,
     )
 
-    # 7. Processa a resposta
+    # 7. Processa a resposta (com retry de recibo quando SEFAZ devolve 103)
     status_code = resultado[0]
+    recibo = None
+    nfe_proc = None
     if status_code != 0:
+        recibo = _extrair_recibo_do_erro(resultado, xml_com_qrcode)
+        if recibo:
+            prot = await _polling_recibo(comunicacao, "nfce", recibo)
+            if prot is not None:
+                nfe_proc = etree.Element(
+                    "nfeProc",
+                    xmlns="http://www.portalfiscal.inf.br/nfe",
+                    versao="4.00",
+                )
+                nfe_proc.append(xml_com_qrcode)
+                nfe_proc.append(prot)
+                status_code = 0
+
+    if status_code != 0:
+        if recibo:
+            return await _persistir_processando_nfce(
+                nota,
+                schema,
+                empresa_id,
+                xml_assinado_str,
+                recibo,
+                session,
+            )
         return _resposta_erro_nfce(nota, schema, empresa_id, xml_assinado_str, resultado)
 
-    nfe_proc = resultado[1]
+    nfe_proc = resultado[1] if nfe_proc is None else nfe_proc
     chave, protocolo, cstat = _extrair_da_resposta(nfe_proc)
     status = STATUS_AUTORIZADA if cstat in ("100", "150") else STATUS_REJEITADA
     xml_protocolado_str = etree.tostring(nfe_proc, encoding="unicode", pretty_print=False)
@@ -240,3 +268,52 @@ def _resposta_erro_nfce(
         xml_assinado=xml_assinado_str,
         mensagem=str(resultado[1]) if len(resultado) > 1 else "Falha na comunicação com a SEFAZ",
     )
+
+
+async def _persistir_processando_nfce(
+    nota: Any,
+    schema: Any,
+    empresa_id: UUID,
+    xml_assinado_str: str,
+    recibo: str,
+    session: Any,
+) -> NFCeResponse:
+    """Persiste a NFC-e como PROCESSANDO (lote pendente na SEFAZ)."""
+    from api.models import NotaFiscal as NotaFiscalModel
+
+    identificador = nota.identificador_unico or ""
+    chave = identificador.removeprefix("NFe")
+    emitida_em = schema.data_emissao or datetime.now(timezone.utc)
+
+    async with _session_ctx(session) as db:
+        registro = NotaFiscalModel(
+            empresa_id=empresa_id,
+            chave_acesso=chave,
+            numero=int(schema.numero),
+            serie=int(schema.serie),
+            modelo="65",
+            status=STATUS_PROCESSANDO_NFE,
+            recibo=recibo,
+            xml_assinado=xml_assinado_str,
+            valor_total=float(getattr(nota, "totais_icms_total_nota", 0)),
+            emitida_em=emitida_em,
+            natureza_operacao=schema.natureza_operacao,
+        )
+        db.add(registro)
+        await db.commit()
+        await db.refresh(registro)
+
+        return NFCeResponse(
+            id=registro.id,
+            empresa_id=empresa_id,
+            chave_acesso=chave,
+            numero=int(schema.numero),
+            serie=int(schema.serie),
+            modelo="65",
+            status=STATUS_PROCESSANDO_NFE,
+            valor_total=float(getattr(nota, "totais_icms_total_nota", 0)),
+            emitida_em=emitida_em,
+            xml_assinado=xml_assinado_str,
+            mensagem="Nota em processamento na SEFAZ. O resultado estara disponivel em instantes.",
+            recibo=recibo,  # type: ignore[call-arg]
+        )

@@ -121,3 +121,4 @@ class NFeEmitirResponse(BaseModel):
     xml_assinado: str | None = None
     xml_protocolado: str | None = None
     mensagem: str | None = None
+    recibo: str | None = None

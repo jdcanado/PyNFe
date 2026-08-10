@@ -51,6 +51,11 @@ STATUS_CANCELADA = "CANCELADA"
 logger = get_logger("api.nfe_service")
 STATUS_REJEITADA = "REJEITADA"
 STATUS_ERRO = "ERRO"
+STATUS_PROCESSANDO_NFE = "PROCESSANDO"
+
+# Retry de recibo da SEFAZ (quando a autorizacao retorna 103/105)
+RECIBO_MAX_TENTATIVAS = 5
+RECIBO_SLEEP_SEGUNDOS = 3
 
 
 @contextmanager
@@ -123,6 +128,60 @@ def _extrair_da_resposta(nfe_proc: etree._Element) -> tuple[str, str, str]:
     return chave, protocolo, status
 
 
+def _extrair_recibo_do_erro(resultado: tuple, xml_assinado: Any) -> str | None:
+    """Tenta extrair o nRec do XML de resposta quando autorizacao falha.
+
+    Retorna o recibo (string) se o lote foi recebido (cStat 103),
+    ou None se nao for possivel extrair.
+    """
+    if len(resultado) < 2:
+        return None
+    retorno = resultado[1]
+    try:
+        xml_ret = etree.fromstring(retorno.text or retorno.content)
+    except Exception:  # noqa: BLE001
+        return None
+    cstat_lote = xml_ret.xpath("string(.//*[local-name()='cStat'])")
+    if cstat_lote not in ("103",):
+        return None
+    nrec = xml_ret.xpath("string(.//*[local-name()='nRec'])")
+    return nrec.strip() if nrec else None
+
+
+async def _polling_recibo(
+    comunicacao: Any,
+    modelo: str,
+    nrec: str,
+    max_tentativas: int = RECIBO_MAX_TENTATIVAS,
+) -> Any:
+    """Faz polling do recibo com retry (sleep entre tentativas).
+
+    Retorna o elemento protNFe (lxml) se o lote for processado (cStat 104),
+    ou None se esgotar as tentativas.
+    """
+    for tentativa in range(1, max_tentativas + 1):
+        try:
+            resposta = await asyncio.to_thread(comunicacao.consulta_recibo, modelo, nrec)
+            xml_resp = etree.fromstring(resposta.content)
+            cstat_lote = xml_resp.xpath(
+                "string(.//*[local-name()='retConsReciNFe']/*[local-name()='cStat'])"
+            )
+            if cstat_lote == "104":
+                ns = {"ns": "http://www.portalfiscal.inf.br/nfe"}
+                prot_nfe = xml_resp.xpath(".//*[local-name()='protNFe']", namespaces=ns)
+                if prot_nfe and len(prot_nfe) > 0:
+                    return prot_nfe[0]
+            elif cstat_lote != "105":
+                return None  # erro no lote; nao adianta retentar
+        except Exception:  # noqa: BLE001
+            logger.debug("Falha na tentativa %s de consulta_recibo", tentativa)
+
+        if tentativa < max_tentativas:
+            await asyncio.sleep(RECIBO_SLEEP_SEGUNDOS)
+
+    return None
+
+
 async def emitir_nfe(
     schema: NotaFiscalSchema,
     *,
@@ -178,12 +237,37 @@ async def emitir_nfe(
         nota_fiscal=xml_assinado,
     )
 
-    # 6. Processa a resposta
+    # 6. Processa a resposta (com retry de recibo quando SEFAZ devolve 103)
     status_code = resultado[0]
+    recibo = None
+    nfe_proc = None
     if status_code != 0:
+        recibo = _extrair_recibo_do_erro(resultado, xml_assinado)
+        if recibo:
+            prot = await _polling_recibo(comunicacao, modelo_comunicacao, recibo)
+            if prot is not None:
+                nfe_proc = etree.Element(
+                    "nfeProc",
+                    xmlns="http://www.portalfiscal.inf.br/nfe",
+                    versao="4.00",
+                )
+                nfe_proc.append(xml_assinado)
+                nfe_proc.append(prot)
+                status_code = 0
+
+    if status_code != 0:
+        if recibo:
+            return await _persistir_processando(
+                nota,
+                schema,
+                empresa_id,
+                xml_assinado_str,
+                recibo,
+                session,
+            )
         return _resposta_erro(nota, schema, empresa_id, xml_assinado_str, resultado)
 
-    nfe_proc = resultado[1]
+    nfe_proc = resultado[1] if nfe_proc is None else nfe_proc
     chave, protocolo, cstat = _extrair_da_resposta(nfe_proc)
     status = STATUS_AUTORIZADA if cstat in ("100", "150") else STATUS_REJEITADA
     xml_protocolado_str = etree.tostring(nfe_proc, encoding="unicode", pretty_print=False)
@@ -275,6 +359,62 @@ def _resposta_erro(
         xml_assinado=xml_assinado_str,
         mensagem=str(resultado[1]) if len(resultado) > 1 else "Falha na comunicação com a SEFAZ",
     )
+
+
+async def _persistir_processando(
+    nota: Any,
+    schema: NotaFiscalSchema,
+    empresa_id: UUID,
+    xml_assinado_str: str,
+    recibo: str,
+    session: Any,
+) -> NFeEmitirResponse:
+    """Persiste a nota como PROCESSANDO (lote pendente na SEFAZ) e retorna status.
+
+    O recibo fica armazenado para que o poller (manual ou cron) possa
+    consultar o resultado posteriormente sem depender de agendamento externo.
+    """
+    from api.models import NotaFiscal as NotaFiscalModel
+
+    identificador = nota.identificador_unico or ""
+    chave = identificador.removeprefix("NFe")
+    emitida_em = schema.data_emissao or datetime.now(timezone.utc)
+
+    async with _session_ctx(session) as db:
+        registro = NotaFiscalModel(
+            empresa_id=empresa_id,
+            chave_acesso=chave,
+            numero=int(schema.numero),
+            serie=int(schema.serie),
+            modelo=str(schema.modelo),
+            status=STATUS_PROCESSANDO_NFE,
+            recibo=recibo,
+            xml_assinado=xml_assinado_str,
+            valor_total=float(getattr(nota, "totais_icms_total_nota", 0)),
+            emitida_em=emitida_em,
+            natureza_operacao=schema.natureza_operacao,
+        )
+        db.add(registro)
+        await db.commit()
+        await db.refresh(registro)
+
+        return NFeEmitirResponse(
+            id=registro.id,
+            empresa_id=empresa_id,
+            chave_acesso=chave,
+            numero=int(schema.numero),
+            serie=int(schema.serie),
+            modelo=str(schema.modelo),
+            status=STATUS_PROCESSANDO_NFE,
+            protocolo="",
+            valor_total=float(getattr(nota, "totais_icms_total_nota", 0)),
+            emitida_em=emitida_em,
+            autorizada_em=None,
+            xml_assinado=xml_assinado_str,
+            xml_protocolado="",
+            mensagem="Nota em processamento na SEFAZ. O resultado estara disponivel em instantes.",
+            recibo=recibo,  # type: ignore[call-arg]
+        )
 
 
 # ---------------------------------------------------------------------------

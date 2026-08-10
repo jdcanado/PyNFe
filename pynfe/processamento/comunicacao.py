@@ -295,7 +295,7 @@ class ComunicacaoSefaz(Comunicacao):
         # Chama método que efetua a requisição POST no servidor SOAP
         return self._post(url, xml)
 
-    def consulta_gtin(self, gtin):
+    def consulta_gtin(self, gtin, timeout=None):
         url = NFE["SP"]["GTIN"]  # self._get_url("nfe", consulta="GTIN")
 
         raiz = etree.Element("consGTIN", versao="1.00", xmlns=NAMESPACE_NFE)
@@ -304,7 +304,7 @@ class ComunicacaoSefaz(Comunicacao):
         # Monta XML para envio da requisição
         xml = self._construir_xml_soap("ccgConsGTIN", raiz)
         # Chama método que efetua a requisição POST no servidor SOAP
-        return self._post(url, xml)
+        return self._post(url, xml, timeout=timeout)
 
     def evento(self, modelo, evento, id_lote=1):
         """

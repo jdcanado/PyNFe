@@ -54,6 +54,9 @@ class Settings(BaseSettings):
     # Segredo global para assinatura HMAC (fallback quando a empresa não define)
     webhook_secret: str = ""
 
+    # Tarefas internas (crons / poller via HTTP)
+    tasks_secret: str = ""
+
     # Logging
     log_level: str = "INFO"
 

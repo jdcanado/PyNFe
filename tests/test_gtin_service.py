@@ -27,29 +27,32 @@ XML_GTIN_ENCONTRADO = """<?xml version="1.0" encoding="UTF-8"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
     <retConsGTIN xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.00">
+      <verAplic>SVRS20250801</verAplic>
       <cStat>138</cStat>
       <xMotivo>GTIN consultado com sucesso</xMotivo>
+      <dhResp>2026-08-10T12:00:00-03:00</dhResp>
       <GTIN>7891234567890</GTIN>
-      <prod>
-        <descricao>Produto Teste</descricao>
-        <marca>Marca Teste</marca>
-        <gpc>01000000</gpc>
-        <ncm>22030000</ncm>
-        <cest>0300100</cest>
-      </prod>
+      <tpGTIN>GTIN-13</tpGTIN>
+      <xProd>Produto Teste</xProd>
+      <NCM>22030000</NCM>
+      <CEST>0300100</CEST>
     </retConsGTIN>
   </soap:Body>
 </soap:Envelope>
 """
 
-XML_GTIN_NAO_ENCONTRADO = (
-    XML_GTIN_ENCONTRADO.replace("<cStat>138</cStat>", "<cStat>139</cStat>")
-    .replace("<xMotivo>GTIN consultado com sucesso</xMotivo>", "<xMotivo>não localizado</xMotivo>")
-    .replace(
-        "<prod>\n        <descricao>Produto Teste</descricao>\n        <marca>Marca Teste</marca>\n        <gpc>01000000</gpc>\n        <ncm>22030000</ncm>\n        <cest>0300100</cest>\n      </prod>",
-        "",
-    )
-)
+XML_GTIN_NAO_ENCONTRADO = """<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <retConsGTIN xmlns="http://www.portalfiscal.inf.br/nfe" versao="1.00">
+      <verAplic>SVRS20250801</verAplic>
+      <cStat>139</cStat>
+      <xMotivo>GTIN nao localizado</xMotivo>
+      <dhResp>2026-08-10T12:00:00-03:00</dhResp>
+    </retConsGTIN>
+  </soap:Body>
+</soap:Envelope>
+"""
 
 
 class FakeRetorno:
@@ -97,7 +100,7 @@ def mockar_sefaz(
 ):
     """Substitui o consulta_gtin do ComunicacaoSefaz por um mock."""
 
-    def fake_consulta_gtin(self, gtin):
+    def fake_consulta_gtin(self, gtin, timeout=None):
         if chamadas is not None:
             chamadas.append(gtin)
         return FakeRetorno(xml_resposta)
@@ -118,10 +121,10 @@ def test_consultar_individual_retorna_dados(monkeypatch):
     assert resultado["codigo_gtin"] == "7891234567890"
     assert resultado["encontrado"] is True
     assert resultado["descricao"] == "Produto Teste"
-    assert resultado["marca"] == "Marca Teste"
+    assert resultado["marca"] is None  # leiaute v1.00 nao fornece
     assert resultado["ncm"] == "22030000"
     assert resultado["cest"] == "0300100"
-    assert resultado["gpc"] == "01000000"
+    assert resultado["gpc"] is None  # leiaute v1.00 nao fornece
     assert len(chamadas) == 1
 
     # Cache salvo com TTL de 24h e consulta registrada no banco
