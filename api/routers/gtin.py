@@ -31,7 +31,7 @@ async def consultar(
             detail="GTIN deve ter 8, 12, 13 ou 14 dígitos numéricos",
         )
 
-    resultado = await consultar_individual(db, redis, codigo)
+    resultado = await consultar_individual(db, redis, codigo, empresa_id=client.empresa_id)
     return GtinResponse(**resultado)
 
 
@@ -43,7 +43,7 @@ async def consultar_lote_endpoint(
     redis: redis_async.Redis = Depends(get_redis_dep),  # noqa: B008
 ) -> GtinLoteResponse:
     """Consulta até 50 GTINs em paralelo."""
-    resultados = await consultar_lote(db, redis, payload.codigos)
+    resultados = await consultar_lote(db, redis, payload.codigos, empresa_id=client.empresa_id)
     return GtinLoteResponse(
         resultados=[GtinResponse(**r) for r in resultados],
         consultados=len(resultados),

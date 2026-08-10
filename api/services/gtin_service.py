@@ -74,21 +74,27 @@ def _parse_retorno_gtin(xml_str: str, codigo_gtin: str) -> dict:
     }
 
 
-async def _consultar_sefaz(codigo_gtin: str) -> dict:
+async def _consultar_sefaz(
+    codigo_gtin: str,
+    *,
+    cert_pem: str | None = None,
+    key_pem: str | None = None,
+) -> dict:
     """Consulta o SVRS (síncrona) em thread e devolve o resultado parseado."""
     from api.core.config import get_settings
     from pynfe.processamento.comunicacao import ComunicacaoSefaz
 
     settings = get_settings()
+    _cert = cert_pem or ""
+    _key = key_pem or ""
 
-    # Consulta GTIN não assina: cert_pem/key_pem dummy evitam criar CertificadoA1
     comunicacao = ComunicacaoSefaz(
         uf="SP",
         certificado=None,
         certificado_senha="",
         homologacao=True,
-        cert_pem="",
-        key_pem="",
+        cert_pem=_cert,
+        key_pem=_key,
     )
     retorno = await asyncio.to_thread(
         comunicacao.consulta_gtin,
@@ -131,11 +137,18 @@ async def consultar_individual(
     db: Any,
     redis: Any,
     codigo_gtin: str,
+    empresa_id: Any = None,
     *,
+    cert_pem: str | None = None,
+    key_pem: str | None = None,
     ttl: int = GTIN_CACHE_TTL,
     registrar: bool = True,
 ) -> dict:
-    """Consulta um GTIN individualmente (cache KV -> SEFAZ -> registro)."""
+    """Consulta um GTIN individualmente (cache KV -> SEFAZ -> registro).
+
+    O certificado pode ser injetado diretamente (p.ex. pelo lote, que
+    obtem os PEMs uma unica vez) ou resolvido via ``empresa_id``.
+    """
     key = GTIN_CACHE_KEY.format(codigo=codigo_gtin)
 
     # 1. Cache KV
@@ -143,8 +156,14 @@ async def consultar_individual(
     if cached:
         return json.loads(cached)
 
-    # 2. Cache miss: consulta a SEFAZ e faz o parse
-    resultado = await _consultar_sefaz(codigo_gtin)
+    # 2. Cache miss: resolve o certificado e consulta o SVRS
+    if cert_pem is None and key_pem is None and empresa_id is not None:
+        from api.services.certificado_service import obter_pem
+
+        pems = await obter_pem(empresa_id, redis=redis, session=db)
+        if pems is not None:
+            cert_pem, key_pem = pems
+    resultado = await _consultar_sefaz(codigo_gtin, cert_pem=cert_pem, key_pem=key_pem)
 
     # 3. Salva no KV (TTL injetável para testes)
     if ttl > 0:
@@ -157,7 +176,9 @@ async def consultar_individual(
     return resultado
 
 
-async def consultar_lote(db: Any, redis: Any, codigos: list[str]) -> list[dict]:
+async def consultar_lote(
+    db: Any, redis: Any, codigos: list[str], empresa_id: Any = None
+) -> list[dict]:
     """Consulta até 50 GTINs em paralelo (`asyncio.gather`).
 
     O `gather` paraleliza a SEFAZ e o cache; o registro no banco é feito em
@@ -165,8 +186,20 @@ async def consultar_lote(db: Any, redis: Any, codigos: list[str]) -> list[dict]:
     concorrente.
     """
     codigos = codigos[:50]
+    cert_pem = key_pem = None
+    if empresa_id is not None:
+        from api.services.certificado_service import obter_pem
+
+        pems = await obter_pem(empresa_id, redis=redis, session=db)
+        if pems is not None:
+            cert_pem, key_pem = pems
     resultados = await asyncio.gather(
-        *(consultar_individual(None, redis, codigo, registrar=False) for codigo in codigos)
+        *(
+            consultar_individual(
+                None, redis, codigo, cert_pem=cert_pem, key_pem=key_pem, registrar=False
+            )
+            for codigo in codigos
+        )
     )
     for resultado in resultados:
         await _registrar_consulta(db, resultado["codigo_gtin"], resultado)
