@@ -20,6 +20,15 @@ _COLUNAS_EMPRESAS = (
     ("codigo_regime_tributario", "VARCHAR(2)"),
 )
 
+# ALTER COLUMN TYPE para colunas que tiveram o tamanho ampliado
+# (ex.: protocolo/recibo da NFC-e podem ter mais dígitos que NF-e).
+_ALTERACOES_TIPO = {
+    "notas_fiscais": [
+        ("protocolo", "VARCHAR(20)"),
+        ("recibo", "VARCHAR(20)"),
+    ],
+}
+
 
 async def migrar() -> list[str]:
     """Cria as tabelas e adiciona colunas novas (idempotente).
@@ -49,6 +58,15 @@ async def migrar() -> list[str]:
             for nome, tipo in _COLUNAS_EMPRESAS:
                 if nome not in existentes:
                     await conn.execute(text(f"ALTER TABLE empresas ADD COLUMN {nome} {tipo}"))
+
+        # ALTER COLUMN TYPE: ampliações de tamanho (ex.: protocolo/recibo da NFC-e).
+        # SQLite não enforça comprimento — só Postgres.
+        if engine.dialect.name == "postgresql":
+            for tabela, colunas in _ALTERACOES_TIPO.items():
+                for coluna, tipo in colunas:
+                    await conn.execute(
+                        text(f"ALTER TABLE {tabela} ALTER COLUMN {coluna} TYPE {tipo}")
+                    )
 
     return sorted(Base.metadata.tables)
 

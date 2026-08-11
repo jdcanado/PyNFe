@@ -35,9 +35,9 @@ class NotaFiscal(UUIDMixin, TimestampMixin, Base):
     # LGPD: documento do destinatário criptografado com Fernet (dado pessoal em repouso)
     destinatario_cpf_encrypted: Mapped[Optional[str]] = mapped_column(Text)
 
-    protocolo: Mapped[Optional[str]] = mapped_column(String(15))
+    protocolo: Mapped[Optional[str]] = mapped_column(String(20))
     # nRec do lote assíncrono (usado pelo poller para consultar o resultado)
-    recibo: Mapped[Optional[str]] = mapped_column(String(15))
+    recibo: Mapped[Optional[str]] = mapped_column(String(20))
     xml_assinado: Mapped[Optional[str]] = mapped_column(Text)
     xml_protocolado: Mapped[Optional[str]] = mapped_column(Text)
     # JSONB no Postgres; JSON no SQLite (testes)
