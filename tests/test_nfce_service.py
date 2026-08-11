@@ -304,6 +304,8 @@ def test_emitir_nfce_autorizada_com_qrcode():
     assert "<mod>65</mod>" in xml
     assert "<indPres>1</indPres>" in xml
     assert "<indFinal>1</indFinal>" in xml
+    # Rejeição 753: NFC-e sem ocorrência de transporte (modFrete=9)
+    assert "<modFrete>9</modFrete>" in xml
     # QR Code presente no XML (infNFeSupl) e na resposta
     assert "infNFeSupl" in xml
     assert resp.qrcode_url and resp.qrcode_url.startswith("http")

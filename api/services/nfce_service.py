@@ -66,6 +66,10 @@ def _converter_nota_nfce(schema: NFCeEmitirRequest) -> NotaFiscal:
         indicador_destino=1,  # operação interna
         indicador_presencial=schema.indicador_presencial,
         tipo_impressao_danfe=schema.tipo_impressao_danfe,
+        # NFC-e: sem ocorrência de transporte (modFrete=9). O default do PyNFe
+        # é 0 (frete por conta do remetente), o que gera rejeição 753
+        # ("DANFE Simplificado Tipo 2 com Frete") em tpImp=4/6.
+        transporte_modalidade_frete=9,
     )
     # NFC-e não exige destinatário completo (CPF opcional)
     if schema.cliente is not None:
