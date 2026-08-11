@@ -1,18 +1,31 @@
-"""Migração inicial do banco — cria todas as tabelas (idempotente).
+"""Migração do banco — cria tabelas e adiciona colunas novas (idempotente).
 
-Uso:
+Uso (script):
     PYTHONPATH=. python api/scripts/migrate.py
 
-Usa o `DATABASE_URL` do ambiente/`api/.env` (Postgres em produção, SQLite em
-dev local). Pode ser executado repetidamente sem erro.
+Também expõe `migrar()` para o endpoint `POST /api/v1/admin/migrate`.
+`Base.metadata.create_all` não altera tabelas existentes; as colunas novas
+adicionadas ao modelo depois da criação inicial da tabela são aplicadas via
+ALTER TABLE idempotente.
 """
 
 from __future__ import annotations
 
 import asyncio
 
+# Colunas adicionadas à tabela `empresas` depois da criação inicial
+_COLUNAS_EMPRESAS = (
+    ("csc", "VARCHAR(36)"),
+    ("csc_id", "VARCHAR(6)"),
+    ("codigo_regime_tributario", "VARCHAR(2)"),
+)
 
-async def _run() -> None:
+
+async def migrar() -> list[str]:
+    """Cria as tabelas e adiciona colunas novas (idempotente).
+
+    Retorna a lista de tabelas do schema após a migração.
+    """
     from sqlalchemy import text
 
     import api.models  # noqa: F401  (registra todos os modelos)
@@ -22,21 +35,29 @@ async def _run() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-        # `create_all` não adiciona colunas em tabelas existentes. Para
-        # Postgres, aplica ALTER TABLE idempotente para colunas que foram
-        # adicionadas ao modelo depois da criação inicial da tabela.
-        # Ex.: csc/csc_id (NFC-e/QR Code) na tabela `empresas`.
         if engine.dialect.name == "postgresql":
-            await conn.execute(
-                text(
-                    "ALTER TABLE empresas "
-                    "ADD COLUMN IF NOT EXISTS csc VARCHAR(36), "
-                    "ADD COLUMN IF NOT EXISTS csc_id VARCHAR(6), "
-                    "ADD COLUMN IF NOT EXISTS codigo_regime_tributario VARCHAR(2)"
-                )
+            adicionar = ", ".join(
+                f"ADD COLUMN IF NOT EXISTS {nome} {tipo}" for nome, tipo in _COLUNAS_EMPRESAS
             )
+            await conn.execute(text(f"ALTER TABLE empresas {adicionar}"))
+        elif engine.dialect.name == "sqlite":
+            # SQLite não suporta ADD COLUMN IF NOT EXISTS: verifica via PRAGMA.
+            existentes = {
+                row[1]
+                for row in (await conn.execute(text("PRAGMA table_info(empresas)"))).fetchall()
+            }
+            for nome, tipo in _COLUNAS_EMPRESAS:
+                if nome not in existentes:
+                    await conn.execute(text(f"ALTER TABLE empresas ADD COLUMN {nome} {tipo}"))
 
-    print("Migração concluída. Tabelas:", ", ".join(sorted(Base.metadata.tables)))
+    return sorted(Base.metadata.tables)
+
+
+async def _run() -> None:
+    from api.core.database import engine
+
+    tabelas = await migrar()
+    print("Migração concluída. Tabelas:", ", ".join(tabelas))
     await engine.dispose()
 
 

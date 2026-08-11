@@ -17,6 +17,7 @@ from api.core.dependencies import get_current_client
 from api.core.exceptions import DomainError, EmpresaJaExiste
 from api.models import APIClient, NotaFiscal
 from api.schemas.empresa import EmpresaCreateRequest, EmpresaCreateResponse
+from api.scripts.migrate import migrar
 from api.services.empresa_service import criar_empresa
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -137,3 +138,21 @@ async def criar_empresa_endpoint(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(exc),
         ) from exc
+
+
+@router.post("/migrate")
+async def migrar_banco(
+    client: APIClient = Depends(_get_current_admin),  # noqa: B008
+) -> dict:
+    """Executa a migração do banco (create_all + colunas novas) — idempotente.
+
+    Cobre colunas adicionadas ao modelo depois da criação inicial da tabela
+    (ex.: csc/csc_id/codigo_regime_tributario em `empresas`), que o
+    `create_all` não aplica em tabelas existentes.
+    """
+    tabelas = await migrar()
+    return {
+        "status": "ok",
+        "tabelas": tabelas,
+        "mensagem": "Migração concluída com sucesso",
+    }
