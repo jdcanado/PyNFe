@@ -31,6 +31,7 @@ from api.schemas.nota_item import (
     ClienteSchema,
     CofinsSchema,
     EmitenteSchema,
+    IBSCBSSchema,
     IcmsSchema,
     PagamentoSchema,
     PisSchema,
@@ -44,6 +45,18 @@ SENHA_PFX = "1234"
 EMPRESA_ID = uuid4()
 CSC = "0123456789abcdef0123456789abcdef0123"
 CSC_ID = "000001"
+IBSCBS_PADRAO = IBSCBSSchema(
+    cst="000",
+    c_class_trib="000001",
+    vbc="117.00",
+    p_ibs_uf="0.1000",
+    v_ibs_uf="0.12",
+    p_ibs_mun="0.0000",
+    v_ibs_mun="0.00",
+    v_ibs="0.12",
+    p_cbs="0.9000",
+    v_cbs="1.05",
+)
 
 
 def gerar_pfx_bytes(senha: str = SENHA_PFX) -> bytes:
@@ -83,14 +96,16 @@ def extrair_pems() -> tuple[str, str]:
 KEY_PEM, CERT_PEM = extrair_pems()
 
 
-def schema_nfce(cliente: ClienteSchema | None = None) -> NFCeEmitirRequest:
-    """Monta um NFCeEmitirRequest completo (cliente opcional)."""
+def schema_nfce(
+    cliente: ClienteSchema | None = None, ibscbs: IBSCBSSchema | None = None
+) -> NFCeEmitirRequest:
+    """Monta um NFCeEmitirRequest completo (cliente e IBSCBS opcionais)."""
     return NFCeEmitirRequest(
         empresa_id=EMPRESA_ID,
         uf="PR",
         municipio="4118402",
         natureza_operacao="VENDA",
-        data_emissao=datetime(2026, 8, 5, 12, 0, tzinfo=timezone.utc),
+        data_emissao=datetime.now(timezone.utc),
         serie="1",
         numero="222",
         indicador_presencial=1,
@@ -113,9 +128,9 @@ def schema_nfce(cliente: ClienteSchema | None = None) -> NFCeEmitirRequest:
             ProdutoItemSchema(
                 codigo="000328",
                 descricao="Produto teste",
-                ncm="99999999",
+                ncm="61091000",
                 cfop="5102",
-                ean="1234567890121",
+                ean="1234567890128",
                 unidade_comercial="UN",
                 quantidade_comercial=12,
                 valor_unitario_comercial="9.75",
@@ -139,6 +154,7 @@ def schema_nfce(cliente: ClienteSchema | None = None) -> NFCeEmitirRequest:
                     aliquota_percentual="3.00",
                     valor="3.51",
                 ),
+                ibscbs=ibscbs,
             )
         ],
         pagamentos=[PagamentoSchema(forma_pagamento="01", valor="117.00")],
@@ -240,10 +256,13 @@ def run(coro) -> object:
 class EmpresaFake:
     """Empresa mínima com CSC para o db.get do service."""
 
-    def __init__(self, csc: str = CSC, csc_id: str = CSC_ID) -> None:
+    def __init__(
+        self, csc: str = CSC, csc_id: str = CSC_ID, codigo_regime_tributario: str | None = None
+    ) -> None:
         self.id = EMPRESA_ID
         self.csc = csc
         self.csc_id = csc_id
+        self.codigo_regime_tributario = codigo_regime_tributario
 
 
 async def get_pem_mock(empresa_id, *, redis=None, session=None):
@@ -265,7 +284,7 @@ def test_emitir_nfce_autorizada_com_qrcode():
 
     resp = run(
         emitir_nfce(
-            schema_nfce(),
+            schema_nfce(ibscbs=IBSCBS_PADRAO),
             homologacao=True,
             redis=redis,
             session=session,
@@ -305,7 +324,7 @@ def test_emitir_nfce_sem_destinatario():
 
     resp = run(
         emitir_nfce(
-            schema_nfce(cliente=None),
+            schema_nfce(cliente=None, ibscbs=IBSCBS_PADRAO),
             redis=redis,
             session=session,
             comunicacao_factory=comunicacao_factory,
@@ -325,7 +344,7 @@ def test_emitir_nfce_sem_csc_levanta_erro():
     with pytest.raises(ValidacaoNegocioError, match="CSC"):
         run(
             emitir_nfce(
-                schema_nfce(),
+                schema_nfce(ibscbs=IBSCBS_PADRAO),
                 redis=redis,
                 session=session,
                 get_pem=get_pem_mock,
@@ -359,3 +378,43 @@ def test_qrcode_url_depende_do_csc():
 
     assert url_a != url_b
     assert "qrcode" in url_a
+
+
+def test_emitir_nfce_com_ibscbs_gera_grupo_no_xml():
+    """Item com IBSCBS (Reforma Tributária) gera <IBSCBS> e <IBSCBSTot> no XML."""
+    session = FakeSession(EmpresaFake())
+    redis = FakeRedis()
+
+    def comunicacao_factory(**kwargs):
+        return FakeComunicacao((0, nfe_proc_fake()))
+
+    resp = run(
+        emitir_nfce(
+            schema_nfce(
+                ibscbs=IBSCBSSchema(
+                    cst="000",
+                    c_class_trib="000001",
+                    vbc="117.00",
+                    p_ibs_uf="0.1000",
+                    v_ibs_uf="0.12",
+                    p_ibs_mun="0.0000",
+                    v_ibs_mun="0.00",
+                    v_ibs="0.12",
+                    p_cbs="0.9000",
+                    v_cbs="1.05",
+                )
+            ),
+            homologacao=True,
+            redis=redis,
+            session=session,
+            comunicacao_factory=comunicacao_factory,
+            get_pem=get_pem_mock,
+        )
+    )
+
+    assert resp.status == "AUTORIZADA"
+    xml = resp.xml_assinado
+    assert "<IBSCBS>" in xml
+    assert "<CST>000</CST>" in xml
+    assert "<cClassTrib>000001</cClassTrib>" in xml
+    assert "<IBSCBSTot>" in xml

@@ -19,6 +19,7 @@ from api.schemas.nota_item import (
     ClienteSchema,
     CofinsSchema,
     EmitenteSchema,
+    IBSCBSSchema,
     IcmsSchema,
     ImpostoImportacaoSchema,
     IpiSchema,
@@ -61,9 +62,9 @@ def produto_schema(**icms_kwargs) -> ProdutoItemSchema:
     return ProdutoItemSchema(
         codigo="000328",
         descricao="Produto teste",
-        ncm="99999999",
+        ncm="61091000",
         cfop="5102",
-        ean="1234567890121",
+        ean="1234567890128",
         unidade_comercial="UN",
         quantidade_comercial=Decimal(12),
         valor_unitario_comercial=Decimal("9.75"),
@@ -186,7 +187,7 @@ def test_converter_produto_dados_basicos():
     produto = converter_produto(produto_schema())
     assert produto.codigo == "000328"
     assert produto.descricao == "Produto teste"
-    assert produto.ncm == "99999999"
+    assert produto.ncm == "61091000"
     assert produto.cfop == "5102"
     assert produto.quantidade_comercial == Decimal(12)
     assert produto.valor_unitario_comercial == Decimal("9.75")
@@ -295,6 +296,90 @@ def test_converter_produto_sem_impostos():
 # ---------------------------------------------------------------------------
 # Pagamento
 # ---------------------------------------------------------------------------
+
+
+def test_converter_produto_ibscbs():
+    """Grupo IBSCBS (Reforma Tributária) é mapeado para os campos ibscbs_*."""
+    produto = converter_produto(
+        ProdutoItemSchema(
+            codigo="000328",
+            descricao="Produto teste",
+            ncm="61091000",
+            cfop="5102",
+            ean="1234567890128",
+            unidade_comercial="UN",
+            quantidade_comercial=Decimal(1),
+            valor_unitario_comercial=Decimal("10.00"),
+            valor_total_bruto=Decimal("10.00"),
+            icms=IcmsSchema(modalidade="00", origem=0),
+            pis=PisSchema(situacao_tributaria="49"),
+            cofins=CofinsSchema(situacao_tributaria="49"),
+            ibscbs=IBSCBSSchema(
+                cst="000",
+                c_class_trib="000001",
+                vbc=Decimal("10.00"),
+                p_ibs_uf=Decimal("0.1000"),
+                v_ibs_uf=Decimal("0.01"),
+                p_ibs_mun=Decimal("0.0000"),
+                v_ibs_mun=Decimal("0.00"),
+                v_ibs=Decimal("0.01"),
+                p_cbs=Decimal("0.9000"),
+                v_cbs=Decimal("0.09"),
+            ),
+        )
+    )
+    assert produto.ibscbs_cst == "000"
+    assert produto.ibscbs_c_class_trib == "000001"
+    assert produto.ibscbs_vbc == Decimal("10.00")
+    assert produto.ibscbs_p_ibs_uf == Decimal("0.1000")
+    assert produto.ibscbs_v_ibs_uf == Decimal("0.01")
+    assert produto.ibscbs_p_ibs_mun == Decimal("0.0000")
+    assert produto.ibscbs_v_ibs_mun == Decimal("0.00")
+    assert produto.ibscbs_v_ibs == Decimal("0.01")
+    assert produto.ibscbs_p_cbs == Decimal("0.9000")
+    assert produto.ibscbs_v_cbs == Decimal("0.09")
+
+
+def test_converter_produto_sem_ibscbs_nao_gera_campos():
+    """Sem o grupo ibscbs, nenhum campo ibscbs_* é gerado (XML retroativo)."""
+    produto = converter_produto(produto_schema())
+    assert produto.ibscbs_cst == ""
+
+
+def test_converter_produto_espelha_ean_tributavel():
+    """Rejeição 885: sem ean_tributavel informado, usa o GTIN da unidade comercial."""
+    produto = converter_produto(produto_schema(ean_tributavel="SEM GTIN"))
+    assert produto.ean == "1234567890128"
+    assert produto.ean_tributavel == "1234567890128"
+
+
+def _produto(**campos) -> ProdutoItemSchema:
+    """Produto base para testar validações de formato (ncm/gtin)."""
+    base = {
+        "codigo": "000328",
+        "descricao": "Produto teste",
+        "ncm": "61091000",
+        "cfop": "5102",
+        "ean": "1234567890128",
+        "unidade_comercial": "UN",
+        "quantidade_comercial": Decimal(1),
+        "valor_unitario_comercial": Decimal("10.00"),
+        "valor_total_bruto": Decimal("10.00"),
+    }
+    base.update(campos)
+    return ProdutoItemSchema(**base)
+
+
+def test_produto_ncm_invalido_rejeitado():
+    """Rejeição 486: NCM inexistente é rejeitado na validação do schema."""
+    with pytest.raises(ValidationError, match="NCM"):
+        _produto(ncm="99999999")
+
+
+def test_produto_gtin_invalido_rejeitado():
+    """Rejeição 611: GTIN com dígito verificador errado é rejeitado no schema."""
+    with pytest.raises(ValidationError, match="GTIN"):
+        _produto(ean="1234567890121")
 
 
 def test_converter_pagamento():

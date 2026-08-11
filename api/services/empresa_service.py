@@ -64,6 +64,7 @@ async def criar_empresa(
             nome_fantasia=dados.nome_fantasia,
             inscricao_estadual=dados.inscricao_estadual,
             uf=dados.uf,
+            codigo_regime_tributario=dados.codigo_regime_tributario,
             csc=dados.csc,
             csc_id=dados.csc_id,
         )

@@ -153,3 +153,36 @@ def test_criar_empresa_csc_uuid_homologacao(client, admin_token):
     data = resp.json()
     assert data["csc_id"] == "000003"
     assert data["csc_mascarado"] == csc_uuid[:4] + "*" * 32
+
+
+def test_criar_empresa_com_crt(client, db, admin_token):
+    """CRT (regime tributário) é aceito na criação e persistido no banco."""
+    resp = run(
+        client.post(
+            "/api/v1/admin/empresa",
+            json=_payload(cnpj="55555555000155", codigo_regime_tributario="1"),
+            headers=authorization_headers(admin_token),
+        )
+    )
+    assert resp.status_code == 201
+
+    async def _check():
+        async with db() as session:
+            return (
+                await session.execute(select(Empresa).where(Empresa.cnpj == "55555555000155"))
+            ).scalar_one()
+
+    emp = run(_check())
+    assert emp.codigo_regime_tributario == "1"
+
+
+def test_criar_empresa_crt_invalido_422(client, admin_token):
+    """CRT fora de 1-4 é rejeitado pelo schema."""
+    resp = run(
+        client.post(
+            "/api/v1/admin/empresa",
+            json=_payload(cnpj="66666666000166", codigo_regime_tributario="9"),
+            headers=authorization_headers(admin_token),
+        )
+    )
+    assert resp.status_code == 422

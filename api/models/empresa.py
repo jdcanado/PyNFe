@@ -31,6 +31,9 @@ class Empresa(UUIDMixin, TimestampMixin, Base):
     csc: Mapped[Optional[str]] = mapped_column(String(36))
     csc_id: Mapped[Optional[str]] = mapped_column(String(6))
 
+    # Regime tributário (CRT: 1=Simples, 2=SN MEI, 3=Regime Normal, 4=SN acima do sublimite)
+    codigo_regime_tributario: Mapped[Optional[str]] = mapped_column(String(2))
+
     # Webhooks (URL de entrega e segredo HMAC da assinatura)
     webhook_url: Mapped[Optional[str]] = mapped_column(String(500))
     webhook_secret: Mapped[Optional[str]] = mapped_column(String(128))

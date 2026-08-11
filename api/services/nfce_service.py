@@ -40,6 +40,7 @@ from api.services.nfe_service import (
     _fonte_dados_isolada,
     _polling_recibo,
 )
+from api.services.validacao_pre_envio import validar_nfce
 from api.utils.crypto import encrypt_senha, hash_documento
 from pynfe.entidades.notafiscal import NotaFiscal
 from pynfe.processamento.serializacao import SerializacaoQrcode, SerializacaoXML
@@ -88,6 +89,15 @@ async def _obter_csc(session: Any, empresa_id: UUID) -> tuple[str, str]:
         return empresa.csc, empresa.csc_id
 
 
+async def _obter_crt(session: Any, empresa_id: UUID) -> str | None:
+    """Retorna o CRT cadastrado da empresa (None se não informado)."""
+    async with _session_ctx(session) as db:
+        empresa = await db.get(Empresa, empresa_id)
+        if empresa is None:
+            return None
+        return empresa.codigo_regime_tributario
+
+
 async def emitir_nfce(
     schema: NFCeEmitirRequest,
     *,
@@ -97,9 +107,15 @@ async def emitir_nfce(
     http_client: Any | None = None,
     comunicacao_factory: Callable[..., Any] | None = None,
     get_pem: Callable[..., Any] | None = None,
+    crt: str | None = None,
 ) -> NFCeResponse:
     """Executa o pipeline completo de emissão de NFC-e e persiste o resultado."""
     empresa_id = schema.empresa_id
+
+    # 0. Validações pré-envio (espelham rejeições da SEFAZ: 704, 373, 590, 1115)
+    if crt is None:
+        crt = await _obter_crt(session, empresa_id)
+    validar_nfce(schema, homologacao=homologacao, crt=crt)
 
     # 1+2. Monta a entidade e serializa usando FonteDados isolada (por request)
     with _fonte_dados_isolada() as fonte:

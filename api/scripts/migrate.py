@@ -31,7 +31,8 @@ async def _run() -> None:
                 text(
                     "ALTER TABLE empresas "
                     "ADD COLUMN IF NOT EXISTS csc VARCHAR(36), "
-                    "ADD COLUMN IF NOT EXISTS csc_id VARCHAR(6)"
+                    "ADD COLUMN IF NOT EXISTS csc_id VARCHAR(6), "
+                    "ADD COLUMN IF NOT EXISTS codigo_regime_tributario VARCHAR(2)"
                 )
             )
 

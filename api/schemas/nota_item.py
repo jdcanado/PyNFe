@@ -13,6 +13,8 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, field_validator
 
+from api.utils.tabelas import is_cclass_trib_valido, is_ncm_valido
+
 
 def _validar_cnpj(v: str) -> str:
     if not v.isdigit() or len(v) != 14:
@@ -112,6 +114,44 @@ class IcmsSchema(BaseModel):
     fcp_valor: Decimal | None = None
 
 
+class IBSCBSSchema(BaseModel):
+    """Grupo IBSCBS de um item — Reforma Tributária (NT 2025.002-RTC).
+
+    IVA Dual: IBS (UF + Município) e CBS. Fase de testes 2026: CBS 0,9%,
+    IBS-UF 0,1%, IBS-Mun 0%. Os impostos legados (ICMS, PIS, COFINS)
+    continuam obrigatórios e coexistem no mesmo XML.
+    """
+
+    cst: str = Field(description="CST IBS/CBS de 3 dígitos (ex.: 000, 010, 222, 900)")
+    c_class_trib: str | None = Field(default=None, description="cClassTrib (6 dígitos)")
+    vbc: Decimal | None = None
+    p_ibs_uf: Decimal | None = None
+    v_ibs_uf: Decimal | None = None
+    p_ibs_mun: Decimal | None = None
+    v_ibs_mun: Decimal | None = None
+    v_ibs: Decimal | None = None
+    p_cbs: Decimal | None = None
+    v_cbs: Decimal | None = None
+
+    @field_validator("cst")
+    @classmethod
+    def _validar_cst(cls, v: str) -> str:
+        if not v.isdigit() or len(v) != 3:
+            raise ValueError("CST IBS/CBS deve ter exatamente 3 dígitos")
+        return v
+
+    @field_validator("c_class_trib")
+    @classmethod
+    def _validar_c_class_trib(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        if not v.isdigit() or len(v) != 6:
+            raise ValueError("cClassTrib deve ter exatamente 6 dígitos")
+        if not is_cclass_trib_valido(v):
+            raise ValueError(f"cClassTrib {v} inexistente na tabela de classificação tributária")
+        return v
+
+
 class PisSchema(BaseModel):
     """Grupo PIS de um item."""
 
@@ -190,6 +230,43 @@ class ProdutoItemSchema(BaseModel):
     cofins: CofinsSchema | None = None
     ipi: IpiSchema | None = None
     ii: ImpostoImportacaoSchema | None = None
+    ibscbs: IBSCBSSchema | None = None
+
+    @field_validator("ncm")
+    @classmethod
+    def _validar_ncm(cls, v: str) -> str:
+        if not v.isdigit() or len(v) != 8:
+            raise ValueError("NCM deve ter exatamente 8 dígitos numéricos")
+        if not is_ncm_valido(v):
+            raise ValueError(f"NCM {v} inexistente na tabela vigente")
+        return v
+
+    @field_validator("ean")
+    @classmethod
+    def _validar_ean(cls, v: str) -> str:
+        return _validar_gtin(v)
+
+    @field_validator("ean_tributavel")
+    @classmethod
+    def _validar_ean_tributavel(cls, v: str) -> str:
+        return _validar_gtin(v)
+
+
+def _validar_gtin(v: str) -> str:
+    """Valida GTIN/EAN (8, 12, 13 ou 14 dígitos) pelo dígito verificador.
+
+    `""` e `"SEM GTIN"` são aceitos (produto sem código de barras). O cálculo
+    segue o módulo 10 (pesos alternados 3/1 da direita para a esquerda).
+    """
+    if v in ("", "SEM GTIN"):
+        return v
+    if not v.isdigit() or len(v) not in (8, 12, 13, 14):
+        raise ValueError("GTIN deve ter 8, 12, 13 ou 14 dígitos numéricos")
+    digitos = [int(c) for c in v]
+    soma = sum(d * (3 if i % 2 == 0 else 1) for i, d in enumerate(reversed(digitos[:-1])))
+    if (10 - soma % 10) % 10 != digitos[-1]:
+        raise ValueError("GTIN inválido: dígito verificador não confere")
+    return v
 
 
 class PagamentoSchema(BaseModel):

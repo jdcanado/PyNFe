@@ -36,6 +36,7 @@ class EmpresaCreateRequest(BaseModel):
     nome_fantasia: str | None = Field(default=None, max_length=200)
     inscricao_estadual: str | None = Field(default=None, max_length=20)
     uf: str | None = Field(default=None, max_length=2)
+    codigo_regime_tributario: str | None = Field(default=None, max_length=2)
     # NFC-e (QR Code) — opcionais já na criação
     csc: str | None = Field(default=None, max_length=36)
     csc_id: str | None = Field(default=None, max_length=6)
@@ -50,6 +51,13 @@ class EmpresaCreateRequest(BaseModel):
     @classmethod
     def _validar_uf(cls, v: str | None) -> str | None:
         return validar_uf(v) if v is not None else None
+
+    @field_validator("codigo_regime_tributario")
+    @classmethod
+    def _validar_crt(cls, v: str | None) -> str | None:
+        if v is not None and v not in ("1", "2", "3", "4"):
+            raise ValueError("codigo_regime_tributario deve ser 1, 2, 3 ou 4 (CRT)")
+        return v
 
     @field_validator("csc")
     @classmethod
@@ -84,6 +92,7 @@ class EmpresaUpdateRequest(BaseModel):
     nome_fantasia: str | None = Field(default=None, max_length=200)
     inscricao_estadual: str | None = Field(default=None, max_length=20)
     uf: str | None = Field(default=None, max_length=2)
+    codigo_regime_tributario: str | None = Field(default=None, max_length=2)
     csc: str | None = Field(default=None, max_length=36)
     csc_id: str | None = Field(default=None, max_length=6)
 
@@ -91,6 +100,13 @@ class EmpresaUpdateRequest(BaseModel):
     @classmethod
     def _validar_uf(cls, v: str | None) -> str | None:
         return validar_uf(v) if v is not None else None
+
+    @field_validator("codigo_regime_tributario")
+    @classmethod
+    def _validar_crt(cls, v: str | None) -> str | None:
+        if v is not None and v not in ("1", "2", "3", "4"):
+            raise ValueError("codigo_regime_tributario deve ser 1, 2, 3 ou 4 (CRT)")
+        return v
 
     @field_validator("csc")
     @classmethod

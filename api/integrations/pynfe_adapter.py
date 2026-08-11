@@ -17,6 +17,7 @@ from api.schemas.nota_item import (
     ClienteSchema,
     CofinsSchema,
     EmitenteSchema,
+    IBSCBSSchema,
     IcmsSchema,
     ImpostoImportacaoSchema,
     IpiSchema,
@@ -219,16 +220,48 @@ def _ii_kwargs(ii: ImpostoImportacaoSchema | None) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def _ibscbs_kwargs(ibscbs: IBSCBSSchema | None) -> dict[str, Any]:
+    """Gera os campos ibscbs_* do produto a partir do `IBSCBSSchema`.
+
+    Reforma Tributária (NT 2025.002-RTC): grupo <IBSCBS> no item. Se o
+    grupo não for informado, nenhum campo é gerado (XML sem IBS/CBS).
+    """
+    if ibscbs is None:
+        return {}
+    return _sem_vazios(
+        {
+            "ibscbs_cst": ibscbs.cst,
+            "ibscbs_c_class_trib": ibscbs.c_class_trib,
+            "ibscbs_vbc": _dec(ibscbs.vbc),
+            "ibscbs_p_ibs_uf": _dec(ibscbs.p_ibs_uf),
+            "ibscbs_v_ibs_uf": _dec(ibscbs.v_ibs_uf),
+            "ibscbs_p_ibs_mun": _dec(ibscbs.p_ibs_mun),
+            "ibscbs_v_ibs_mun": _dec(ibscbs.v_ibs_mun),
+            "ibscbs_v_ibs": _dec(ibscbs.v_ibs),
+            "ibscbs_p_cbs": _dec(ibscbs.p_cbs),
+            "ibscbs_v_cbs": _dec(ibscbs.v_cbs),
+        }
+    )
+
+
 def converter_produto_kwargs(schema: ProdutoItemSchema) -> dict[str, Any]:
     """Gera os kwargs do produto (dados + impostos) para `NotaFiscalProduto`."""
+    # Rejeição 885: se o GTIN da unidade tributável não foi informado
+    # (default "SEM GTIN") e o da unidade comercial é um GTIN válido,
+    # espelha o mesmo GTIN para o cEANTrib.
+    ean = schema.ean
+    ean_tributavel = schema.ean_tributavel
+    if ean_tributavel in ("", "SEM GTIN") and ean not in ("", "SEM GTIN"):
+        ean_tributavel = ean
+
     kwargs = _sem_vazios(
         {
             "codigo": schema.codigo,
             "descricao": schema.descricao,
             "ncm": schema.ncm,
             "cfop": schema.cfop,
-            "ean": schema.ean,
-            "ean_tributavel": schema.ean_tributavel,
+            "ean": ean,
+            "ean_tributavel": ean_tributavel,
             "cest": schema.cest,
             "unidade_comercial": schema.unidade_comercial,
             "quantidade_comercial": _dec(schema.quantidade_comercial),
@@ -258,6 +291,7 @@ def converter_produto_kwargs(schema: ProdutoItemSchema) -> dict[str, Any]:
     kwargs.update(_cofins_kwargs(schema.cofins))
     kwargs.update(_ipi_kwargs(schema.ipi))
     kwargs.update(_ii_kwargs(schema.ii))
+    kwargs.update(_ibscbs_kwargs(schema.ibscbs))
     return kwargs
 
 
